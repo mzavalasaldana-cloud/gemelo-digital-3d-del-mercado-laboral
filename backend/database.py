@@ -18,23 +18,29 @@ else:
 
 logger = logging.getLogger("labortwin.database")
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+asyncpg://postgres:1234@localhost:5432/labortwin_db"
-)
+raw_db_url = os.getenv("DATABASE_URL")
+if not raw_db_url:
+    if os.getenv("RENDER"):
+        DATABASE_URL = "sqlite+aiosqlite:///./labortwin_dev.db"
+    else:
+        DATABASE_URL = "postgresql+asyncpg://postgres:1234@localhost:5432/labortwin_db"
+else:
+    DATABASE_URL = raw_db_url
 
 # Declarative base class for SQLAlchemy models
 Base = declarative_base()
 
 # Configure Async Engine
-engine: AsyncEngine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    future=True,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-)
+is_sqlite = DATABASE_URL.startswith("sqlite")
+engine_kwargs = {"echo": False, "future": True}
+if not is_sqlite:
+    engine_kwargs.update({
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_pre_ping": True,
+    })
+
+engine: AsyncEngine = create_async_engine(DATABASE_URL, **engine_kwargs)
 
 _session_factory = async_sessionmaker(
     bind=engine,

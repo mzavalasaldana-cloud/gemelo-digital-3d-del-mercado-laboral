@@ -32,3 +32,4 @@ labortwin_dev.db
 .DS_Store
 Thumbs.db
 *.log
+Claude outputs/
