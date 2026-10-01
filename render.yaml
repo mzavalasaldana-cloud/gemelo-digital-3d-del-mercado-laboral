@@ -1,0 +1,26 @@
+services:
+  # 1. FastAPI Backend (REST API + WebSockets + ML Engine)
+  - type: web
+    name: gemelo-laboral-backend
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: CORS_ORIGINS
+        value: http://localhost:3000
+
+  # 2. Streamlit Dashboard (Opcional en Render)
+  - type: web
+    name: gemelo-laboral-streamlit
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt streamlit plotly pandas
+    startCommand: streamlit run streamlit_app/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
