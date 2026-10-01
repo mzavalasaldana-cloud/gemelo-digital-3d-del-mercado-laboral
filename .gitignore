@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Production
+build/
+dist/
+
+# Tests & Coverage
+coverage/
+.pytest_cache/
+
+# Environment and secrets
+.env*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Databases & local data stores
+*.db
+*.sqlite3
+labortwin_dev.db
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.log

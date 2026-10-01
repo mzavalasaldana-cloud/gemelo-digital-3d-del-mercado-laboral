@@ -1,0 +1,6 @@
+{
+  "name": "Gemelo Digital 3D del Mercado Laboral",
+  "description": "Prototipo interactivo 3D y HUD analítico para la simulación del mercado laboral formal-informal y diseño de políticas de empleo decente.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
