@@ -258,20 +258,36 @@ class ITDTModel:
         t = self.month
         in_policy = t >= self.burn_in_months
 
-        # Inyección de choque de demanda si está configurado
-        if p.demand_shock_month is not None and t == p.demand_shock_month:
-            self.A = self.A * (1.0 + p.demand_shock_pct)
+        # Inyección de choque de demanda en t = 96 + 60 = 156 (o demand_shock_month)
+        if p.demand_shock_month is not None:
+            shock_target = (
+                p.demand_shock_month
+                if p.demand_shock_month >= self.burn_in_months
+                else (self.burn_in_months + p.demand_shock_month)
+            )
+            if t == shock_target:
+                self.A = self.A * (1.0 + p.demand_shock_pct)
+                self._update_firm_production()
 
         # Determinación de parámetros activos por escenario de política
-        cur_kappa = p.kappa
-        cur_phi_1 = p.phi_1
-        cur_mu_0 = p.mu_0 * p.sanction_mult
-        cur_mu_1 = p.mu_1 * p.sanction_mult
-        cur_beta = p.beta
-        dcc_subsidy = False
-        d_growth = p.D_sys_growth
+        # NOTA: El multiplicador de sanciones (sanction_mult) actúa estrictamente en el período de política
+        if not in_policy:
+            cur_kappa = p.kappa
+            cur_phi_1 = p.phi_1
+            cur_mu_0 = p.mu_0
+            cur_mu_1 = p.mu_1
+            cur_beta = p.beta
+            dcc_subsidy = False
+            d_growth = p.D_sys_growth
+        else:
+            cur_kappa = p.kappa
+            cur_phi_1 = p.phi_1
+            cur_mu_0 = p.mu_0 * p.sanction_mult
+            cur_mu_1 = p.mu_1 * p.sanction_mult
+            cur_beta = p.beta
+            dcc_subsidy = False
+            d_growth = p.D_sys_growth
 
-        if in_policy:
             sc = self.scenario
             if sc == "A" or sc == "BASELINE":
                 d_growth = p.D_sys_growth
