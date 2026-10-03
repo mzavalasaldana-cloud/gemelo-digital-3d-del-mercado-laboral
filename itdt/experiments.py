@@ -412,7 +412,7 @@ def run_sanctions_sweep_experiment(
     # Eje derecho: Cierres anuales (%) en barras con ancho 0.25
     ax2.bar(x, df_sweep["exit_rate_mean"], width=0.22, color="#bdc3c7", alpha=0.5, edgecolor="#7f8c8d", label="Cierre anual de empresas (%)")
     ax2.set_ylabel("Cierre anual de empresas (%)", fontsize=11, fontweight="bold", color="#555555")
-    ax2.set_ylim(0.0, 30.0)
+    ax2.set_ylim(0.0, 60.0)
     ax2.grid(False)
 
     # Eje izquierdo: Cambios frente al status quo en p.p. (líneas con bandas)
@@ -737,9 +737,26 @@ def run_sensitivity_and_robustness(
 # 6. BENCHMARKING DE COSTO COMPUTACIONAL (TABLA 10)
 # ==============================================================================
 
+def get_process_memory_mb() -> float:
+    """Mide la memoria residente real (RSS) del proceso en MB usando psutil o resource."""
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        return float(process.memory_info().rss / (1024 * 1024))
+    except Exception:
+        pass
+    try:
+        import resource
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return float(usage / 1024.0)
+    except Exception:
+        pass
+    return 0.0
+
+
 def benchmark_computational_cost(output_dir: str = "outputs") -> pd.DataFrame:
     """
-    Mide el tiempo de ejecución por réplica (216 meses) y la memoria pico para:
+    Mide el tiempo de ejecución por réplica (216 meses) y la memoria real del proceso para:
     N_W in {3000, 6000, 12000, 24000} y N_F in {300, 600, 1200, 2400}.
     """
     print("\n--- Ejecutando benchmarking de costo computacional (Tabla 10)... ---")
@@ -754,7 +771,7 @@ def benchmark_computational_cost(output_dir: str = "outputs") -> pd.DataFrame:
 
     for nw, nf, label in scales:
         times = []
-        tracemalloc.start()
+        peak_mb = get_process_memory_mb()
 
         for rep in range(3):
             t_start = time.perf_counter()
@@ -768,11 +785,11 @@ def benchmark_computational_cost(output_dir: str = "outputs") -> pd.DataFrame:
                 policy_months=120,
             )
             model.run()
-            times.append(time.perf_counter() - t_start)
-
-        _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
-        peak_mb = peak_mem / (1024 * 1024)
+            elapsed = time.perf_counter() - t_start
+            times.append(elapsed)
+            current_mem = get_process_memory_mb()
+            if current_mem > peak_mb:
+                peak_mb = current_mem
 
         mean_t = float(np.mean(times))
         std_t = float(np.std(times, ddof=1))
@@ -783,14 +800,15 @@ def benchmark_computational_cost(output_dir: str = "outputs") -> pd.DataFrame:
             "Tiempo por réplica (s), media (DE)": f"{mean_t:.3f} ({std_t:.3f})",
             "Memoria máxima del proceso (MB)": f"{peak_mb:.1f}",
         })
-        print(f"  N_W = {label}: {mean_t:.3f} s (DE = {std_t:.3f}), Memoria pico: {peak_mb:.1f} MB")
+        print(f"  N_W = {label}: {mean_t:.3f} s (DE = {std_t:.3f}), Memoria real del proceso: {peak_mb:.1f} MB")
 
     df_t10 = pd.DataFrame(table10_rows)
     df_t10.to_csv(os.path.join(output_dir, "table10_cost.csv"), index=False, encoding="utf-8")
     with open(os.path.join(output_dir, "table10_cost.md"), "w", encoding="utf-8") as f:
         f.write("# Tabla 10: Costo computacional por réplica (216 meses: 96 de calentamiento + 120 de escenario)\n\n")
         f.write(df_t10.to_markdown(index=False))
-        f.write("\n\n*Nota.* 3 repeticiones por tamaño. El tiempo crece de forma aproximadamente lineal con NW.\n")
+        f.write("\n\n*Nota.* 3 repeticiones por tamaño. El tiempo crece de forma aproximadamente lineal con NW. "
+                "Memoria real del proceso medida con psutil/resource (RSS).\n")
 
     print(f"Tabla 10 generada en {output_dir}/table10_cost.*")
     return df_t10
@@ -1010,7 +1028,8 @@ def generate_figure_6(
             ci_high = np.percentile(all_series, 97.5, axis=0)
 
             c_color = scenario_colors[sc]
-            ax.plot(months, mean_traj, color=c_color, linewidth=2.0, label=scenario_labels[sc])
+            line_style = "--" if sc == "A" else "-"
+            ax.plot(months, mean_traj, color=c_color, linewidth=2.0, linestyle=line_style, label=scenario_labels[sc])
             ax.fill_between(months, ci_low, ci_high, color=c_color, alpha=0.12)
 
         ax.set_title(f"Trayectoria de Informalidad - {sex_title}", fontsize=12, fontweight="bold", pad=10)
