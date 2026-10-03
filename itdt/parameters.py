@@ -86,18 +86,18 @@ def load_ilostat_s_F_data() -> Dict[str, float]:
     return s_F_dict
 
 
+import json
+
 _s_F_data = load_ilostat_s_F_data()
 
-# Calibraciones empíricas por país (Tabla 2 del artículo)
-# s_F cargado desde data/ilostat_s_F.csv (no derivado de F, M, T)
+# Base empírica por país observada en ILOSTAT
+# NOTA: phi_0 y gamma_0 NO están escritos a mano; se leen dinámicamente de outputs/calibration_estimates.json
 COUNTRY_DATABASE: Dict[str, Dict[str, Any]] = {
     "KENYA": {
         "name": "Kenia",
         "country_code": "KEN",
         "year": 2019,
         "s_F": _s_F_data.get("KENYA", 0.476259), # Proporción oficial ILOSTAT
-        "phi_0": 3.08,                          # Parámetro calibrado DCC
-        "gamma_0": 0.461,                       # Penalización de cuidados calibrada
         "F_obs": 90.19,                         # Tasa femenina observada ILOSTAT (%)
         "M_obs": 83.13,                         # Tasa masculina observada ILOSTAT (%)
         "T_obs": 86.49,                         # Tasa total observada ILOSTAT (%)
@@ -107,8 +107,6 @@ COUNTRY_DATABASE: Dict[str, Dict[str, Any]] = {
         "country_code": "NGA",
         "year": 2024,
         "s_F": _s_F_data.get("NIGERIA", 0.503854),
-        "phi_0": 8.96,
-        "gamma_0": 0.620,
         "F_obs": 96.39,
         "M_obs": 89.92,
         "T_obs": 93.18,
@@ -118,8 +116,6 @@ COUNTRY_DATABASE: Dict[str, Dict[str, Any]] = {
         "country_code": "IND",
         "year": 2024,
         "s_F": _s_F_data.get("INDIA", 0.309070),
-        "phi_0": 4.84,
-        "gamma_0": 0.464,
         "F_obs": 91.93,
         "M_obs": 86.76,
         "T_obs": 88.36,
@@ -129,8 +125,6 @@ COUNTRY_DATABASE: Dict[str, Dict[str, Any]] = {
         "country_code": "BGD",
         "year": 2023,
         "s_F": _s_F_data.get("BANGLADESH", 0.345429),
-        "phi_0": 2.03,
-        "gamma_0": 0.763,
         "F_obs": 95.77,
         "M_obs": 78.08,
         "T_obs": 84.19,
@@ -138,14 +132,50 @@ COUNTRY_DATABASE: Dict[str, Dict[str, Any]] = {
 }
 
 
+def load_calibration_estimates() -> Dict[str, Dict[str, float]]:
+    """
+    Carga phi_0 y gamma_0 exclusivamente desde outputs/calibration_estimates.json.
+    """
+    json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "outputs", "calibration_estimates.json")
+    estimates = {}
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, mode="r", encoding="utf-8") as f:
+                data = json.load(f)
+                summary = data.get("summary", {})
+                for c_key, c_val in summary.items():
+                    estimates[c_key.upper()] = {
+                        "phi_0": float(c_val["phi_0"]),
+                        "gamma_0": float(c_val["gamma_0"]),
+                    }
+        except Exception:
+            pass
+    return estimates
+
+
+def update_country_database_from_calibration():
+    """
+    Actualiza COUNTRY_DATABASE poblando phi_0 y gamma_0 exclusivamente desde outputs/calibration_estimates.json.
+    """
+    estimates = load_calibration_estimates()
+    for c_key, vals in estimates.items():
+        if c_key in COUNTRY_DATABASE:
+            COUNTRY_DATABASE[c_key]["phi_0"] = vals["phi_0"]
+            COUNTRY_DATABASE[c_key]["gamma_0"] = vals["gamma_0"]
+
+
+# Poblar automáticamente COUNTRY_DATABASE desde outputs/calibration_estimates.json
+update_country_database_from_calibration()
+
+
 def resolve_country_params(country_input: Any) -> Dict[str, Any]:
     """
     Normaliza el parámetro country_params aceptando un string de país o un dict de parámetros.
+    Garantiza que phi_0 y gamma_0 se lean de outputs/calibration_estimates.json.
     """
+    update_country_database_from_calibration()
     if isinstance(country_input, str):
         key = country_input.strip().upper()
-        if key in COUNTRY_DATABASE:
-            return COUNTRY_DATABASE[key].copy()
         # Aliases comunes
         aliases = {
             "KENIA": "KENYA",
@@ -155,8 +185,16 @@ def resolve_country_params(country_input: Any) -> Dict[str, Any]:
             "BGD": "BANGLADESH",
             "BANGLADES": "BANGLADESH",
         }
-        if key in aliases and aliases[key] in COUNTRY_DATABASE:
-            return COUNTRY_DATABASE[aliases[key]].copy()
+        resolved_key = aliases.get(key, key)
+        if resolved_key in COUNTRY_DATABASE:
+            c_info = COUNTRY_DATABASE[resolved_key].copy()
+            if "phi_0" not in c_info or "gamma_0" not in c_info:
+                raise RuntimeError(
+                    f"País '{resolved_key}' no tiene estimaciones calibradas (phi_0, gamma_0). "
+                    "outputs/calibration_estimates.json no contiene este país o no existe. "
+                    "Ejecute 'make calibrate' para generarlo."
+                )
+            return c_info
         raise ValueError(f"País '{country_input}' no reconocido. Opciones válidas: {list(COUNTRY_DATABASE.keys())}")
     
     if isinstance(country_input, dict):

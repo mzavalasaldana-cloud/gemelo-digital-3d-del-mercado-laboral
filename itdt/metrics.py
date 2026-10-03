@@ -96,13 +96,17 @@ def compute_monthly_metrics(
     formal_vacancies = int(np.sum(L[is_formal_firm]))
     formal_firms_count = int(np.sum(is_formal_firm))
 
+    r_fem = round(inf_female, 2)
+    r_male = round(inf_male, 2)
+    r_gap = round(r_fem - r_male, 2)
+
     return {
         "month": month,
         "is_burn_in": is_burn_in,
         "informality_total": round(inf_total, 2),
-        "informality_female": round(inf_female, 2),
-        "informality_male": round(inf_male, 2),
-        "gender_gap": round(gender_gap, 2),
+        "informality_female": r_fem,
+        "informality_male": r_male,
+        "gender_gap": r_gap,
         "annual_exit_rate": round(annual_exit_rate, 2),
         "firm_closures_count": int(num_exits),
         "formal_firms_count": formal_firms_count,
