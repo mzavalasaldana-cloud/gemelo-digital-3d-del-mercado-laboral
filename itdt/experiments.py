@@ -26,7 +26,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 from itdt.model import ITDTModel
-from itdt.parameters import FixedParameters, COUNTRY_DATABASE, load_ilostat_s_F_data
+from itdt.parameters import FixedParameters, COUNTRY_DATABASE, load_ilostat_s_F_data, resolve_country_params
 
 TARGET_COUNTRIES = ["KENYA", "NIGERIA", "INDIA", "BANGLADESH"]
 POLICY_SCENARIOS = ["A", "B1", "B2", "C", "D"]
@@ -634,7 +634,7 @@ def run_sensitivity_and_robustness(
         ("gamma_0", "gamma_0"),
         ("Hcare mujeres", "H_care_fem_mean"),
         ("T_0", "T_0"),
-        ("d", "d"),
+        ("(1 − d)", "cooling_rate"),
     ]
 
     table9_rows = [
@@ -649,16 +649,24 @@ def run_sensitivity_and_robustness(
 
     for label, param_name in params_to_perturb:
         if param_name in ["phi_0", "gamma_0"]:
-            # Perturbar en country_dict
+            # Usar los phi_0 y gamma_0 calibrados para cada país desde outputs/calibration_estimates.json
             c_low = {}
             c_high = {}
             for c in countries:
-                info = COUNTRY_DATABASE[c]
-                val = info[param_name]
+                info = resolve_country_params(c)
+                val = float(info[param_name])
                 c_low[c] = {**info, param_name: val * 0.80}
                 c_high[c] = {**info, param_name: val * 1.20}
             b2_low, d_low = eval_contrast_b2_fem_and_d_tot(custom_c_dict=c_low)
             b2_high, d_high = eval_contrast_b2_fem_and_d_tot(custom_c_dict=c_high)
+        elif param_name == "cooling_rate":
+            # d_base = 0.85 => (1 - d)_base = 0.15
+            # -20% en (1 - d): 0.15 * 0.80 = 0.12 => d = 1 - 0.12 = 0.88
+            # +20% en (1 - d): 0.15 * 1.20 = 0.18 => d = 1 - 0.18 = 0.82
+            fp_low = FixedParameters(d=0.88)
+            fp_high = FixedParameters(d=0.82)
+            b2_low, d_low = eval_contrast_b2_fem_and_d_tot(custom_fp=fp_low)
+            b2_high, d_high = eval_contrast_b2_fem_and_d_tot(custom_fp=fp_high)
         else:
             base_val = getattr(FixedParameters(), param_name)
             fp_low = FixedParameters(**{param_name: base_val * 0.80})
@@ -680,29 +688,29 @@ def run_sensitivity_and_robustness(
         })
 
     # Robustez CES y Choque de demanda
-    # CES sigma = 0.5
+    # CES sigma = 0.5 (sin «recalibrado»)
     fp_ces05 = FixedParameters(ces_sigma=0.5)
     b2_ces05, d_ces05 = eval_contrast_b2_fem_and_d_tot(custom_fp=fp_ces05)
     table9_rows.append({
-        "Parámetro": "CES, σ=0.5 (recalibrado)",
+        "Parámetro": "CES, σ=0.5",
         "Δ mujeres en B2: −20 % / +20 %": f"{b2_ces05:.2f}",
         "Elasticidad (B2)": "—",
         "Δ total en D: −20 % / +20 %": f"{d_ces05:.2f}",
         "Elasticidad (D)": "—",
     })
 
-    # CES sigma = 1.5
+    # CES sigma = 1.5 (sin «recalibrado»)
     fp_ces15 = FixedParameters(ces_sigma=1.5)
     b2_ces15, d_ces15 = eval_contrast_b2_fem_and_d_tot(custom_fp=fp_ces15)
     table9_rows.append({
-        "Parámetro": "CES, σ=1.5 (recalibrado)",
+        "Parámetro": "CES, σ=1.5",
         "Δ mujeres en B2: −20 % / +20 %": f"{b2_ces15:.2f}",
         "Elasticidad (B2)": "—",
         "Δ total en D: −20 % / +20 %": f"{d_ces15:.2f}",
         "Elasticidad (D)": "—",
     })
 
-    # Choque de demanda -5% en mes 60
+    # Choque de demanda -5%
     fp_shock = FixedParameters(demand_shock_month=60, demand_shock_pct=-0.05)
     b2_shock, d_shock = eval_contrast_b2_fem_and_d_tot(custom_fp=fp_shock)
     table9_rows.append({
