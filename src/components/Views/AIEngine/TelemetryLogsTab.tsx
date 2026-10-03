@@ -24,9 +24,9 @@ interface TelemetryLogsTabProps {
 
 const INITIAL_LOGS_ES = [
   '[2026-09-05 09:30:01] [INIT] Inicializando entorno de inferencia distribuida XGBoost v3.4 en clúster GPU NVIDIA H100...',
-  '[2026-09-05 09:30:02] [DATA] Ingestando 1,245,900 registros censales armonizados de encuestas de hogares...',
-  '[2026-09-05 09:30:03] [DATA] Validación sintáctica OK. Imputación MICE completada (tasa nulos: 0.8%).',
-  '[2026-09-05 09:30:04] [SPLIT] Particionando datos: 80% Train (996,720) | 20% Test (249,180) con K-Fold Estratificado.',
+  '[2026-09-05 09:30:02] [DATA] Ingestando 15,420 registros sintéticos calibrados (demostración)...',
+  '[2026-09-05 09:30:03] [DATA] Validación sintáctica OK. Imputación mediana/moda completada (tasa nulos: 0.8%).',
+  '[2026-09-05 09:30:04] [SPLIT] Particionando datos: 80% Train (12,336) | 20% Test (3,084) con K-Fold Estratificado.',
   '[2026-09-05 09:30:06] [GPU] CUDA context creado. 8 hilos GPU asignados. Batch size: 4096.',
   '[2026-09-05 09:30:08] [EPOCH 01/50] Train Loss: 0.4820 | Val Loss: 0.4912 | ROC-AUC: 0.784 | F1: 0.742',
   '[2026-09-05 09:30:11] [EPOCH 10/50] Train Loss: 0.2814 | Val Loss: 0.2940 | ROC-AUC: 0.865 | F1: 0.820',
@@ -44,9 +44,9 @@ const INITIAL_LOGS_ES = [
 
 const INITIAL_LOGS_EN = [
   '[2026-09-05 09:30:01] [INIT] Initializing distributed inference environment XGBoost v3.4 on NVIDIA H100 GPU cluster...',
-  '[2026-09-05 09:30:02] [DATA] Ingesting 1,245,900 harmonized census records from household surveys...',
-  '[2026-09-05 09:30:03] [DATA] Syntactic validation OK. MICE imputation complete (null rate: 0.8%).',
-  '[2026-09-05 09:30:04] [SPLIT] Splitting data: 80% Train (996,720) | 20% Test (249,180) with Stratified K-Fold.',
+  '[2026-09-05 09:30:02] [DATA] Ingesting 15,420 synthetic calibrated records (demonstration)...',
+  '[2026-09-05 09:30:03] [DATA] Syntactic validation OK. Median/mode imputation complete (null rate: 0.8%).',
+  '[2026-09-05 09:30:04] [SPLIT] Splitting data: 80% Train (12,336) | 20% Test (3,084) with Stratified K-Fold.',
   '[2026-09-05 09:30:06] [GPU] CUDA context created. 8 GPU threads allocated. Batch size: 4096.',
   '[2026-09-05 09:30:08] [EPOCH 01/50] Train Loss: 0.4820 | Val Loss: 0.4912 | ROC-AUC: 0.784 | F1: 0.742',
   '[2026-09-05 09:30:11] [EPOCH 10/50] Train Loss: 0.2814 | Val Loss: 0.2940 | ROC-AUC: 0.865 | F1: 0.820',
@@ -127,6 +127,9 @@ export const TelemetryLogsTab: React.FC<TelemetryLogsTabProps> = ({
             <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono rounded bg-emerald-500/20 border border-emerald-400 text-emerald-500 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               {t('liveStream', language)}
+            </span>
+            <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-amber-500/20 border border-amber-400 text-amber-500 font-bold">
+              Demostración
             </span>
           </div>
           <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>

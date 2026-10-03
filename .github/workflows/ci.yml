@@ -1,0 +1,39 @@
+name: CI ITDT Replicación
+
+on:
+  push:
+    branches:
+      - itdt-articulo
+      - main
+      - master
+  pull_request:
+    branches:
+      - itdt-articulo
+      - main
+      - master
+
+jobs:
+  test:
+    name: Pruebas unitarias, metamórficas y smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependencias exactas
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-itdt.txt
+
+      - name: Ejecutar suite completa con pytest
+        run: python -m pytest tests/test_itdt_canonical.py tests/test_itdt.py -v
+
+      - name: Ejecutar make smoke (< 1 minuto)
+        run: make smoke

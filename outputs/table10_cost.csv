@@ -1,0 +1,5 @@
+NW (trabajadores),NF (empresas),"Tiempo por réplica (s), media (DE)",Memoria máxima del proceso (MB)
+3 000,300,0.595 (0.154),1.1
+6 000 (configuración base),600,0.754 (0.052),1.9
+12 000,1 200,0.976 (0.027),3.4
+24 000,2 400,1.095 (0.076),6.4

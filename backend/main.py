@@ -66,7 +66,7 @@ logger = logging.getLogger("labortwin.server")
 # In-memory cached active dataset
 ACTIVE_DATASET_CACHE: Dict[str, Any] = {
     "df": None,
-    "filename": "Encuesta_Armonizada_Microdatos_2024.csv",
+    "filename": "SINTETICO_benchmark_microdatos_armonizados.csv",
     "records_count": 0,
     "model_id": "model-xgboost-prod-opt",
 }
@@ -83,19 +83,35 @@ async def lifespan(app: FastAPI):
         )
         active_ds = result.scalars().first()
         
+        benchmark_path = os.path.join(DATA_STORE_DIR, "SINTETICO_benchmark_microdatos_armonizados.csv")
+
         if active_ds and os.path.exists(active_ds.filepath):
             logger.info(f"Loading existing active dataset from {active_ds.filepath}")
             ACTIVE_DATASET_CACHE["df"] = pd.read_csv(active_ds.filepath)
             ACTIVE_DATASET_CACHE["filename"] = active_ds.filename
             ACTIVE_DATASET_CACHE["records_count"] = active_ds.records_count
+        elif os.path.exists(benchmark_path):
+            logger.info(f"Loading existing benchmark dataset from {benchmark_path}")
+            df = pd.read_csv(benchmark_path)
+            ACTIVE_DATASET_CACHE["df"] = df
+            ACTIVE_DATASET_CACHE["filename"] = "SINTETICO_benchmark_microdatos_armonizados.csv"
+            ACTIVE_DATASET_CACHE["records_count"] = len(df)
+            new_ds = DatasetModel(
+                filename="SINTETICO_benchmark_microdatos_armonizados.csv",
+                filepath=benchmark_path,
+                records_count=len(df),
+                features_list=df.columns.tolist(),
+                is_active=True,
+            )
+            session.add(new_ds)
+            await session.commit()
         else:
             logger.info("Generating initial synthetic benchmark dataset...")
             df = generate_synthetic_benchmark_dataset(num_records=15420)
-            benchmark_path = os.path.join(DATA_STORE_DIR, "benchmark_microdatos_armonizados.csv")
             df.to_csv(benchmark_path, index=False)
             
             new_ds = DatasetModel(
-                filename="Encuesta_Armonizada_Microdatos_2024.csv",
+                filename="SINTETICO_benchmark_microdatos_armonizados.csv",
                 filepath=benchmark_path,
                 records_count=len(df),
                 features_list=df.columns.tolist(),

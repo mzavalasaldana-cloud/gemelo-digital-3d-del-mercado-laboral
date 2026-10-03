@@ -55,8 +55,8 @@ def generate_country_preset_dataset(preset_id: str) -> Tuple[pd.DataFrame, str, 
 
     if preset_id == "ds-plfs-ind" or "INDIA" in preset_id.upper():
         num_records = 48500
-        filename = "PLFS_India_Periodic_Labour_Force_Survey_2023-24.csv"
-        institution = "MoSPI National Statistical Office (India)"
+        filename = "SINTETICO_calibrado_PLFS_India.csv"
+        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: India MoSPI)"
         inf_target = 0.886
         
         ages = np.random.randint(18, 64, size=num_records)
@@ -92,8 +92,8 @@ def generate_country_preset_dataset(preset_id: str) -> Tuple[pd.DataFrame, str, 
 
     elif preset_id == "ds-knbs-ken" or "KENYA" in preset_id.upper():
         num_records = 38000
-        filename = "KNBS_Kenya_Informal_Sector_Survey_2024.csv"
-        institution = "Kenya National Bureau of Statistics (KNBS)"
+        filename = "SINTETICO_calibrado_KNBS_Kenya.csv"
+        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: Kenya KNBS)"
         
         ages = np.random.randint(18, 62, size=num_records)
         genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.50, 0.50])
@@ -125,8 +125,8 @@ def generate_country_preset_dataset(preset_id: str) -> Tuple[pd.DataFrame, str, 
 
     elif preset_id == "ds-nbs-nga" or "NIGERIA" in preset_id.upper():
         num_records = 42000
-        filename = "NBS_Nigeria_National_Living_Standard_Survey_2023.csv"
-        institution = "National Bureau of Statistics (NBS Nigeria)"
+        filename = "SINTETICO_calibrado_NBS_Nigeria.csv"
+        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: Nigeria NBS)"
         
         ages = np.random.randint(18, 65, size=num_records)
         genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.48, 0.52])
@@ -158,8 +158,8 @@ def generate_country_preset_dataset(preset_id: str) -> Tuple[pd.DataFrame, str, 
 
     else: # Bangladesh or default
         num_records = 36000
-        filename = "BBS_Bangladesh_Labour_Force_Survey_2023-24.csv"
-        institution = "Bangladesh Bureau of Statistics (BBS)"
+        filename = "SINTETICO_calibrado_BBS_Bangladesh.csv"
+        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: Bangladesh BBS)"
         
         ages = np.random.randint(18, 60, size=num_records)
         genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.52, 0.48])
@@ -387,8 +387,8 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
             "imputedRows": int(round(total_records * 0.08)),
             "numericCols": len(numeric_df.columns),
             "categoricalCols": total_variables - len(numeric_df.columns),
-            "imputationMethod": "MICE Multivariada (Iterative SVD)",
-            "surveySource": survey_source or "Microdatos Armonizados de Encuestas Continuas de Hogares y Empleo",
+            "imputationMethod": "Mediana / Moda (Demostración)",
+            "surveySource": survey_source or "Datos sintéticos de demostración; no son microdatos oficiales",
         },
         "histograms": {
             "salary": {"label": "Ingreso Salarial Mensual", "unit": "USD", "data": salary_hist_data},

@@ -138,12 +138,12 @@ if os.path.exists(sqlite_path):
 else:
     print("No se encontro SQLite previo, se iniciara con esquema limpio y datasets oficiales.")
 
-# 4. Insertar datasets oficiales predeterminados si no existen
+# 4. Insertar datasets sintéticos de demostración predeterminados si no existen
 default_datasets = [
-    ("ds-knbs-ken", "KNBS_Kenya_Informal_Sector_Survey_2024.csv", "./data_store/KNBS_Kenya_Informal_Sector_Survey_2024.csv", 38000, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], True),
-    ("ds-plfs-ind", "PLFS_India_Periodic_Labour_Force_Survey_2023-24.csv", "./data_store/PLFS_India_Periodic_Labour_Force_Survey_2023-24.csv", 48500, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], False),
-    ("ds-nlss-nga", "NBS_Nigeria_Living_Standards_Survey_2023.csv", "./data_store/NBS_Nigeria_Living_Standards_Survey_2023.csv", 32000, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], False),
-    ("ds-qlfs-bgd", "BBS_Bangladesh_Quarterly_Labour_Force_Survey_2024.csv", "./data_store/BBS_Bangladesh_Quarterly_Labour_Force_Survey_2024.csv", 29500, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], False),
+    ("ds-knbs-ken", "SINTETICO_calibrado_KNBS_Kenya.csv", "./data_store/SINTETICO_calibrado_KNBS_Kenya.csv", 38000, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], True),
+    ("ds-plfs-ind", "SINTETICO_calibrado_PLFS_India.csv", "./data_store/SINTETICO_calibrado_PLFS_India.csv", 48500, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], False),
+    ("ds-nlss-nga", "SINTETICO_calibrado_NBS_Nigeria.csv", "./data_store/SINTETICO_calibrado_NBS_Nigeria.csv", 32000, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], False),
+    ("ds-qlfs-bgd", "SINTETICO_calibrado_BBS_Bangladesh.csv", "./data_store/SINTETICO_calibrado_BBS_Bangladesh.csv", 29500, ["ESTADO_LABORAL", "INGRESO_NETO_DIA", "CAPITAL_HUMANO", "EDAD", "EDUCACION_ANIOS", "APORTE_SEG_SOC", "TAM_EMPRESA"], False),
 ]
 
 for did, fname, fpath, rcount, flist, isact in default_datasets:

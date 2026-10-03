@@ -89,6 +89,9 @@ export const HyperparamsStatsTab: React.FC<HyperparamsStatsTabProps> = ({
             }`}>
               Optuna v3.6 + SciPy
             </span>
+            <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-amber-500/20 border border-amber-400 text-amber-500 font-bold">
+              Demostración
+            </span>
           </div>
           <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
             {t('hyperparamsSubtitle', language)}

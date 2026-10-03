@@ -41,16 +41,18 @@ def render_datasets_reports_view():
                     📁 DATASETS DE ENCUESTAS & GENERADOR DE REPORTES EJECUTIVOS
                 </h2>
                 <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #94a3b8;">
-                    Microdatos Armonizados de Fuerza Laboral (PLFS, ILFS, NLFS) & Exportador Oficial OIT / Banco Mundial
+                    Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.
                 </p>
             </div>
             <div style="display: flex; gap: 8px;">
-                <span class="glow-badge badge-emerald">4 Encuestas Oficiales</span>
+                <span class="glow-badge badge-emerald">4 Datasets Sintéticos (Demostración)</span>
                 <span class="glow-badge badge-cyan">Exportación: PDF / Excel / HTML / JSON</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    st.warning("⚠️ **Aviso Metodológico:** Datos sintéticos de demostración; no son microdatos oficiales. El modelo y el artículo no usan microdatos, sino únicamente tasas agregadas de ILOSTAT.")
 
     tab_datasets, tab_reports = st.tabs(["📚 Catálogo & Ingesta de Microdatos", "📑 Generador de Informes Ejecutivos"])
 

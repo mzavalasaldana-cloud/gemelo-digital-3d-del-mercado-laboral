@@ -106,6 +106,7 @@ export const INITIAL_POLICY_STATE: PolicyParameters = {
   smartInspectionCoverage: 20, // 20% inspection
 };
 
+// EMPRESAS FICTICIAS DE DEMOSTRACIÓN (No representan entidades corporativas reales)
 export const MOCK_FIRMS: StructuralFirm[] = [
   // Formal hexagonal crystal enterprises with emergence timeline
   {
@@ -372,68 +373,70 @@ export const MOCK_COHORTS: CohortPrediction[] = [
   },
 ];
 
+// DATASETS SINTÉTICOS DE DEMOSTRACIÓN (No son microdatos oficiales)
 export const MOCK_DATASETS: DatasetEntry[] = [
   {
     id: 'ds-plfs-ind',
-    name: 'PLFS India Periodic Labour Force Survey 2023-24',
+    name: 'SINTETICO_calibrado_PLFS_India.csv',
     country: 'INDIA',
-    yearSpan: '2019-2024',
-    sampleSize: '418,200 hogares',
-    recordsCount: 1245900,
-    institution: 'MoSPI National Statistical Office',
-    variables: ['industry_nic_2008', 'enterprise_type', 'social_sec_benefits', 'daily_earnings', 'vocational_training'],
-    verified: true,
+    yearSpan: '2023-2024',
+    sampleSize: '48,500 registros sintéticos',
+    recordsCount: 48500,
+    institution: 'Generador sintético calibrado (Demostración)',
+    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
+    verified: false,
     active: true,
-    description: 'Encuesta oficial nacional sobre fuerza laboral desagregada por condición formal/informal y microempresas.',
+    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
   },
   {
     id: 'ds-knbs-ken',
-    name: 'Kenya Informal Sector Survey (KNBS-KISS)',
+    name: 'SINTETICO_calibrado_KNBS_Kenya.csv',
     country: 'KENYA',
-    yearSpan: '2018-2024',
-    sampleSize: '84,500 microempresas',
-    recordsCount: 312000,
-    institution: 'Kenya National Bureau of Statistics',
-    variables: ['jua_kali_cluster', 'm_pesa_turnover', 'county_license', 'shg_membership', 'skill_level'],
-    verified: true,
+    yearSpan: '2024',
+    sampleSize: '38,000 registros sintéticos',
+    recordsCount: 38000,
+    institution: 'Generador sintético calibrado (Demostración)',
+    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
+    verified: false,
     active: true,
-    description: 'Censo y panel longitudinal de micro y pequeñas empresas del sector informal y operadores autónomos.',
+    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
   },
   {
     id: 'ds-nbs-nga',
-    name: 'Nigeria National Living Standard Survey (NLSS/NLFS)',
+    name: 'SINTETICO_calibrado_NBS_Nigeria.csv',
     country: 'NIGERIA',
-    yearSpan: '2019-2023',
-    sampleSize: '112,000 unidades',
-    recordsCount: 489000,
-    institution: 'National Bureau of Statistics (NBS)',
-    variables: ['urban_market_id', 'poverty_headcount', 'generator_cost_ratio', 'cac_registration', 'monthly_remittance'],
-    verified: true,
+    yearSpan: '2023',
+    sampleSize: '42,000 registros sintéticos',
+    recordsCount: 42000,
+    institution: 'Generador sintético calibrado (Demostración)',
+    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
+    verified: false,
     active: true,
-    description: 'Microdatos integrados de condiciones de vida, empleo informal urbano y comercio fronterizo.',
+    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
   },
   {
     id: 'ds-bbs-bgd',
-    name: 'Bangladesh Labour Force Survey (BBS-QLFS)',
+    name: 'SINTETICO_calibrado_BBS_Bangladesh.csv',
     country: 'BANGLADESH',
-    yearSpan: '2017-2024',
-    sampleSize: '128,000 individuos',
-    recordsCount: 520000,
-    institution: 'Bangladesh Bureau of Statistics',
-    variables: ['rmg_subcontract', 'rural_microfinance', 'safety_compliance', 'overtime_hours', 'wage_arrears'],
-    verified: true,
+    yearSpan: '2023-2024',
+    sampleSize: '36,000 registros sintéticos',
+    recordsCount: 36000,
+    institution: 'Generador sintético calibrado (Demostración)',
+    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
+    verified: false,
     active: true,
-    description: 'Evolución del empleo en maquilas de confección, subcontratación y microcréditos Grameen.',
+    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
   },
 ];
 
+// USUARIOS FICTICIOS DE DEMOSTRACIÓN (Dominios cambiados a example.org)
 export const MOCK_USERS: UserAccount[] = [
   {
     id: 'usr-01',
-    name: 'Dra. Amina Diallo',
-    email: 'a.diallo@labour-twin.org',
+    name: 'Dra. Amina Diallo (Ficticia)',
+    email: 'a.diallo@example.org',
     role: 'ADMIN',
-    department: 'Dirección General de Modelado & IA',
+    department: 'Dirección de Modelado & Demostración',
     lastActive: 'En línea ahora',
     permissions: {
       editPolicies: true,
@@ -445,10 +448,10 @@ export const MOCK_USERS: UserAccount[] = [
   },
   {
     id: 'usr-02',
-    name: 'Lic. Mateo Rossi',
-    email: 'm.rossi@ilo-policy.org',
+    name: 'Lic. Mateo Rossi (Ficticio)',
+    email: 'm.rossi@example.org',
     role: 'POLICY_ANALYST',
-    department: 'Oficina de Políticas de Empleo Decente',
+    department: 'Análisis de Políticas (Demostración)',
     lastActive: 'Hace 14 min',
     permissions: {
       editPolicies: true,
@@ -460,10 +463,10 @@ export const MOCK_USERS: UserAccount[] = [
   },
   {
     id: 'usr-03',
-    name: 'Prof. Rajesh K. Patel',
-    email: 'r.patel@delhi-economics.edu',
+    name: 'Prof. Rajesh K. Patel (Ficticio)',
+    email: 'r.patel@example.org',
     role: 'RESEARCHER',
-    department: 'Observatorio Laboral del Sur Global',
+    department: 'Investigación Laboral (Demostración)',
     lastActive: 'Hace 2 horas',
     permissions: {
       editPolicies: false,

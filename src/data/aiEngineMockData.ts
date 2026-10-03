@@ -33,12 +33,12 @@ export interface HighCorrelationItem {
 }
 
 export const EDA_KPIS = {
-  dataQuality: 98.4,
-  totalRecords: 1245900,
-  totalVariables: 42,
-  nullPercentage: 0.8,
-  imputationMethod: 'MICE Multivariada (Iterative SVD)',
-  surveySource: 'Microdatos Armonizados de Encuestas Continuas de Hogares y Empleo',
+  dataQuality: 99.2,
+  totalRecords: 15420,
+  totalVariables: 14,
+  nullPercentage: 0.0,
+  imputationMethod: 'Mediana / Moda (Demostración)',
+  surveySource: 'Datos sintéticos de demostración; no son microdatos oficiales',
 };
 
 export const EDA_HISTOGRAMS: Record<string, { label: string; unit: string; data: EDAVariableDistribution[] }> = {
@@ -392,14 +392,14 @@ export const EXTENDED_COHORTS: ExtendedCohortData[] = [
   },
 ];
 
-// Hyperparameters & Statistical Tests Data
+// Hyperparameters & Statistical Tests Data (Demostración)
 export const OPTIMAL_HYPERPARAMS_JSON = {
-  model_id: 'xgboost-prod-opt-v3.4.1',
-  framework: 'XGBoost 3.4.0 (GPU CUDA Acceleration)',
+  model_id: 'xgboost-demo-opt-v3.4',
+  framework: 'XGBoost 3.4.0 (Demostración)',
   objective: 'binary:logistic',
   eval_metric: 'aucpr',
   tree_method: 'hist',
-  device: 'cuda',
+  device: 'cpu',
   best_params: {
     max_depth: 6,
     learning_rate: 0.042,
@@ -418,13 +418,13 @@ export const OPTIMAL_HYPERPARAMS_JSON = {
     delta_roc_auc: '+0.024 (+2.6%)',
     f1_score_optimized: 0.912,
     trials_evaluated: 120,
-    search_strategy: 'Optuna TPE (Tree-structured Parzen Estimator)',
+    search_strategy: 'Optuna TPE (Demostración)',
     execution_time_seconds: 4.8,
   },
   fairness_constraints: {
     demographic_parity_ratio: 0.962,
     equalized_odds_difference: 0.028,
-    status: 'COMPLIANT (ILO Convention 111 & Bias Audit Passed)',
+    status: 'Demostración de auditoría de sesgo (Fairness Audit)',
   },
 };
 
@@ -440,48 +440,48 @@ export interface StatisticalTestRow {
 
 export const STATISTICAL_TESTS_RESULTS: StatisticalTestRow[] = [
   {
-    testName: 'Kolmogorov-Smirnov (2 Muestras)',
+    testName: 'Kolmogorov-Smirnov (Demostración)',
     variable: 'Salario Formal vs Salario Informal',
     statistic: 'D = 0.482',
     pValue: '< 0.00001',
     criticalValue: 'D_crit = 0.018',
-    conclusion: 'Distribuciones significativamente divergentes. Brecha estructural confirmada.',
+    conclusion: '[Demostración] Distribuciones calculadas sobre muestra sintética.',
     status: 'passed',
   },
   {
-    testName: 'Kolmogorov-Smirnov (2 Muestras)',
+    testName: 'Kolmogorov-Smirnov (Demostración)',
     variable: 'Horas Semanales (Hombres vs Mujeres)',
     statistic: 'D = 0.314',
     pValue: '< 0.0001',
     criticalValue: 'D_crit = 0.018',
-    conclusion: 'Diferencias marcadas en dedicación laboral y sobrecarga de cuidados.',
+    conclusion: '[Demostración] Brecha de horas estimada sobre muestra sintética.',
     status: 'passed',
   },
   {
-    testName: 'Test Shapiro-Wilk de Normalidad',
+    testName: 'Test Shapiro-Wilk (Demostración)',
     variable: 'Logaritmo de Productividad por Empleado',
     statistic: 'W = 0.988',
     pValue: '0.042',
     criticalValue: 'W_crit = 0.985',
-    conclusion: 'Aproximación log-normal aceptable para modelos paramétricos y priors bayesianos.',
+    conclusion: '[Demostración] Aproximación log-normal sobre muestra sintética.',
     status: 'passed',
   },
   {
-    testName: 'Factor de Inflación de la Varianza (VIF)',
+    testName: 'Factor Inflación Varianza VIF (Demostración)',
     variable: 'Educación x Edad x Experiencia',
     statistic: 'Max VIF = 2.84',
     pValue: 'N/A',
     criticalValue: 'Umbral VIF < 5.0',
-    conclusion: 'Ausencia de multicolinealidad severa. Estimadores estables.',
+    conclusion: '[Demostración] Ausencia de multicolinealidad severa en muestra sintética.',
     status: 'passed',
   },
   {
-    testName: 'Prueba de Paridad Demográfica (Fairness Audit)',
+    testName: 'Paridad Demográfica (Demostración)',
     variable: 'Tasa de Selección Formal por Género',
     statistic: 'Ratio = 0.962',
-    pValue: '0.68 (no sesgo)',
+    pValue: '0.68',
     criticalValue: 'Regla del 80% (Ratio > 0.80)',
-    conclusion: 'Cumple estándar de no-discriminación algorítmica sin impacto adverso.',
+    conclusion: '[Demostración] Simulación de auditoría algorítmica sin sesgo adverso.',
     status: 'passed',
   },
 ];

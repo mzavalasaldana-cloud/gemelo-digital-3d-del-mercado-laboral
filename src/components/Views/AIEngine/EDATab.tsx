@@ -176,6 +176,16 @@ export const EDATab: React.FC<EDATabProps> = ({
         </button>
       </div>
 
+      {/* Banner de datos sintéticos */}
+      <div className={`p-3.5 rounded-xl border flex items-center gap-3 text-xs font-mono ${
+        isLight ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+      }`}>
+        <Info className="w-4 h-4 text-amber-500 shrink-0" />
+        <span>
+          <strong>Aviso Metodológico:</strong> Datos sintéticos de demostración; no son microdatos oficiales. El modelo y el artículo no usan microdatos: usan solo tasas agregadas de ILOSTAT.
+        </span>
+      </div>
+
       {/* 2. ESTADO INICIAL (VISTA VACÍA) */}
       {!hasRunEDA && !isGeneratingEDA && (
         <div className={`p-16 rounded-2xl border-2 border-dashed text-center flex flex-col items-center justify-center space-y-4 my-2 ${
@@ -302,10 +312,10 @@ export const EDATab: React.FC<EDATabProps> = ({
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className={`text-2xl font-display font-bold ${isLight ? 'text-indigo-700' : 'text-indigo-300'}`}>{(currentKPIs.imputedRows ?? 0).toLocaleString()}</span>
-                <span className="text-xs text-indigo-500 font-mono">MICE v3.1</span>
+                <span className="text-xs text-indigo-500 font-mono">Mediana/Moda (Demostración)</span>
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                {language === 'en' ? 'Chained multivariate imputation' : 'Imputación multivariada encadenada'}
+                {language === 'en' ? 'Demonstration median/mode imputation' : 'Imputación mediana/moda (demostración)'}
               </p>
             </div>
 

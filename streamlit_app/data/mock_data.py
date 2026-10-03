@@ -71,6 +71,7 @@ INITIAL_POLICY_STATE: Dict[str, float] = {
     "smartInspectionCoverage": 20.0,
 }
 
+# EMPRESAS FICTICIAS DE DEMOSTRACIÓN (No representan entidades corporativas reales)
 MOCK_FIRMS: List[Dict[str, Any]] = [
     {
         "id": "firm-f-01",
@@ -298,11 +299,12 @@ ILO_DECENT_WORK_INDICATORS: List[Dict[str, Any]] = [
     },
 ]
 
+# USUARIOS FICTICIOS DE DEMOSTRACIÓN (Dominios cambiados a example.org)
 MOCK_USERS: List[Dict[str, Any]] = [
     {
         "id": "usr-001",
-        "name": "Dra. Elena Rostova",
-        "email": "elena.rostova@labortwin.org",
+        "name": "Dra. Elena Rostova (Ficticia)",
+        "email": "elena.rostova@example.org",
         "role": "ADMIN",
         "department": "Dirección de Modelado Macroeconómico",
         "lastActive": "Activo ahora",
@@ -317,10 +319,10 @@ MOCK_USERS: List[Dict[str, Any]] = [
     },
     {
         "id": "usr-002",
-        "name": "Carlos Mendoza",
-        "email": "carlos.mendoza@mintrabajo.gov",
+        "name": "Carlos Mendoza (Ficticio)",
+        "email": "carlos.mendoza@example.org",
         "role": "POLICY_ANALYST",
-        "department": "Viceministerio de Políticas de Empleo",
+        "department": "Análisis de Políticas de Empleo",
         "lastActive": "Hace 15 min",
         "avatar": "👨‍💼",
         "permissions": {
@@ -333,10 +335,10 @@ MOCK_USERS: List[Dict[str, Any]] = [
     },
     {
         "id": "usr-003",
-        "name": "Dr. Kwame Achebe",
-        "email": "kwame.achebe@ilo-research.org",
+        "name": "Dr. Kwame Achebe (Ficticio)",
+        "email": "kwame.achebe@example.org",
         "role": "RESEARCHER",
-        "department": "División de Estadísticas OIT",
+        "department": "Investigación Laboral (Demostración)",
         "lastActive": "Hace 2 horas",
         "avatar": "🧑‍🔬",
         "permissions": {
@@ -349,10 +351,10 @@ MOCK_USERS: List[Dict[str, Any]] = [
     },
     {
         "id": "usr-004",
-        "name": "Sofia Lindqvist",
-        "email": "sofia.lindqvist@audit.worldbank.org",
+        "name": "Sofia Lindqvist (Ficticia)",
+        "email": "sofia.lindqvist@example.org",
         "role": "AUDITOR",
-        "department": "Panel de Evaluación de Impacto",
+        "department": "Auditoría de Modelado (Demostración)",
         "lastActive": "Ayer",
         "avatar": "🕵️‍♀️",
         "permissions": {
@@ -365,49 +367,50 @@ MOCK_USERS: List[Dict[str, Any]] = [
     },
 ]
 
+# DATASETS SINTÉTICOS DE DEMOSTRACIÓN (No son microdatos oficiales)
 PRELOADED_DATASETS: List[Dict[str, Any]] = [
     {
         "id": "ds-plfs-india",
-        "name": "India Periodic Labour Force Survey (PLFS) 2023-24",
+        "name": "SINTETICO_calibrado_PLFS_India.csv",
         "country": "INDIA",
-        "records": 102450,
-        "variables": 48,
-        "sampleType": "Muestreo Estratificado por Estados y Distritos",
-        "institution": "Ministry of Statistics and Programme Implementation (MoSPI)",
-        "fileFormat": "CSV / Microdatos Armonizados",
-        "isVerified": True,
+        "records": 48500,
+        "variables": 14,
+        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
+        "institution": "Generador sintético calibrado (Demostración)",
+        "fileFormat": "CSV / Sintético Demostración",
+        "isVerified": False,
     },
     {
         "id": "ds-knbs-kenya",
-        "name": "Kenya Integrated Labour Force Survey (ILFS) 2023",
+        "name": "SINTETICO_calibrado_KNBS_Kenya.csv",
         "country": "KENYA",
-        "records": 42180,
-        "variables": 42,
-        "sampleType": "Marco Muestral Nacional NASSEP V",
-        "institution": "Kenya National Bureau of Statistics (KNBS)",
-        "fileFormat": "Parquet / Microdatos",
-        "isVerified": True,
+        "records": 38000,
+        "variables": 14,
+        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
+        "institution": "Generador sintético calibrado (Demostración)",
+        "fileFormat": "CSV / Sintético Demostración",
+        "isVerified": False,
     },
     {
         "id": "ds-nbs-nigeria",
-        "name": "Nigeria Labour Force Survey (NLFS) Q4 2023",
+        "name": "SINTETICO_calibrado_NBS_Nigeria.csv",
         "country": "NIGERIA",
-        "records": 58300,
-        "variables": 39,
-        "sampleType": "Muestreo por Conglomerados Urbanos y Rurales",
-        "institution": "National Bureau of Statistics (NBS)",
-        "fileFormat": "CSV / Stata Compatible",
-        "isVerified": True,
+        "records": 42000,
+        "variables": 14,
+        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
+        "institution": "Generador sintético calibrado (Demostración)",
+        "fileFormat": "CSV / Sintético Demostración",
+        "isVerified": False,
     },
     {
         "id": "ds-bbs-bangladesh",
-        "name": "Bangladesh Labour Force Survey (LFS) 2023",
+        "name": "SINTETICO_calibrado_BBS_Bangladesh.csv",
         "country": "BANGLADESH",
-        "records": 64890,
-        "variables": 45,
-        "sampleType": "Muestreo Probabilístico Nacional",
-        "institution": "Bangladesh Bureau of Statistics (BBS)",
-        "fileFormat": "CSV",
-        "isVerified": True,
+        "records": 36000,
+        "variables": 14,
+        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
+        "institution": "Generador sintético calibrado (Demostración)",
+        "fileFormat": "CSV / Sintético Demostración",
+        "isVerified": False,
     },
 ]

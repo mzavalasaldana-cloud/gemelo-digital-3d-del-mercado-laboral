@@ -14,7 +14,8 @@ import {
   RefreshCw,
   ArrowRight,
   RotateCcw,
-  Check
+  Check,
+  Info
 } from 'lucide-react';
 import { playHoloClick, playCrystallizeSound } from '../../utils/audioSynth';
 import { uploadDatasetFile, selectPresetDataset, fetchDatasetPreview } from '../../services/api';
@@ -230,6 +231,17 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
             >
               {t('tabExportReports', language)}
             </button>
+          </div>
+        </div>
+
+        {/* Banner Metodológico de Datos Sintéticos */}
+        <div className={`p-4 rounded-2xl border flex items-center gap-3 text-xs font-mono shadow-sm ${
+          isLight ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+        }`}>
+          <Info className="w-5 h-5 text-amber-500 shrink-0" />
+          <div>
+            <strong className="block text-xs uppercase tracking-wide">Aviso Metodológico:</strong>
+            <span>Datos sintéticos de demostración; no son microdatos oficiales. El modelo y el artículo no usan microdatos: usan solo tasas agregadas de ILOSTAT.</span>
           </div>
         </div>
 

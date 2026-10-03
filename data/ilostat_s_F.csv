@@ -1,0 +1,5 @@
+country,country_code,year,indicator,employment_female_thousands,employment_male_thousands,employment_total_thousands,s_F,source,query_date
+Kenya,KEN,2019,EMP_TEMP_SEX_AGE_NB,8624.4,9484.2,18108.6,0.476259,"ILOSTAT (ILO database), Employment by sex and age; KNBS 2019 Kenya Population and Housing Census (KPHC)",2026-10-02
+Nigeria,NGA,2024,EMP_TEMP_SEX_AGE_NB,34760.1,34228.3,68988.4,0.503854,"ILOSTAT (ILO database), Employment by sex and age; NBS Nigeria Labour Force Survey / ILO Modelled Estimates 2024",2026-10-02
+India,IND,2024,EMP_TEMP_SEX_AGE_NB,175280.0,391840.0,567120.0,0.309070,"ILOSTAT (ILO database), Employment by sex and age; MoSPI Periodic Labour Force Survey (PLFS 2023-24)",2026-10-02
+Bangladesh,BGD,2023,EMP_TEMP_SEX_AGE_NB,24560.0,46540.0,71100.0,0.345429,"ILOSTAT (ILO database), Employment by sex and age; BBS Quarterly Labour Force Survey (QLFS 2023)",2026-10-02
