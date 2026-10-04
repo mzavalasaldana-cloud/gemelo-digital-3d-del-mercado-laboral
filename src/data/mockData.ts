@@ -107,7 +107,7 @@ export const INITIAL_POLICY_STATE: PolicyParameters = {
 };
 
 // EMPRESAS FICTICIAS DE DEMOSTRACIÓN (No representan entidades corporativas reales)
-export const MOCK_FIRMS: StructuralFirm[] = [
+export const DEMO_FIRMS: StructuralFirm[] = [
   // Formal hexagonal crystal enterprises with emergence timeline
   {
     id: 'firm-f-01',
@@ -280,8 +280,9 @@ export const MOCK_FIRMS: StructuralFirm[] = [
     baseEmployees: 160,
   },
 ];
+export const MOCK_FIRMS = DEMO_FIRMS;
 
-export const MOCK_ML_ALGORITHMS: MLAlgorithmMetric[] = [
+export const DEMO_ML_ALGORITHMS: MLAlgorithmMetric[] = [
   {
     id: 'algo-xgboost',
     name: 'XGBoost Gradient Boosted Trees v3.4',
@@ -333,8 +334,9 @@ export const MOCK_ML_ALGORITHMS: MLAlgorithmMetric[] = [
     isDeployed: false,
   },
 ];
+export const MOCK_ML_ALGORITHMS = DEMO_ML_ALGORITHMS;
 
-export const MOCK_COHORTS: CohortPrediction[] = [
+export const DEMO_COHORTS: CohortPrediction[] = [
   {
     id: 'cohort-01',
     label: 'Mujeres jóvenes en comercio informal urbano',
@@ -372,9 +374,10 @@ export const MOCK_COHORTS: CohortPrediction[] = [
     topDriver: 'Régimen Simplificado Monotributo Digital',
   },
 ];
+export const MOCK_COHORTS = DEMO_COHORTS;
 
 // DATASETS SINTÉTICOS DE DEMOSTRACIÓN (No son microdatos oficiales)
-export const MOCK_DATASETS: DatasetEntry[] = [
+export const DEMO_DATASETS: DatasetEntry[] = [
   {
     id: 'ds-plfs-ind',
     name: 'SINTETICO_calibrado_PLFS_India.csv',
@@ -428,9 +431,10 @@ export const MOCK_DATASETS: DatasetEntry[] = [
     description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
   },
 ];
+export const MOCK_DATASETS = DEMO_DATASETS;
 
 // USUARIOS FICTICIOS DE DEMOSTRACIÓN (Dominios cambiados a example.org)
-export const MOCK_USERS: UserAccount[] = [
+export const DEMO_USERS: UserAccount[] = [
   {
     id: 'usr-01',
     name: 'Dra. Amina Diallo (Ficticia)',
@@ -477,8 +481,9 @@ export const MOCK_USERS: UserAccount[] = [
     },
   },
 ];
+export const MOCK_USERS = DEMO_USERS;
 
-export const MOCK_SIM_RUNS: SimulationRun[] = [
+export const DEMO_SIM_RUNS: SimulationRun[] = [
   {
     id: 'RUN-2034-098',
     name: 'Kenia: Reducción Barreras Registro + Subsidio $50',
@@ -530,3 +535,5 @@ export const MOCK_SIM_RUNS: SimulationRun[] = [
     executionTimeSec: 8.9,
   },
 ];
+export const MOCK_SIM_RUNS = DEMO_SIM_RUNS;
+

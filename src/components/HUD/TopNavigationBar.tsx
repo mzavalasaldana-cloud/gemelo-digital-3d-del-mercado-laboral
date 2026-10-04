@@ -48,7 +48,7 @@ interface TopNavigationBarProps {
   isDatasetLoaded?: boolean;
 }
 
-export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
+export const TopNavigationBar: React.FC<TopNavigationBarProps> = React.memo(({
   currentView,
   onChangeView,
   country,
@@ -446,5 +446,5 @@ export const TopNavigationBar: React.FC<TopNavigationBarProps> = ({
       </div>
     </header>
   );
-};
+});
 

@@ -114,20 +114,19 @@ export const fetchDatasetPreview = async () => {
 };
 
 export const fetchActiveDataset = async () => {
-  try {
-    const res = await fetch(`${API_BASE}/datasets/active`);
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (e) {
-    // Offline mode
+  const res = await fetch(`${API_BASE}/datasets/active`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-  return {
-    is_loaded: true,
-    filename: 'Encuesta_Armonizada_Microdatos_2024.csv',
-    records_count: 15420,
-    institution: 'Microdatos Armonizados',
-  };
+  return await res.json();
+};
+
+export const fetchDatasetsListApi = async (): Promise<{ datasets: any[]; active_id: string }> => {
+  const res = await fetch(`${API_BASE}/datasets/list`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
+  }
+  return await res.json();
 };
 
 // ==========================================
@@ -144,24 +143,11 @@ export interface EDAApiResponse {
 }
 
 export const fetchEDAAnalytics = async (): Promise<EDAApiResponse> => {
-  try {
-    const res = await fetch(`${API_BASE}/ml/eda`);
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn('[API ML] EDA endpoint offline, usando benchmark local.');
+  const res = await fetch(`${API_BASE}/ml/eda`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-
-  // Resilient fallback
-  return {
-    kpis: EDA_KPIS,
-    histograms: EDA_HISTOGRAMS,
-    correlationVariables: CORRELATION_VARIABLES,
-    correlationMatrix: CORRELATION_MATRIX,
-    highCorrelations: HIGH_CORRELATIONS_TABLE,
-    boxplots: BOXPLOT_METRICS,
-  };
+  return await res.json();
 };
 
 export const runCrossValidationApi = async (
@@ -169,30 +155,20 @@ export const runCrossValidationApi = async (
   algorithm: string = 'xgboost',
   targetCol: string = 'ESTADO_LABORAL'
 ): Promise<CVMockResult & { model_id?: string }> => {
-  try {
-    const res = await fetch(`${API_BASE}/ml/cross-validation`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ n_folds: nFolds, algorithm, target_col: targetCol }),
-    });
+  const res = await fetch(`${API_BASE}/ml/cross-validation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ n_folds: nFolds, algorithm, target_col: targetCol }),
+  });
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.model_id) {
-        setActiveModelId(data.model_id);
-      }
-      return data;
-    }
-  } catch (err) {
-    console.warn('[API ML] Cross validation endpoint offline, usando preset local.');
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-
-  const base = CV_PRESET_RESULTS[algorithm] || CV_PRESET_RESULTS.xgboost;
-  return {
-    ...base,
-    kFolds: nFolds,
-    model_id: `model-${algorithm}-${Date.now().toString().slice(-6)}`,
-  };
+  const data = await res.json();
+  if (data.model_id) {
+    setActiveModelId(data.model_id);
+  }
+  return data;
 };
 
 export const fetchCohortProjectionsApi = async (
@@ -200,66 +176,37 @@ export const fetchCohortProjectionsApi = async (
   cohortFilters: Record<string, any> = {}
 ): Promise<{ model_id: string; cohorts: ExtendedCohortData[] }> => {
   const modelId = getActiveModelId();
-  try {
-    const res = await fetch(`${API_BASE}/ml/proyeccion-cohorte`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model_id: modelId,
-        cohort_filters: cohortFilters,
-        policy_params: policyParams,
-      }),
-    });
+  const res = await fetch(`${API_BASE}/ml/proyeccion-cohorte`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model_id: modelId,
+      cohort_filters: cohortFilters,
+      policy_params: policyParams,
+    }),
+  });
 
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn('[API ML] Cohorts endpoint offline, calculando elásticamente local.');
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-
-  // Dynamic local elasticity calculation for seamless offline UX
-  const boost = 
-    (policyParams.registrationCostReduction / 100) * 0.14 +
-    (policyParams.smeSubsidyUSDMonth / 150) * 0.16 +
-    (policyParams.skillsTrainingCoverage / 100) * 0.12 +
-    (policyParams.smartInspectionCoverage / 100) * 0.08;
-
-  const dynamicCohorts = EXTENDED_COHORTS.map((c) => ({
-    ...c,
-    probability: Math.min(96, Number((c.probability * (1 + boost)).toFixed(1))),
-    estimatedMonths: Math.max(6, Math.round(c.estimatedMonths * (1 - boost * 0.7))),
-  }));
-
-  return {
-    model_id: modelId,
-    cohorts: dynamicCohorts,
-  };
+  return await res.json();
 };
 
 export const fetchMLModelsApi = async (): Promise<{ models: any[]; active_model_id: string; active_model: any } | null> => {
-  try {
-    const res = await fetch(`${API_BASE}/ml/models`);
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn('[API ML] fetchMLModelsApi offline.');
+  const res = await fetch(`${API_BASE}/ml/models`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-  return null;
+  return await res.json();
 };
 
 export const fetchActiveMLModelApi = async (): Promise<any | null> => {
-  try {
-    const res = await fetch(`${API_BASE}/ml/active-model`);
-    if (res.ok) {
-      const data = await res.json();
-      return data.active_model;
-    }
-  } catch (err) {
-    console.warn('[API ML] fetchActiveMLModelApi offline.');
+  const res = await fetch(`${API_BASE}/ml/active-model`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-  return null;
+  const data = await res.json();
+  return data.active_model;
 };
 
 export const deployMLModelApi = async (modelId: string, deployedBy: string = 'Digital Twin Web UI'): Promise<any | null> => {
@@ -280,31 +227,48 @@ export const deployMLModelApi = async (modelId: string, deployedBy: string = 'Di
 };
 
 // ==========================================
-// 3. SIMULATION RUNS PERSISTENCE
+// 3. SIMULATION RUNS & METRICS SERVICES
 // ==========================================
 
-export const fetchSimulationHistory = async (): Promise<SimulationRun[]> => {
-  try {
-    const res = await fetch(`${API_BASE}/simulations/history`);
-    if (res.ok) {
-      const data = await res.json();
-      return data.runs;
-    }
-  } catch (e) {
-    // Offline mode
+export const fetchSimulationScenariosApi = async (): Promise<any> => {
+  const res = await fetch(`${API_BASE}/simulation/scenarios`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
-  return [];
+  return await res.json();
+};
+
+export const fetchStructuralMetricsApi = async (
+  country: string,
+  scenario: string,
+  month: number
+): Promise<StructuralMetrics> => {
+  const res = await fetch(
+    `${API_BASE}/simulation/metrics?country=${encodeURIComponent(country)}&scenario=${encodeURIComponent(scenario)}&month=${month}`
+  );
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
+  }
+  return await res.json();
+};
+
+export const fetchSimulationHistory = async (): Promise<SimulationRun[]> => {
+  const res = await fetch(`${API_BASE}/simulations/history`);
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
+  }
+  const data = await res.json();
+  return data.runs || [];
 };
 
 export const saveSimulationRunApi = async (run: Record<string, any>): Promise<void> => {
-  try {
-    await fetch(`${API_BASE}/simulations/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(run),
-    });
-  } catch (e) {
-    // Ignore offline error
+  const res = await fetch(`${API_BASE}/simulations/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(run),
+  });
+  if (!res.ok) {
+    throw new Error('Backend no disponible');
   }
 };
 

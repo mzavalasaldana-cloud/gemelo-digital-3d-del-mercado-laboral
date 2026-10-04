@@ -25,7 +25,8 @@ import {
   Zap,
   TrendingUp,
   Award,
-  RotateCcw
+  RotateCcw,
+  AlertTriangle
 } from 'lucide-react';
 import { playHoloClick, playCrystallizeSound } from '../../../utils/audioSynth';
 import { fetchCohortProjectionsApi } from '../../../services/api';
@@ -47,6 +48,7 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
   const [selectedCohortId, setSelectedCohortId] = useState<string>(EXTENDED_COHORTS[0].id);
   const [hasRunCohort, setHasRunCohort] = useState<boolean>(false);
   const [isGeneratingCohort, setIsGeneratingCohort] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isLight = theme === 'light';
   const currentCohort = cohortsList.find((c) => c.id === selectedCohortId) || cohortsList[0] || EXTENDED_COHORTS[0];
@@ -73,6 +75,7 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
 
   const handleRunProjection = async () => {
     setIsGeneratingCohort(true);
+    setErrorMsg(null);
     playHoloClick(950);
     try {
       const res = await fetchCohortProjectionsApi(INITIAL_POLICY_STATE);
@@ -81,8 +84,8 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
       }
       setHasRunCohort(true);
       playCrystallizeSound();
-    } catch (e) {
-      setHasRunCohort(true);
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Backend no disponible');
     } finally {
       setIsGeneratingCohort(false);
     }
@@ -90,6 +93,7 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
 
   const handleResetCohort = () => {
     playHoloClick(700);
+    setErrorMsg(null);
     setHasRunCohort(false);
   };
 
@@ -109,6 +113,9 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
               isLight ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-cyan-950 border-cyan-500/30 text-cyan-300'
             }`}>
               Micro-Markov Models
+            </span>
+            <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-amber-500/20 border border-amber-400 text-amber-500 font-bold">
+              Datos de demostración
             </span>
           </div>
           <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
@@ -160,6 +167,26 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Aviso de Backend no disponible */}
+      {errorMsg && (
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono animate-in fade-in ${
+          isLight ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span><strong>Aviso:</strong> Backend no disponible. No se pudieron proyectar las cohortes en el servidor FastAPI.</span>
+          </div>
+          <button
+            onClick={handleRunProjection}
+            className={`px-3 py-1 rounded-lg border font-mono-hud text-xs cursor-pointer ${
+              isLight ? 'bg-white border-rose-300 text-rose-700 hover:bg-rose-100' : 'bg-rose-900/50 border-rose-500/50 text-rose-200 hover:bg-rose-800/60'
+            }`}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* 2. ESTADO INICIAL */}
       {!hasRunCohort && !isGeneratingCohort && (

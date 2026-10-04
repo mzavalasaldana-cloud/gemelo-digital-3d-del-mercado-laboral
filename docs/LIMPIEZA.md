@@ -115,3 +115,68 @@ Este documento registra el inventario exhaustivo, las evidencias técnicas y las
 - **Arranque de Backend:** `python -m uvicorn backend.main:app` arranca limpiamente e inicializa el esquema de PostgreSQL, respondiendo exitosamente (código 200) a solicitudes HTTP.
 - **Arranque de Streamlit:** `streamlit run app.py` arranca limpiamente en modo headless, respondiendo exitosamente (código 200) a solicitudes HTTP.
 
+---
+
+## 5. Fase 3: Limpieza de Frontend React, Código Muerto y Carga Perezosa (Parte 3)
+
+### 5.1 Herramientas y Auditoría de Dependencias
+- **Herramientas ejecutadas:** `depcheck`, `tsc --noEmit` y `grep` exhaustivo sobre `src/`, `package.json` y archivos de configuración.
+- **Dependencias analizadas y eliminadas:**
+  - `@google/genai` (0 usos en el proyecto; desinstalado).
+  - `dotenv` (0 usos; Vite utiliza nativamente `import.meta.env`; desinstalado).
+  - `express` y `@types/express` (0 usos en el frontend Vite cliente; desinstalados).
+  - `tsx` (0 usos; la compilación se efectúa mediante Vite/tsc y el backend en Python; desinstalado).
+  - `motion` (0 usos; animaciones resueltas mediante vanilla CSS y Tailwind; desinstalado).
+  - `autoprefixer` (0 usos directos; desinstalado).
+  - `esbuild` (dependencia redundante de desarrollo; desinstalada).
+- **Dependencia retenida con justificación:**
+  - `react-is`: Aunque no es importada de forma explícita en el código fuente de usuario, es un requisito transitivo estricto de `recharts/es6/util/ReactUtils.js`. Su ausencia aborta `vite build` en la resolución de chunks de Rollup. Se mantuvo instalada.
+
+### 5.2 Componentes y Archivos de Código Muerto Eliminados
+Tras confirmar con `grep` 0 referencias e importaciones en el proyecto:
+- `src/components/HUD/MetricsPanel.tsx` (reemplazado por `LiveMetricsPill` en el viewport 3D).
+- `src/components/HUD/PolicyPanel.tsx` (reemplazado por drawer de políticas minimalista flotante).
+- `src/components/HUD/TimelineController.tsx` (reemplazado por scrubber integrado en `DigitalTwin3DView`).
+- `src/components/Modals/AIEngineModal.tsx` (reemplazado por la vista completa de primer nivel `AIEngineView`).
+- `src/components/Modals/DatasetManagerModal.tsx` (reemplazado por la vista `DatasetsReportsView`).
+- `src/components/Modals/ExportReportsModal.tsx` (reemplazado por la pestaña de exportación en `DatasetsReportsView`).
+
+### 5.3 Limpieza de Configuración (`vite.config.ts` y `tsconfig.json`)
+- `vite.config.ts`: Eliminados comentarios y directivas obsoletas heredadas de Google AI Studio (`DISABLE_HMR` y `.system_generated`).
+- `tsconfig.json`: Añadida la directiva `"types": ["vite/client"]`, resolviendo de forma canónica los 4 errores de tipado `TS2339` sobre `import.meta.env`.
+
+### 5.4 Mocks y Fuentes de Datos Reales (`api.ts`, `mockData.ts`, `aiEngineMockData.ts`)
+- **Datos con endpoint real en backend FastAPI:**
+  - Escenarios: Conectados a `/api/v1/simulations/scenarios`.
+  - Métricas estructurales: Conectadas a `/api/v1/simulations/metrics`.
+  - Datasets oficiales: Conectados a `/api/v1/datasets` y `/api/v1/datasets/active`.
+  - Modelos de Machine Learning: Conectados a `/api/v1/ml/models` y `/api/v1/ml/active-model`.
+  - Historial de simulaciones: Conectado a `/api/v1/simulations/history`.
+- **Tratamiento en desconexión:** Si el servidor backend no responde, la UI captura el error y despliega el aviso `"Backend no disponible"` con opción de reintento; **no se inventan datos ficticios en caso de falla**.
+- **Datos sin endpoint:** Renombrados con prefijo `DEMO_` (`DEMO_USERS`, `DEMO_FIRMS`, `DEMO_DATASETS`, `DEMO_COHORTS`, etc.) y marcados con la etiqueta visible `"Datos de demostración"` en la interfaz (`UserManagementModal`, `DatasetsReportsView`, `CrossValidationTab`, `HyperparamsStatsTab`, `CohortProjectionsTab`, `DigitalTwin3DView`).
+
+### 5.5 Carga Perezosa (Lazy Loading) y Memoización del HUD
+- **Carga perezosa:** `DigitalTwin3DView` y la librería pesada `Three.js` ahora se cargan dinámicamente mediante `React.lazy` y `React.Suspense` con un componente indicador de carga.
+- **Memoización:** Para prevenir re-renderizados costosos en cada tick de la simulación mensual (0 a 120 meses), se envolvieron en `React.memo`:
+  - `TopNavigationBar`
+  - `LiveMetricsPill`
+  - `AgentInspectorModal`
+  - `DigitalTwin3DView`
+
+### 5.6 Comparativa del Tamaño del Bundle (Antes vs Después)
+
+| Archivo / Chunk | Tamaño Antes de Parte 3 | Tamaño Después de Parte 3 | Variación neta |
+|---|---|---|---|
+| **Bundle Inicial JS (`index-*.js`)** | **1,517.81 kB** | **923.48 kB** | **-594.33 kB (-39.2 %)** |
+| **Chunk Dinámico 3D (`DigitalTwin3DView-*.js`)** | *(no existía, embebido)* | **595.09 kB** | Separado en carga perezosa |
+| **Estilos CSS (`index-*.css`)** | 84.88 kB | 85.69 kB | +0.81 kB (nuevos badges) |
+| **HTML Raíz (`index.html`)** | 1.43 kB | 1.43 kB | 0.00 kB |
+
+*Resultado: La carga inicial de la aplicación se redujo en casi 600 kB (~40 %), permitiendo un inicio mucho más rápido y difiriendo Three.js solo a cuando el usuario navega a la vista 3D.*
+
+### 5.7 Verificaciones Finales de Integridad
+- `npm run lint` (`tsc --noEmit`): **0 errores**.
+- `npm run build` (`vite build`): **0 errores (éxito en 6.02s)**.
+- `python -m pytest`: **24/24 pruebas pasadas exitosamente**.
+- **Integridad econométrica:** 12/12 archivos CSV en `outputs/` idénticos byte a byte a la línea base.
+

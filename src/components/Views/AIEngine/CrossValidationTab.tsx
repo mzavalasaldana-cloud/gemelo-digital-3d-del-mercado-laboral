@@ -28,7 +28,8 @@ import {
   Info,
   RotateCcw,
   Sparkles,
-  Check
+  Check,
+  AlertTriangle
 } from 'lucide-react';
 import { playHoloClick, playCrystallizeSound } from '../../../utils/audioSynth';
 import { runCrossValidationApi, fetchActiveMLModelApi, deployMLModelApi } from '../../../services/api';
@@ -50,6 +51,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
   const [strategy, setStrategy] = useState<string>('K-Fold Estratificado');
   const [hasRunCV, setHasRunCV] = useState<boolean>(true);
   const [isGeneratingCV, setIsGeneratingCV] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [currentResult, setCurrentResult] = useState<CVMockResult>(CV_PRESET_RESULTS.xgboost);
   const [activeDeployedModel, setActiveDeployedModel] = useState<any | null>(null);
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
@@ -98,6 +100,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
 
   const handleRunCV = async () => {
     setIsGeneratingCV(true);
+    setErrorMsg(null);
     playHoloClick(950);
     try {
       const res = await runCrossValidationApi(nFolds, selectedAlgoKey);
@@ -108,8 +111,8 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
       });
       setHasRunCV(true);
       playCrystallizeSound();
-    } catch (e) {
-      setHasRunCV(true);
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Backend no disponible');
     } finally {
       setIsGeneratingCV(false);
     }
@@ -117,6 +120,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
 
   const handleResetCV = () => {
     playHoloClick(700);
+    setErrorMsg(null);
     setHasRunCV(false);
   };
 
@@ -251,7 +255,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
               {language === 'en' ? 'Benchmarking Suite' : 'Matriz Comparativa'}
             </span>
             <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-amber-500/20 border border-amber-400 text-amber-500 font-bold">
-              Demostración
+              Datos de demostración
             </span>
           </div>
           <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
@@ -323,6 +327,26 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Aviso de Backend no disponible */}
+      {errorMsg && (
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono animate-in fade-in ${
+          isLight ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span><strong>Aviso:</strong> Backend no disponible. No se pudo ejecutar la validación cruzada en el servidor FastAPI.</span>
+          </div>
+          <button
+            onClick={handleRunCV}
+            className={`px-3 py-1 rounded-lg border font-mono-hud text-xs cursor-pointer ${
+              isLight ? 'bg-white border-rose-300 text-rose-700 hover:bg-rose-100' : 'bg-rose-900/50 border-rose-500/50 text-rose-200 hover:bg-rose-800/60'
+            }`}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* 2. ESTADO INICIAL (VISTA VACÍA) */}
       {!hasRunCV && !isGeneratingCV && (

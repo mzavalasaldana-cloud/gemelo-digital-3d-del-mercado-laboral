@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CountryCode, ScenarioPreset, StructuralMetrics, Language, AppTheme } from '../../types';
-import { COUNTRY_PROFILES, MOCK_DATASETS } from '../../data/mockData';
+import { COUNTRY_PROFILES, DEMO_DATASETS } from '../../data/mockData';
 import { 
   Database, 
   FileDown, 
@@ -70,7 +70,7 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
   };
 
   // 1. Carga de Dataset Preset Oficial conectada al Backend
-  const handleSelectSavedDataset = async (ds: typeof MOCK_DATASETS[0], e?: React.MouseEvent) => {
+  const handleSelectSavedDataset = async (ds: typeof DEMO_DATASETS[0], e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -97,13 +97,10 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
           : `Dataset "${ds.name}" cargado en memoria de FastAPI exitosamente (${recordsMsg}). Motor de IA listo.`
       );
     } catch (err: any) {
-      onSelectCountry(ds.country);
-      setIsDatasetLoaded(true);
-      setLoadedDatasetName(ds.name);
       setIngestFeedback(
         language === 'en'
-          ? `Dataset "${ds.name}" active in workspace.`
-          : `Dataset "${ds.name}" activo en entorno.`
+          ? 'Backend unavailable: cannot connect to dataset service (http://localhost:8000).'
+          : 'Backend no disponible: no se pudo conectar al servicio de datasets (http://localhost:8000).'
       );
     } finally {
       setLoadingDatasetId(null);
@@ -113,10 +110,19 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
 
   const handleOpenPreview = async () => {
     playHoloClick(900);
-    const data = await fetchDatasetPreview();
-    if (data) {
-      setPreviewData(data);
-      setIsPreviewOpen(true);
+    try {
+      const data = await fetchDatasetPreview();
+      if (data) {
+        setPreviewData(data);
+        setIsPreviewOpen(true);
+      }
+    } catch {
+      setIngestFeedback(
+        language === 'en'
+          ? 'Backend unavailable: could not fetch dataset preview.'
+          : 'Backend no disponible: no se pudo obtener la vista previa del dataset.'
+      );
+      setTimeout(() => setIngestFeedback(null), 5000);
     }
   };
 
@@ -615,7 +621,7 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {MOCK_DATASETS.map((ds) => {
+                {DEMO_DATASETS.map((ds) => {
                   const isCurrentActive = isDatasetLoaded && (loadedDatasetName === ds.name || country === ds.country);
                   const isLoadingThis = loadingDatasetId === ds.id;
 
@@ -632,7 +638,12 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
                     >
                       <div>
                         <div className="flex items-center justify-between">
-                          <span className="text-xl">{COUNTRY_PROFILES[ds.country].flag}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{COUNTRY_PROFILES[ds.country].flag}</span>
+                            <span className="text-[10px] font-mono-hud px-1.5 py-0.5 rounded font-bold border bg-amber-500/10 text-amber-400 border-amber-500/30">
+                              Datos de demostración
+                            </span>
+                          </div>
                           {isCurrentActive && (
                             <span className={`flex items-center gap-1 text-[10px] font-mono-hud px-2 py-0.5 rounded-full border font-bold ${
                               isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'text-emerald-300 bg-emerald-500/20 border-emerald-400'

@@ -573,6 +573,7 @@ async def save_simulation_run(
 
 
 @app.get("/api/v1/simulation/scenarios")
+@app.get("/api/v1/simulations/scenarios")
 async def get_simulation_scenarios():
     """
     Retorna la configuración y definiciones de los escenarios canónicos
@@ -588,6 +589,7 @@ async def get_simulation_scenarios():
 
 
 @app.get("/api/v1/simulation/metrics")
+@app.get("/api/v1/simulations/metrics")
 async def get_structural_metrics_endpoint(
     country: str = Query(default="KENYA"),
     scenario: str = Query(default="A"),

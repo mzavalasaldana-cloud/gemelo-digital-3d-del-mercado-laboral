@@ -32,7 +32,7 @@ export interface HighCorrelationItem {
   impact: string;
 }
 
-export const EDA_KPIS = {
+export const DEMO_EDA_KPIS = {
   dataQuality: 99.2,
   totalRecords: 15420,
   totalVariables: 14,
@@ -40,8 +40,9 @@ export const EDA_KPIS = {
   imputationMethod: 'Mediana / Moda (Demostración)',
   surveySource: 'Datos sintéticos de demostración; no son microdatos oficiales',
 };
+export const EDA_KPIS = DEMO_EDA_KPIS;
 
-export const EDA_HISTOGRAMS: Record<string, { label: string; unit: string; data: EDAVariableDistribution[] }> = {
+export const DEMO_EDA_HISTOGRAMS: Record<string, { label: string; unit: string; data: EDAVariableDistribution[] }> = {
   salary: {
     label: 'Ingreso Salarial Mensual',
     unit: 'USD',
@@ -78,8 +79,9 @@ export const EDA_HISTOGRAMS: Record<string, { label: string; unit: string; data:
     ],
   },
 };
+export const EDA_HISTOGRAMS = DEMO_EDA_HISTOGRAMS;
 
-export const CORRELATION_VARIABLES = [
+export const DEMO_CORRELATION_VARIABLES = [
   'Formalidad',
   'Salario USD',
   'Años Educ.',
@@ -87,8 +89,9 @@ export const CORRELATION_VARIABLES = [
   'Aporte Seg. Soc.',
   'Tasa Inspecc.',
 ];
+export const CORRELATION_VARIABLES = DEMO_CORRELATION_VARIABLES;
 
-export const CORRELATION_MATRIX: number[][] = [
+export const DEMO_CORRELATION_MATRIX: number[][] = [
   [1.00, 0.68, 0.62, 0.74, 0.84, 0.58],
   [0.68, 1.00, 0.73, 0.65, 0.71, 0.44],
   [0.62, 0.73, 1.00, 0.51, 0.59, 0.38],
@@ -96,8 +99,9 @@ export const CORRELATION_MATRIX: number[][] = [
   [0.84, 0.71, 0.59, 0.79, 1.00, 0.61],
   [0.58, 0.44, 0.38, 0.63, 0.61, 1.00],
 ];
+export const CORRELATION_MATRIX = DEMO_CORRELATION_MATRIX;
 
-export const BOXPLOT_METRICS: BoxplotMetric[] = [
+export const DEMO_BOXPLOT_METRICS: BoxplotMetric[] = [
   {
     group: 'Empleo Formal',
     min: 240,
@@ -117,8 +121,9 @@ export const BOXPLOT_METRICS: BoxplotMetric[] = [
     outliers: [1150, 1380, 1620],
   },
 ];
+export const BOXPLOT_METRICS = DEMO_BOXPLOT_METRICS;
 
-export const HIGH_CORRELATIONS_TABLE: HighCorrelationItem[] = [
+export const DEMO_HIGH_CORRELATIONS_TABLE: HighCorrelationItem[] = [
   {
     varA: 'Aporte Continuo a Seguridad Social',
     varB: 'Probabilidad de Formalidad Laboral',
@@ -160,6 +165,7 @@ export const HIGH_CORRELATIONS_TABLE: HighCorrelationItem[] = [
     impact: 'La huella digital de transacciones desincentiva la economía sumergida en efectivo.',
   },
 ];
+export const HIGH_CORRELATIONS_TABLE = DEMO_HIGH_CORRELATIONS_TABLE;
 
 // Cross-Validation Mock Data
 export interface CVMockResult {
@@ -195,7 +201,7 @@ export interface CVMockResult {
   };
 }
 
-export const CV_PRESET_RESULTS: Record<string, CVMockResult> = {
+export const DEMO_CV_PRESET_RESULTS: Record<string, CVMockResult> = {
   xgboost: {
     algorithm: 'XGBoost Classifier v3.4',
     kFolds: 5,
@@ -302,6 +308,7 @@ export const CV_PRESET_RESULTS: Record<string, CVMockResult> = {
     },
   },
 };
+export const CV_PRESET_RESULTS = DEMO_CV_PRESET_RESULTS;
 
 // Cohort Projections Mock Data
 export interface ExtendedCohortData {
@@ -319,7 +326,7 @@ export interface ExtendedCohortData {
   barrier: string;
 }
 
-export const EXTENDED_COHORTS: ExtendedCohortData[] = [
+export const DEMO_EXTENDED_COHORTS: ExtendedCohortData[] = [
   {
     id: 'cohort-01',
     label: 'Jóvenes (18-24) en comercio informal urbano',
@@ -391,6 +398,7 @@ export const EXTENDED_COHORTS: ExtendedCohortData[] = [
     barrier: 'Vacío regulatorio internacional y asimetría de poder en la fijación de tarifas dinámicas por algoritmo.',
   },
 ];
+export const EXTENDED_COHORTS = DEMO_EXTENDED_COHORTS;
 
 // Hyperparameters & Statistical Tests Data (Demostración)
 export const OPTIMAL_HYPERPARAMS_JSON = {
@@ -438,7 +446,7 @@ export interface StatisticalTestRow {
   status: 'passed' | 'warning' | 'failed';
 }
 
-export const STATISTICAL_TESTS_RESULTS: StatisticalTestRow[] = [
+export const DEMO_STATISTICAL_TESTS_RESULTS: StatisticalTestRow[] = [
   {
     testName: 'Kolmogorov-Smirnov (Demostración)',
     variable: 'Salario Formal vs Salario Informal',
@@ -485,3 +493,4 @@ export const STATISTICAL_TESTS_RESULTS: StatisticalTestRow[] = [
     status: 'passed',
   },
 ];
+export const STATISTICAL_TESTS_RESULTS = DEMO_STATISTICAL_TESTS_RESULTS;

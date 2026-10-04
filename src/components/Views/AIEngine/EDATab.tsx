@@ -50,6 +50,7 @@ export const EDATab: React.FC<EDATabProps> = ({
 }) => {
   const [hasRunEDA, setHasRunEDA] = useState<boolean>(false);
   const [isGeneratingEDA, setIsGeneratingEDA] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedVarKey, setSelectedVarKey] = useState<string>('salary');
   const [hoveredCorr, setHoveredCorr] = useState<{ a: string; b: string; val: number } | null>(null);
   const [edaResult, setEdaResult] = useState<EDAApiResponse | null>(null);
@@ -58,14 +59,16 @@ export const EDATab: React.FC<EDATabProps> = ({
 
   const handleRunEDA = async () => {
     setIsGeneratingEDA(true);
+    setErrorMsg(null);
     playHoloClick(1000);
     try {
       const data = await fetchEDAAnalytics();
       setEdaResult(data);
       setHasRunEDA(true);
       playCrystallizeSound();
-    } catch (err) {
-      setHasRunEDA(true);
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Backend no disponible');
+      setHasRunEDA(false);
     } finally {
       setIsGeneratingEDA(false);
     }
@@ -73,6 +76,7 @@ export const EDATab: React.FC<EDATabProps> = ({
 
   const handleResetEDA = () => {
     playHoloClick(700);
+    setErrorMsg(null);
     setHasRunEDA(false);
   };
 
@@ -175,6 +179,26 @@ export const EDATab: React.FC<EDATabProps> = ({
           )}
         </button>
       </div>
+
+      {/* Aviso de Backend no disponible */}
+      {errorMsg && (
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs font-mono animate-in fade-in ${
+          isLight ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span><strong>Aviso:</strong> Backend no disponible. No se pudo obtener el análisis exploratorio de datos de la API.</span>
+          </div>
+          <button
+            onClick={handleRunEDA}
+            className={`px-3 py-1 rounded-lg border font-mono-hud text-xs cursor-pointer ${
+              isLight ? 'bg-white border-rose-300 text-rose-700 hover:bg-rose-100' : 'bg-rose-900/50 border-rose-500/50 text-rose-200 hover:bg-rose-800/60'
+            }`}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* Banner de datos sintéticos */}
       <div className={`p-3.5 rounded-xl border flex items-center gap-3 text-xs font-mono ${

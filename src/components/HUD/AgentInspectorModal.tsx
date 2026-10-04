@@ -22,7 +22,7 @@ interface AgentInspectorModalProps {
   onFocusEntity: (x: number, y: number, z: number) => void;
 }
 
-export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
+export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
   worker,
   firm,
   onClose,
@@ -252,4 +252,4 @@ export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
       </div>
     </div>
   );
-};
+});

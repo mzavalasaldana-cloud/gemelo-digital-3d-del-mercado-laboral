@@ -16,13 +16,14 @@ import {
 import { 
   COUNTRY_PROFILES, 
   INITIAL_POLICY_STATE, 
-  MOCK_FIRMS, 
-  MOCK_SIM_RUNS,
-  MOCK_USERS
+  DEMO_FIRMS, 
+  DEMO_USERS
 } from './data/mockData';
 import { TopNavigationBar } from './components/HUD/TopNavigationBar';
 import { DashboardView } from './components/Views/DashboardView';
-import { DigitalTwin3DView } from './components/Views/DigitalTwin3DView';
+const DigitalTwin3DView = React.lazy(() => 
+  import('./components/Views/DigitalTwin3DView').then(m => ({ default: m.DigitalTwin3DView }))
+);
 import { AIEngineView } from './components/Views/AIEngineView';
 import { DatasetsReportsView } from './components/Views/DatasetsReportsView';
 import { UserManagementModal } from './components/Modals/UserManagementModal';
@@ -220,16 +221,17 @@ export default function App() {
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
 
   // 6. Entity Collections & Selection (Initialized synchronously)
-  const [firms, setFirms] = useState<StructuralFirm[]>(MOCK_FIRMS);
+  const [firms, setFirms] = useState<StructuralFirm[]>(DEMO_FIRMS);
   const [workers, setWorkers] = useState<WorkerAgent[]>(() => 
-    createWorkersPopulation('KENYA', COUNTRY_PROFILES['KENYA'].baseInformalityRate, MOCK_FIRMS)
+    createWorkersPopulation('KENYA', COUNTRY_PROFILES['KENYA'].baseInformalityRate, DEMO_FIRMS)
   );
   const [selectedWorker, setSelectedWorker] = useState<WorkerAgent | null>(null);
   const [selectedFirm, setSelectedFirm] = useState<StructuralFirm | null>(null);
-  const [simRuns, setSimRuns] = useState<SimulationRun[]>(MOCK_SIM_RUNS);
+  const [simRuns, setSimRuns] = useState<SimulationRun[]>([]);
+  const [backendOffline, setBackendOffline] = useState<boolean>(false);
 
   // 7. Global Utilities Modals & RBAC Users State
-  const [users, setUsers] = useState<UserAccount[]>(MOCK_USERS);
+  const [users, setUsers] = useState<UserAccount[]>(DEMO_USERS);
   const [isUsersOpen, setIsUsersOpen] = useState(false);
   const [isILOOpen, setIsILOOpen] = useState(false);
 
@@ -237,20 +239,30 @@ export default function App() {
   const [isDatasetLoaded, setIsDatasetLoaded] = useState<boolean>(true);
   const [loadedDatasetName, setLoadedDatasetName] = useState<string | null>('PLFS India Periodic Labour Force Survey 2023-24');
 
-  // Hydrate active dataset & simulation history on mount
+  // Hydrate active dataset & simulation history on mount from real API
   useEffect(() => {
-    fetchActiveDataset().then((ds) => {
-      if (ds && ds.is_loaded) {
-        setIsDatasetLoaded(true);
-        setLoadedDatasetName(ds.filename);
-      }
-    });
+    fetchActiveDataset()
+      .then((ds) => {
+        if (ds && ds.is_loaded) {
+          setIsDatasetLoaded(true);
+          setLoadedDatasetName(ds.filename);
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend active dataset unavailable:', err);
+        setBackendOffline(true);
+      });
 
-    fetchSimulationHistory().then((history) => {
-      if (history && history.length > 0) {
-        setSimRuns(history);
-      }
-    });
+    fetchSimulationHistory()
+      .then((history) => {
+        if (history && history.length > 0) {
+          setSimRuns(history);
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend simulation history unavailable:', err);
+        setBackendOffline(true);
+      });
   }, []);
 
   // Initialize and connect WebSocket
@@ -482,9 +494,9 @@ export default function App() {
     } else if (newScenario === 'BASELINE') {
       playHoloClick(800);
       setPolicyParams(INITIAL_POLICY_STATE);
-      setFirms(MOCK_FIRMS);
+      setFirms(DEMO_FIRMS);
       const baseInf = COUNTRY_PROFILES[country].baseInformalityRate;
-      setWorkers(createWorkersPopulation(country, baseInf, MOCK_FIRMS));
+      setWorkers(createWorkersPopulation(country, baseInf, DEMO_FIRMS));
     }
   };
 
@@ -541,6 +553,22 @@ export default function App() {
         isDatasetLoaded={isDatasetLoaded}
       />
 
+      {/* Backend Availability Alert Banner */}
+      {backendOffline && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-300 text-xs px-4 py-1.5 flex items-center justify-between z-30 shrink-0">
+          <div className="flex items-center gap-2 font-mono">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <span>Aviso: Backend no disponible. La API FastAPI en http://localhost:8000 no responde; los datos en tiempo real requieren la API.</span>
+          </div>
+          <button
+            onClick={() => setBackendOffline(false)}
+            className="text-amber-400 hover:text-amber-200 font-bold px-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Primary Dynamic View Routing */}
       <div className="flex-1 w-full h-full relative overflow-hidden">
         {/* ROUTE 1: 📊 DASHBOARD PRINCIPAL (Default 2D view, NO 3D canvas mounted) */}
@@ -561,36 +589,47 @@ export default function App() {
           />
         )}
 
-        {/* ROUTE 2: 🌐 GEMELO DIGITAL 3D (Dedicated 100% spatial viewport with minimal floating HUD) */}
+        {/* ROUTE 2: 🌐 GEMELO DIGITAL 3D (Dedicated 100% spatial viewport with minimal floating HUD, loaded lazily) */}
         {currentView === 'digital_twin_3d' && (
-          <DigitalTwin3DView
-            country={country}
-            month={month}
-            onMonthChange={setMonth}
-            year={year}
-            scenario={scenario}
-            onSelectScenario={handleSelectScenario}
-            policyParams={policyParams}
-            onChangePolicy={setPolicyParams}
-            workers={workers}
-            firms={firms}
-            selectedWorker={selectedWorker}
-            selectedFirm={selectedFirm}
-            onSelectWorker={setSelectedWorker}
-            onSelectFirm={setSelectedFirm}
-            metrics={currentMetrics}
-            policyWaveTrigger={policyWaveTrigger}
-            onTriggerPolicyWave={() => {
-              playPolicyWaveSound();
-              setPolicyWaveTrigger((prev) => prev + 1);
-            }}
-            isPlayingTimeline={isPlayingTimeline}
-            onTogglePlay={() => setIsPlayingTimeline(!isPlayingTimeline)}
-            playbackSpeed={playbackSpeed}
-            onChangeSpeed={setPlaybackSpeed}
-            language={language}
-            theme={theme}
-          />
+          <React.Suspense
+            fallback={
+              <div className="flex flex-col items-center justify-center h-full w-full bg-[#05070c] text-cyan-400 gap-4">
+                <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin" />
+                <div className="text-sm font-mono-hud tracking-wider text-slate-300">
+                  Cargando Gemelo Digital 3D & Three.js...
+                </div>
+              </div>
+            }
+          >
+            <DigitalTwin3DView
+              country={country}
+              month={month}
+              onMonthChange={setMonth}
+              year={year}
+              scenario={scenario}
+              onSelectScenario={handleSelectScenario}
+              policyParams={policyParams}
+              onChangePolicy={setPolicyParams}
+              workers={workers}
+              firms={firms}
+              selectedWorker={selectedWorker}
+              selectedFirm={selectedFirm}
+              onSelectWorker={setSelectedWorker}
+              onSelectFirm={setSelectedFirm}
+              metrics={currentMetrics}
+              policyWaveTrigger={policyWaveTrigger}
+              onTriggerPolicyWave={() => {
+                playPolicyWaveSound();
+                setPolicyWaveTrigger((prev) => prev + 1);
+              }}
+              isPlayingTimeline={isPlayingTimeline}
+              onTogglePlay={() => setIsPlayingTimeline(!isPlayingTimeline)}
+              playbackSpeed={playbackSpeed}
+              onChangeSpeed={setPlaybackSpeed}
+              language={language}
+              theme={theme}
+            />
+          </React.Suspense>
         )}
 
         {/* ROUTE 3: 🧠 MOTOR IA (Dedicated algorithm audit & explainability) */}

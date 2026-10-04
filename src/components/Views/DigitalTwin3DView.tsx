@@ -57,7 +57,32 @@ interface DigitalTwin3DViewProps {
   theme?: AppTheme;
 }
 
-export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = ({
+// Componente HUD memoizado para evitar re-renderizados innecesarios del panel en cada tick
+const LiveMetricsPill = React.memo<{ metrics: StructuralMetrics }>(({ metrics }) => (
+  <div className="hud-glass px-4 py-2 rounded-2xl border border-cyan-500/30 flex items-center gap-4 text-xs font-mono-hud shadow-xl backdrop-blur-md">
+    <div className="flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+      <span className="text-slate-400">Informalidad:</span>
+      <span className="text-cyan-300 font-bold text-sm">{metrics.informalityRate.toFixed(1)}%</span>
+    </div>
+    <div className="h-4 w-px bg-slate-700" />
+    <div className="flex items-center gap-2">
+      <span className="text-slate-400">Gini:</span>
+      <span className="text-indigo-300 font-bold text-sm">{metrics.giniIndex.toFixed(3)}</span>
+    </div>
+    <div className="h-4 w-px bg-slate-700" />
+    <div className="flex items-center gap-2">
+      <span className="text-slate-400">OIT Decente:</span>
+      <span className="text-emerald-400 font-bold text-sm">{metrics.decentWorkIndex}/100</span>
+    </div>
+    <div className="h-4 w-px bg-slate-700" />
+    <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-mono">
+      Datos de demostración
+    </span>
+  </div>
+));
+
+export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
   country,
   month,
   onMonthChange,
@@ -116,23 +141,7 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = ({
 
       {/* Floating Minimal HUD: Top-Right Live Metrics Pill */}
       <div className="absolute top-20 right-6 z-20 pointer-events-auto flex items-center gap-2">
-        <div className="hud-glass px-4 py-2 rounded-2xl border border-cyan-500/30 flex items-center gap-4 text-xs font-mono-hud shadow-xl backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-slate-400">Informalidad:</span>
-            <span className="text-cyan-300 font-bold text-sm">{metrics.informalityRate.toFixed(1)}%</span>
-          </div>
-          <div className="h-4 w-px bg-slate-700" />
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Gini:</span>
-            <span className="text-indigo-300 font-bold text-sm">{metrics.giniIndex.toFixed(3)}</span>
-          </div>
-          <div className="h-4 w-px bg-slate-700" />
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">OIT Decente:</span>
-            <span className="text-emerald-400 font-bold text-sm">{metrics.decentWorkIndex}/100</span>
-          </div>
-        </div>
+        <LiveMetricsPill metrics={metrics} />
 
         {/* Legend Toggle Button */}
         <button
@@ -510,4 +519,4 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = ({
       />
     </div>
   );
-};
+});

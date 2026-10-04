@@ -19,7 +19,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { playHoloClick } from '../../utils/audioSynth';
-import { MOCK_USERS } from '../../data/mockData';
+import { DEMO_USERS } from '../../data/mockData';
 
 interface UserManagementModalProps {
   isOpen: boolean;
@@ -201,7 +201,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   // 6. RESTORE DEFAULT USERS
   const handleRestoreDefaults = () => {
     playHoloClick(750);
-    setUsers(MOCK_USERS);
+    setUsers(DEMO_USERS);
   };
 
   // Filtered users list
@@ -247,6 +247,9 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-950 text-rose-300 border-rose-700'
                 }`}>
                   CRUD ACTIVO
+                </span>
+                <span className="text-[10px] font-mono-hud px-2 py-0.5 rounded font-bold border bg-amber-500/10 text-amber-400 border-amber-500/30">
+                  Datos de demostración
                 </span>
               </div>
               <p className={`text-xs font-mono-hud ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
