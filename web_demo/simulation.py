@@ -12,6 +12,7 @@ import random
 import os
 import json
 import csv
+import functools
 from typing import Dict, Any, List, Optional, Tuple
 
 from itdt.model import ITDTModel
@@ -120,6 +121,7 @@ def terrain_elevation(x: float, z: float, country: str = "KENYA") -> float:
 
 # Cache en memoria de simulaciones completas ejecutadas por ITDTModel
 _SIMULATION_CACHE: Dict[Tuple[str, str, int], Dict[str, Any]] = {}
+_STRUCTURAL_METRICS_CACHE: Dict[Tuple[str, str, int, int], Dict[str, Any]] = {}
 
 
 def _get_or_run_itdt_model(country_code: str, scenario: str, seed: int = 20260) -> Dict[str, Any]:
@@ -184,16 +186,34 @@ def calculate_structural_metrics(
     """
     Computa las métricas estructurales conectadas directamente a ITDTModel y outputs/.
     Ninguna métrica proviene de fórmulas fijas; todas emergen de la simulación real de agentes.
+    Usa caché en memoria O(1) por (país, escenario, mes, semilla) para evitar recalcular en cada tick.
     """
     country_clean = country_code.upper() if country_code else "KENYA"
     if country_clean not in COUNTRY_BASELINES:
         country_clean = "KENYA"
 
-    sim_data = _get_or_run_itdt_model(country_clean, scenario, seed)
-    monthly_series = sim_data["monthly_series"]
+    sc_clean = scenario.upper().strip() if scenario else "A"
+    if sc_clean in ("BASELINE", "SCENARIO_A_REGISTRATION", "STATUS_QUO"):
+        sc_clean = "A"
+    elif sc_clean in ("SCENARIO_B_WORKER_SUBSIDY", "GOVTECH_MODERADO"):
+        sc_clean = "B1"
+    elif sc_clean in ("SCENARIO_E_AUTOMATION_SHOCK", "GOVTECH_INTENSIVO"):
+        sc_clean = "B2"
+    elif sc_clean not in SCENARIO_CONFIGS:
+        sc_clean = "A"
 
     # Mes relativo a la política: 0 a 120 (en la simulación con burn-in: 96 + month)
     clamped_month = max(0, min(120, int(month)))
+
+    # Consulta de caché rápido si no hay policy_params modificados
+    if not policy_params:
+        cache_key = (country_clean, sc_clean, clamped_month, seed)
+        if cache_key in _STRUCTURAL_METRICS_CACHE:
+            return _STRUCTURAL_METRICS_CACHE[cache_key]
+
+    sim_data = _get_or_run_itdt_model(country_clean, sc_clean, seed)
+    monthly_series = sim_data["monthly_series"]
+
     step_idx = min(len(monthly_series) - 1, 96 + clamped_month)
     rec = monthly_series[step_idx]
 
@@ -280,8 +300,12 @@ def calculate_structural_metrics(
         "phaseProgress": round(clamped_month / 120.0, 3),
         "source": "ITDTModel (Canonical Vectorized ABM - SMM Calibrated)",
     }
+    if not policy_params:
+        _STRUCTURAL_METRICS_CACHE[(country_clean, sc_clean, clamped_month, seed)] = res
+    return res
 
 
+@functools.lru_cache(maxsize=1)
 def load_outputs_data() -> Dict[str, Any]:
     """
     Carga de forma transparente las tablas y resultados oficiales almacenados en outputs/.

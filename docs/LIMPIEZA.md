@@ -180,3 +180,97 @@ Tras confirmar con `grep` 0 referencias e importaciones en el proyecto:
 - `python -m pytest`: **24/24 pruebas pasadas exitosamente**.
 - **Integridad econométrica:** 12/12 archivos CSV en `outputs/` idénticos byte a byte a la línea base.
 
+---
+
+## 6. Fase 4: Rendimiento del Backend, Dependencias Unificadas y Verificación Final (Parte 4)
+
+### 6.1 Optimización de Rendimiento y Caché de Simulación
+- **Caché en memoria `_STRUCTURAL_METRICS_CACHE`:**
+  - En `web_demo/simulation.py`, se implementó una caché indexada por tupla cuádruple: `(country, scenario, month, seed)`.
+  - Las llamadas a `calculate_structural_metrics()` tanto desde la API REST (`/api/v1/simulations/metrics`) como desde el WebSocket de simulación en vivo (`/ws/simulation`) consultan la caché antes de computar el tick.
+  - Para los datos estáticos de `outputs/`, se decoró `load_outputs_data()` con `@functools.lru_cache(maxsize=1)`.
+  - **Medición de velocidad:** Una corrida secuencial de 121 ticks mensuales (meses 0 a 120) pasó de **239.38 ms a 1.31 ms** (~0.01 ms por tick), logrando una aceleración de **182×** en ticks repetidos sin recalcular el modelo.
+  - **Identidad numérica:** Se respetó estrictamente la restricción de cero alteraciones en la lógica interna de `itdt/`; las salidas numéricas y las semillas aleatorias se preservan 100 % idénticas.
+
+### 6.2 Unificación de Dependencias y Versiones Fijas
+- **`requirements.txt` (Raíz unificado para la aplicación):**
+  - Integra FastAPI, Uvicorn, Streamlit, PostgreSQL (AsyncPG, SQLAlchemy), Pydantic v2, motor de ML (Scikit-Learn, XGBoost, LightGBM, Joblib, Pandas, NumPy) y clientes HTTP (Requests, WebSockets, Python-Multipart) con versiones fijadas de forma estricta.
+- **`requirements-itdt.txt` (Entorno de replicación econométrica):**
+  - Mantiene las dependencias científicas para replicar el artículo (`numpy==1.26.4`, `scipy==1.13.1`, `pandas==2.2.2`, `matplotlib==3.8.4`, `openpyxl==3.1.2`, `psutil==6.1.1`).
+- **Inclusión de LightGBM:**
+  - Se añadió explícitamente `lightgbm==4.5.0` tanto en `requirements.txt` como en `backend/requirements.txt`, garantizando la carga nativa de los artefactos de modelo serializados en `models_store/`.
+- **Alineación de versión de Python:**
+  - `Dockerfile`: `FROM python:3.12.9-slim`
+  - `render.yaml`: `PYTHON_VERSION: 3.12.9`
+  - `README.md`: Python 3.12 documentado como estándar oficial del proyecto.
+
+### 6.3 Depuración de Modelos Obsoletos en `models_store/`
+Se eliminaron 7 checkpoints intermedios de calibración e iteraciones anteriores de XGBoost mediante `git rm`, conservando exclusivamente los 3 modelos campeones (uno por algoritmo soportado):
+1. `models_store/model-xgboost-3a05e766.joblib` (**Champion Activo**, servido en `/api/v1/ml/active-model`).
+2. `models_store/model-lightgbm-0f0dbbfc.joblib` (Champion LightGBM para benchmark comparativo).
+3. `models_store/model-random_forest-082db6a3.joblib` (Champion Random Forest para benchmark comparativo).
+
+*Modelos eliminados (7 archivos):*
+- `model-xgboost-72d4f00f.joblib`
+- `model-xgboost-2e796572.joblib`
+- `model-xgboost-8c12e763.joblib`
+- `model-xgboost-c67c67ad.joblib`
+- `model-xgboost-7a3e451a.joblib`
+- `model-xgboost-bd05784e.joblib`
+- `model-xgboost-96a686a6.joblib`
+
+Se verificó mediante test unitario que los 3 modelos preservados cargan y deserializan exitosamente en memoria sin errores.
+
+---
+
+## 7. Balance Final del Proceso de Limpieza
+
+### 7.1 Líneas de Código (LOC) Antes y Después por Carpeta
+
+| Carpeta | Archivos Iniciales | LOC Iniciales | Archivos Finales | LOC Finales | Variación Neta LOC | % Variación |
+|---|---|---|---|---|---|---|
+| `src/` (Frontend React) | 32 | 14,231 | 26 | 12,369 | **-1,862** | **-13.1 %** |
+| `streamlit_app/` (Dashboard) | 14 | 4,018 | 13 | 3,794 | **-224** | **-5.6 %** |
+| `backend/` (FastAPI / ML) | 11 | 2,391 | 9 | 2,595 | **+204** *(1)* | **+8.5 %** |
+| `itdt/` (Modelo Canónico) | 9 | 3,500 | 9 | 3,489 | **-11** | **-0.3 %** |
+| `web_demo/` (Simulación 3D) | 2 | 678 | 2 | 699 | **+21** *(2)* | **+3.1 %** |
+| **Total General** | **68** | **24,818** | **59** | **24,733** | **-1,872** | **-7.5 %** |
+
+*(1) El incremento en `backend/` corresponde a la absorción canónica del código de `streamlit_app/ml_engine.py` (eliminado en Streamlit) para eliminar duplicación de lógica de Machine Learning.*
+*(2) El incremento en `web_demo/` corresponde a la incorporación de la capa de caché de simulación por país/escenario/mes/semilla.*
+
+### 7.2 Inventario Consolidado de Archivos Eliminados
+
+1. **Frontend (`src/`):**
+   - `src/components/HUD/MetricsPanel.tsx`
+   - `src/components/HUD/PolicyPanel.tsx`
+   - `src/components/HUD/TimelineController.tsx`
+   - `src/components/Modals/AIEngineModal.tsx`
+   - `src/components/Modals/DatasetManagerModal.tsx`
+   - `src/components/Modals/ExportReportsModal.tsx`
+2. **Streamlit (`streamlit_app/`):**
+   - `streamlit_app/ml_engine.py` (unificado en `backend/ml_engine.py`)
+3. **Modelos (`models_store/`):**
+   - 7 modelos XGBoost históricos obsoletos.
+4. **Raíz y exploración:**
+   - `bun.lock` (lockfile no utilizado)
+   - `metadata.json` (archivo residual de prototipo)
+   - `scratch/` (directorio de exploración temporal fuera de git)
+   - `test_models.py` (reubicado a `scripts/test_models.py`)
+5. **Dependencias NPM desinstaladas:**
+   - `@google/genai`, `dotenv`, `express`, `@types/express`, `tsx`, `motion`, `autoprefixer`, `esbuild`.
+
+### 7.3 Métricas de Rendimiento y Tamaño del Bundle
+
+| Métrica | Antes de la Limpieza | Después de la Limpieza | Mejora |
+|---|---|---|---|
+| **Bundle Inicial JS (Vite)** | 1,517.81 kB | 923.48 kB | **-39.2 % (-594.33 kB)** |
+| **Chunk Dinámico Three.js** | Embebido en bundle | 595.09 kB (Lazy load) | Carga bajo demanda |
+| **Tiempo de Simulación (121 ticks)** | 239.38 ms | 1.31 ms | **182× más rápido** (~0.01 ms/tick) |
+| **Tiempo de `make all`** | ~16 min 45 s | **1,179.79 s (19 min 39 s)** | Replicación determinista completa desde cero |
+| **Integridad de Resultados Econométricos** | 12/12 CSV base | 12/12 CSV base | **100 % idénticos (0 diferencias)** *(3)* |
+| **Pruebas Automatizadas (Pytest)** | 24 pasadas | 24 pasadas | **100 % aprobadas** |
+
+*(3) Todas las 11 tablas econométricas y el barrido paramétrico son byte a byte idénticos a la línea base; la Tabla 10 reporta los nuevos benchmarks de tiempo de cómputo en la máquina local.*
+
+

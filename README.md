@@ -25,13 +25,54 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
    - Catálogo de datasets sintéticos y generador de informes descargables en PDF, Excel y HTML.
    - Selector de temas (Modo Claro nativo y Modo Oscuro).
 
-3. **Backend de Inferencia & API (FastAPI + Python 3.11):**
+3. **Backend de Inferencia & API (FastAPI + Python 3.12):**
    - Endpoints REST para ingesta de datos, previsualización tabular y análisis exploratorio.
-   - Conexión WebSocket para streaming en tiempo real de coordenadas 3D y métricas de simulación.
+   - Conexión WebSocket para streaming en tiempo real de coordenadas 3D y métricas de simulación con caché en memoria.
 
-4. **Motor de Simulación Compartido (`itdt/`):**
-   - Paquete Python modular (`itdt/simulation.py`) que centraliza el cálculo de métricas estructurales, elevación topográfica y cinemática de agentes.
+4. **Motor de Simulación Compartido (`web_demo/` & `itdt/`):**
+   - Módulo `web_demo/simulation.py` que centraliza el cálculo de métricas estructurales conectadas a `itdt.model.ITDTModel`, elevación topográfica y cinemática de agentes.
    - Adaptadores compatibles para FastAPI (`backend/simulation_engine.py`) y Streamlit (`streamlit_app/simulation_engine.py`).
+
+---
+
+## 📁 Estructura del Repositorio
+
+```text
+.
+├── backend/                  # API REST FastAPI, WebSocket de simulación, motor ML y modelos SQLAlchemy
+│   ├── main.py               # Servidor principal FastAPI y endpoints
+│   ├── ml_engine.py          # Pipelines de Machine Learning (XGBoost, LightGBM, Random Forest, SHAP)
+│   ├── database.py           # Conexión asíncrona a PostgreSQL / SQLite
+│   └── models.py             # Modelos de base de datos (SimulationRunModel, DatasetModel)
+├── streamlit_app/            # Cuadros de mando ejecutivos en Streamlit
+│   ├── app.py                # Punto de entrada de la aplicación Streamlit
+│   ├── views/                # Vistas: Dashboard, Gemelo 3D, Motor IA, Datasets, OIT, Copiloto
+│   └── utils/                # Generador de reportes (PDF, Excel, HTML) y componentes de UI
+├── web_demo/                 # Motor de simulación para web y puente con el modelo canónico
+│   └── simulation.py         # SimulationEngine (partículas 3D) y calculate_structural_metrics
+├── itdt/                     # Paquete canónico del modelo basado en agentes (SMM Calibrado)
+│   ├── model.py              # ITDTModel: agentes trabajadores y firmas con burn-in de 96 meses
+│   ├── parameters.py         # COUNTRY_DATABASE y parámetros fijos del artículo
+│   ├── metrics.py            # Métricas mensuales, Gini y gradientes distributivos
+│   ├── calibrate.py          # Calibración SMM por bisección anidada 9x9
+│   ├── experiments.py        # Escenarios A, B1, B2, C, D (R=40 réplicas, bootstrap)
+│   ├── loco.py               # Validación Leave-One-Country-Out fuera de muestra
+│   └── cli.py                # Orquestador de replicación (make all, make smoke, etc.)
+├── src/                      # Frontend interactivo React 19 + Vite + Three.js + Tailwind CSS
+│   ├── components/           # Vistas (Dashboard, Gemelo 3D con carga perezosa, Motor IA, Datasets)
+│   ├── data/                 # mockData.ts y aiEngineMockData.ts (conectados a API con aviso de desconexión)
+│   └── services/             # api.ts (cliente HTTP REST y WebSocket para simulación en vivo)
+├── data/                     # Datos oficiales de calibración (data/ilostat_s_F.csv)
+├── data_store/               # Almacenamiento local de datasets subidos
+├── models_store/             # Artefactos entrenados serializados (XGBoost, LightGBM, Random Forest)
+├── outputs/                  # Tablas 2–12 y Figuras 4–7 generadas por el modelo econométrico
+├── tests/                    # Suite de 24 pruebas pytest (unitarias, integración y metamórficas)
+├── docs/                     # Diagnóstico técnico, tablas del artículo y registro de limpieza
+├── requirements.txt          # Requisitos fijados para la aplicación (backend + Streamlit)
+├── requirements-itdt.txt     # Requisitos fijados para la replicación del modelo ITDT
+├── Makefile                  # Objetivos make para replicación en Linux/macOS
+└── make.bat                  # Script de conveniencia para ejecutar make en Windows
+```
 
 ---
 
@@ -40,7 +81,7 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
 ```
 ┌─────────────────────────────────┐       ┌─────────────────────────────────┐
 │        Vercel (Frontend)        │       │         Render (Backend)        │
-│   React 19 + Vite + Three.js    │ ────> │ FastAPI + Python 3.11 + Uvicorn │
+│   React 19 + Vite + Three.js    │ ────> │ FastAPI + Python 3.12 + Uvicorn │
 │  https://<tu-app>.vercel.app    │ <──── │ https://<tu-api>.onrender.com   │
 └─────────────────────────────────┘       └─────────────────────────────────┘
                 │                                         │
@@ -74,7 +115,7 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
 
 ### 3. Dashboard Streamlit en Streamlit Cloud
 1. Accede a [share.streamlit.io](https://share.streamlit.io/).
-2. Conecta el repositorio (`gemelo-digital-3d-del-mercado-laboral`) y la rama deseada (`main` o `itdt-articulo`).
+2. Conecta el repositorio (`gemelo-digital-3d-del-mercado-laboral`) y la rama deseada (`main` o `limpieza`).
 3. Especifica como archivo principal: `app.py`.
 
 ---
@@ -83,11 +124,11 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
 
 ### Prerrequisitos
 - Node.js 18+ y npm
-- Python 3.10+
+- Python 3.12+ (o 3.10+)
 
 ### 1. Iniciar Backend (FastAPI)
 ```bash
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 uvicorn backend.main:app --reload --port 8000
 # Documentación interactiva Swagger: http://localhost:8000/docs
 ```
@@ -103,6 +144,11 @@ npm run dev
 ```bash
 streamlit run app.py
 # Dashboard disponible en: http://localhost:8501
+```
+
+### 4. Ejecutar Replicación del Modelo
+```bash
+make all      # o bien: python -m itdt.cli all
 ```
 
 ---

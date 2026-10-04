@@ -1,4 +1,4 @@
-# Requisitos fijados para el backend FastAPI y motor de Machine Learning
+# Requisitos exactos para la plataforma web completa (FastAPI Backend + Streamlit Dashboard + ML Engine)
 # Probado y validado en Python 3.12 / 3.14
 fastapi==0.115.8
 uvicorn[standard]==0.34.0
@@ -19,3 +19,5 @@ xgboost==2.1.4
 lightgbm==4.5.0
 shap==0.46.0
 joblib==1.4.2
+streamlit==1.42.1
+plotly==6.0.0
