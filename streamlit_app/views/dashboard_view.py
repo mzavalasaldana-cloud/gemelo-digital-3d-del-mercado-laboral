@@ -94,22 +94,23 @@ def render_dashboard_view():
             badge="Equidad"
         )
     with c3:
+        base_gini = metrics.get("baseGiniIndex", profile.get("baseGini", 0.35))
         render_metric_card(
             label="Índice de Gini",
             value=f"{metrics['giniIndex']}",
-            delta=f"Base: {profile['baseGini']}",
-            delta_positive=(metrics['giniIndex'] <= profile['baseGini']),
+            delta=f"Base: {base_gini}",
+            delta_positive=(metrics['giniIndex'] <= base_gini),
             icon="⚖️",
-            badge="Gini"
+            badge="Agentes ITDT"
         )
     with c4:
         render_metric_card(
             label="Trabajo Decente",
             value=f"{metrics['decentWorkIndex']}/100",
-            delta="OIT Target 2030",
+            delta="Indicador ilustrativo, no forma parte del artículo",
             delta_positive=True,
             icon="🛡️",
-            badge="ODS 8"
+            badge="Ilustrativo"
         )
     with c5:
         exit_rate = metrics.get("annualExitRate", 0.0)
@@ -353,12 +354,13 @@ def render_dashboard_view():
             gini_val = metrics["giniIndex"]
             alpha = (1.0 + gini_val) / max(0.01, (1.0 - gini_val))
             lorenz_actual = p_pts ** alpha
-            base_alpha = (1.0 + profile["baseGini"]) / max(0.01, (1.0 - profile["baseGini"]))
+            base_gini_val = metrics.get("baseGiniIndex", profile.get("baseGini", 0.35))
+            base_alpha = (1.0 + base_gini_val) / max(0.01, (1.0 - base_gini_val))
             lorenz_baseline = p_pts ** base_alpha
 
             fig_lorenz = go.Figure()
             fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=p_pts*100, mode='lines', name='Igualdad Perfecta', line=dict(color='#64748b', dash='dash')))
-            fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_baseline*100, mode='lines', name=f'Línea Base (Gini {profile["baseGini"]})', line=dict(color='#f59e0b')))
+            fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_baseline*100, mode='lines', name=f'Línea Base (Gini {base_gini_val})', line=dict(color='#f59e0b')))
             fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_actual*100, mode='lines', name=f'Simulado ({scenario} Gini {gini_val})', line=dict(color='#00f0ff', width=3)))
 
             fig_lorenz.update_layout(

@@ -431,6 +431,11 @@ class ITDTModel:
         # PASO 7: REGISTRO DE MÉTRICAS MENSUALES (si está habilitado)
         # -------------------------------------------------------------
         if record_metrics:
+            care_penalty = (
+                np.maximum(0.0, 1.0 - self.gamma_0 * (self.H_care / 48.0))
+                if (p.care_enabled and self.gamma_0 > 0)
+                else np.ones_like(self.h)
+            )
             record = compute_monthly_metrics(
                 month=t,
                 is_burn_in=not in_policy,
@@ -450,6 +455,7 @@ class ITDTModel:
                 T_k=T_k,
                 willing_workers=willing_workers,
                 precomputed_bins=self.precomputed_bins,
+                care_penalty=care_penalty,
             )
             self.monthly_history.append(record)
             return record

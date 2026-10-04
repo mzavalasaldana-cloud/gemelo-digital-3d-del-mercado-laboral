@@ -43,7 +43,7 @@ def render_ilo_decent_work_view():
                 </p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <span class="glow-badge badge-emerald">Índice Global: {metrics['decentWorkIndex']}/100</span>
+                <span class="glow-badge badge-emerald">Índice Global: {metrics['decentWorkIndex']}/100 (Indicador ilustrativo, no forma parte del artículo)</span>
                 <span class="glow-badge badge-cyan">{profile['flag']} {profile['name']}</span>
                 <span class="glow-badge badge-purple">Escenario {scenario}</span>
             </div>
@@ -76,7 +76,7 @@ def render_ilo_decent_work_view():
     # 4 Quick KPIs
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        render_metric_card("Cumplimiento Global OIT", f"{metrics['decentWorkIndex']}%", icon="🛡️", badge="ODS 8")
+        render_metric_card("Cumplimiento Global OIT", f"{metrics['decentWorkIndex']}%", delta="Indicador ilustrativo, no forma parte del artículo", icon="🛡️", badge="Ilustrativo")
     with k2:
         render_metric_card("Tasa de Empleo Informal", f"{metrics['informalityRate']}%", delta="Meta OIT: 45%", delta_positive=(metrics['informalityRate'] <= 45), icon="📉")
     with k3:

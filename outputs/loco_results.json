@@ -1,0 +1,83 @@
+{
+  "fold_details": {
+    "KENYA": {
+      "country_key": "KENYA",
+      "country_name": "Kenia",
+      "F_obs": 90.19,
+      "M_obs": 83.13,
+      "s_F": 0.47635,
+      "best_gamma": 0.7,
+      "pred_F_itdt": 95.72725574520462,
+      "pred_F_mean_gap": 92.90666666666667,
+      "pred_F_mean_ratio": 93.05309009409419,
+      "pred_F_ols": 91.36382756377148,
+      "pred_F_no_care": 82.95489099340647,
+      "err_itdt": 5.537255745204618,
+      "err_mean_gap": 2.7166666666666686,
+      "err_mean_ratio": 2.86309009409419,
+      "err_ols": 1.1738275637714821,
+      "err_no_care": 7.235109006593532
+    },
+    "NIGERIA": {
+      "country_key": "NIGERIA",
+      "country_name": "Nigeria",
+      "F_obs": 96.39,
+      "M_obs": 89.92,
+      "s_F": 0.503765,
+      "best_gamma": 0.5,
+      "pred_F_itdt": 94.79307220490483,
+      "pred_F_mean_gap": 99.89333333333333,
+      "pred_F_mean_ratio": 100.0,
+      "pred_F_ols": 98.11327838768132,
+      "pred_F_no_care": 90.04899738319808,
+      "err_itdt": 1.5969277950951692,
+      "err_mean_gap": 3.5033333333333303,
+      "err_mean_ratio": 3.6099999999999994,
+      "err_ols": 1.7232783876813187,
+      "err_no_care": 6.341002616801916
+    },
+    "INDIA": {
+      "country_key": "INDIA",
+      "country_name": "India",
+      "F_obs": 91.93,
+      "M_obs": 86.76,
+      "s_F": 0.310517,
+      "best_gamma": 0.6,
+      "pred_F_itdt": 94.73788692105849,
+      "pred_F_mean_gap": 97.16666666666667,
+      "pred_F_mean_ratio": 97.8491591069844,
+      "pred_F_ols": 106.88095420336847,
+      "pred_F_no_care": 86.62939734092045,
+      "err_itdt": 2.8078869210584827,
+      "err_mean_gap": 5.236666666666665,
+      "err_mean_ratio": 5.919159106984395,
+      "err_ols": 14.950954203368468,
+      "err_no_care": 5.3006026590795585
+    },
+    "BANGLADESH": {
+      "country_key": "BANGLADESH",
+      "country_name": "Bangladés",
+      "F_obs": 95.77,
+      "M_obs": 78.08,
+      "s_F": 0.345203,
+      "best_gamma": 0.5,
+      "pred_F_itdt": 88.87993957113878,
+      "pred_F_mean_gap": 84.31333333333333,
+      "pred_F_mean_ratio": 83.7139858199632,
+      "pred_F_ols": 83.60256379056827,
+      "pred_F_no_care": 77.93587267186571,
+      "err_itdt": 6.890060428861219,
+      "err_mean_gap": 11.456666666666663,
+      "err_mean_ratio": 12.056014180036797,
+      "err_ols": 12.167436209431727,
+      "err_no_care": 17.834127328134286
+    }
+  },
+  "maes": {
+    "itdt": 4.208032722554872,
+    "mean_gap": 5.728333333333332,
+    "mean_ratio": 6.112065845278845,
+    "ols_s_F": 7.503874091063249,
+    "itdt_no_care": 9.177710402652323
+  }
+}

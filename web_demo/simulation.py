@@ -55,7 +55,8 @@ SCENARIO_CONFIGS: Dict[str, Dict[str, str]] = {
     },
 }
 
-# Líneas base empíricas tomadas de ILOSTAT y parámetros de cuidados de OIT (Tabla 2 del artículo)
+# Líneas base empíricas tomadas de ILOSTAT (Tabla 2 del artículo)
+# Salarios en USD son indicadores ilustrativos de interfaz (no forman parte del artículo)
 COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
     "KENYA": {
         "name": "Kenia",
@@ -64,9 +65,8 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 86.49,
         "baseInformalityFemale": 90.19,
         "baseInformalityMale": 83.13,
-        "baseGini": 0.408,
-        "formalWageBaselineUSD": 28.5,
-        "informalWageBaselineUSD": 14.2,
+        "formalWageBaselineUSD": 28.5,  # Indicador ilustrativo, no forma parte del artículo
+        "informalWageBaselineUSD": 14.2,  # Indicador ilustrativo, no forma parte del artículo
     },
     "NIGERIA": {
         "name": "Nigeria",
@@ -75,9 +75,8 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 93.18,
         "baseInformalityFemale": 96.39,
         "baseInformalityMale": 89.92,
-        "baseGini": 0.351,
-        "formalWageBaselineUSD": 22.0,
-        "informalWageBaselineUSD": 10.5,
+        "formalWageBaselineUSD": 22.0,  # Indicador ilustrativo, no forma parte del artículo
+        "informalWageBaselineUSD": 10.5,  # Indicador ilustrativo, no forma parte del artículo
     },
     "INDIA": {
         "name": "India",
@@ -86,9 +85,8 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 88.36,
         "baseInformalityFemale": 91.93,
         "baseInformalityMale": 86.76,
-        "baseGini": 0.357,
-        "formalWageBaselineUSD": 25.0,
-        "informalWageBaselineUSD": 11.8,
+        "formalWageBaselineUSD": 25.0,  # Indicador ilustrativo, no forma parte del artículo
+        "informalWageBaselineUSD": 11.8,  # Indicador ilustrativo, no forma parte del artículo
     },
     "BANGLADESH": {
         "name": "Bangladés",
@@ -97,9 +95,8 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 84.19,
         "baseInformalityFemale": 95.77,
         "baseInformalityMale": 78.08,
-        "baseGini": 0.324,
-        "formalWageBaselineUSD": 20.0,
-        "informalWageBaselineUSD": 9.4,
+        "formalWageBaselineUSD": 20.0,  # Indicador ilustrativo, no forma parte del artículo
+        "informalWageBaselineUSD": 9.4,  # Indicador ilustrativo, no forma parte del artículo
     },
 }
 
@@ -216,21 +213,27 @@ def calculate_structural_metrics(
     informal_count = total_pop_vis - formal_count
     unemployed_count = 0  # En el modelo canónico, quienes no obtienen vacante formal trabajan en el sector informal
 
-    # Cómputo de salarios promedio y Gini a partir de las funciones del modelo canónico
+    # 1. Coeficiente de Gini endógeno calculado desde los agentes (ingresos individuales de cada trabajador)
+    gini_sim = round(float(rec.get("gini_index", 0.0)), 4)
+    burn_in_end_idx = min(len(monthly_series) - 1, 96)
+    base_gini_sim = round(float(monthly_series[burn_in_end_idx].get("gini_index", gini_sim)), 4)
+
+    # Salarios promedio en unidades de modelo provenientes directamente de ITDTModel
+    avg_formal_wage_model = round(float(rec.get("mean_formal_wage_model", 0.0)), 4)
+    avg_informal_wage_model = round(float(rec.get("mean_informal_wage_model", 0.0)), 4)
+
+    # 2. Salarios en USD e Índice de Trabajo Decente:
+    # No forman parte del modelo canónico ni del artículo (que opera en unidades de modelo normalizadas).
+    # Se conservan los valores existentes como indicadores ilustrativos etiquetados explícitamente sin inventar valores nuevos:
+    ILLUSTRATIVE_NOTE = "Indicador ilustrativo, no forma parte del artículo"
     omega_F = 1.30
     omega_I = 1.00
     tau_w = 0.10
     base_formal_usd = baseline.get("formalWageBaselineUSD", 25.0)
     base_informal_usd = baseline.get("informalWageBaselineUSD", 10.0)
-
-    # El salario formal promedio responde a la productividad y la prima de formalización
     avg_formal_wage = round(base_formal_usd * (1.0 - tau_w) * (omega_F / 1.0), 2)
     avg_informal_wage = round(base_informal_usd * omega_I, 2)
-
-    # Índice de Gini computado analíticamente a partir de la brecha salarial observada
-    # Gini = (1 - formal_share) * informal_weight + formal_share * formal_weight
-    formal_share = (100.0 - inf_total) / 100.0
-    gini_sim = round(float(baseline["baseGini"] - formal_share * 0.05 + abs(gender_gap) * 0.002), 3)
+    decent_work_idx = int(round(max(20, min(95, 20.0 + (100.0 - inf_total) * 0.70 - abs(gender_gap) * 0.40))))
 
     # Recaudación fiscal del modelo canónico (impuesto a sociedades + contribuciones de seguridad social)
     fiscal_revenue = float(rec.get("fiscal_revenue", 0.0))
@@ -239,9 +242,6 @@ def calculate_structural_metrics(
 
     # Tasa anual de cierre de empresas por quiebra
     annual_exit_rate = float(rec.get("annual_exit_rate", 0.0))
-
-    # Índice de trabajo decente de la OIT (proporcional al empleo formal y a la paridad de género)
-    decent_work_idx = int(round(max(20, min(95, 20.0 + (100.0 - inf_total) * 0.70 - abs(gender_gap) * 0.40))))
 
     return {
         "country": country_clean,
@@ -255,12 +255,16 @@ def calculate_structural_metrics(
         "genderGap": round(gender_gap, 2),
         "giniIndex": gini_sim,
         "baseInformalityRate": baseline["baseInformality"],
-        "baseGiniIndex": baseline["baseGini"],
+        "baseGiniIndex": base_gini_sim,
         "formalWorkersCount": formal_count,
         "informalWorkersCount": informal_count,
         "unemployedCount": unemployed_count,
+        "avgFormalWageModel": avg_formal_wage_model,
+        "avgInformalWageModel": avg_informal_wage_model,
         "avgFormalWageUSD": avg_formal_wage,
         "avgInformalWageUSD": avg_informal_wage,
+        "formalWageUSDNote": ILLUSTRATIVE_NOTE,
+        "informalWageUSDNote": ILLUSTRATIVE_NOTE,
         "fiscalRevenueMillionUSD": round(fiscal_revenue, 2),
         "corporateTaxRevenue": round(corp_tax, 2),
         "laborContributionsRevenue": round(labor_tax, 2),
@@ -270,6 +274,7 @@ def calculate_structural_metrics(
         "formalVacancies": int(rec.get("formal_vacancies", 0)),
         "willingWorkersCount": int(rec.get("willing_workers_count", 0)),
         "decentWorkIndex": decent_work_idx,
+        "decentWorkIndexNote": ILLUSTRATIVE_NOTE,
         "digitalCoverage": round(float(rec.get("d_sys", 0.3)), 4),
         "temperature": round(float(rec.get("temperature", 0.5)), 4),
         "informalityByEducation": rec.get("informality_by_education", {}),

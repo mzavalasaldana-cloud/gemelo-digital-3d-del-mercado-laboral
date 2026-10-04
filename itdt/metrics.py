@@ -5,6 +5,19 @@ itdt.metrics: Métricas de evaluación, gradientes distributivos y registro mens
 from typing import Dict, Any, List, Optional
 import numpy as np
 
+def compute_gini(y: np.ndarray) -> float:
+    """Calcula el coeficiente de Gini exacto sobre el vector de ingresos y de los trabajadores."""
+    if len(y) == 0:
+        return 0.0
+    y_sorted = np.sort(np.maximum(1e-9, y))
+    n = len(y_sorted)
+    sum_y = float(np.sum(y_sorted))
+    if sum_y <= 0:
+        return 0.0
+    index = np.arange(1, n + 1)
+    return float((2.0 * np.sum(index * y_sorted)) / (n * sum_y) - (n + 1.0) / n)
+
+
 def compute_monthly_metrics(
     month: int,
     is_burn_in: bool,
@@ -24,6 +37,7 @@ def compute_monthly_metrics(
     T_k: float,
     willing_workers: np.ndarray,
     precomputed_bins: Optional[Dict[str, Any]] = None,
+    care_penalty: Optional[np.ndarray] = None,
 ) -> Dict[str, Any]:
     """
     Computa el registro mensual completo del modelo para el paso t.
@@ -96,6 +110,16 @@ def compute_monthly_metrics(
     formal_vacancies = int(np.sum(L[is_formal_firm]))
     formal_firms_count = int(np.sum(is_formal_firm))
 
+    # 5. Ingresos individuales de los trabajadores y coeficiente de Gini endógeno
+    care_factor = care_penalty if care_penalty is not None else np.ones_like(h)
+    net_formal_wage = omega_F * h * (1.0 - tau_w) * care_factor
+    informal_wage = 1.0 * h
+    worker_incomes = np.where(worker_is_formal, net_formal_wage, informal_wage)
+
+    gini_val = compute_gini(worker_incomes)
+    mean_formal_w = float(np.mean(net_formal_wage[worker_is_formal])) if np.any(worker_is_formal) else 0.0
+    mean_informal_w = float(np.mean(informal_wage[~worker_is_formal])) if np.any(~worker_is_formal) else 0.0
+
     r_fem = round(inf_female, 2)
     r_male = round(inf_male, 2)
     r_gap = round(r_fem - r_male, 2)
@@ -107,6 +131,9 @@ def compute_monthly_metrics(
         "informality_female": r_fem,
         "informality_male": r_male,
         "gender_gap": r_gap,
+        "gini_index": round(gini_val, 4),
+        "mean_formal_wage_model": round(mean_formal_w, 4),
+        "mean_informal_wage_model": round(mean_informal_w, 4),
         "annual_exit_rate": round(annual_exit_rate, 2),
         "firm_closures_count": int(num_exits),
         "formal_firms_count": formal_firms_count,
@@ -138,6 +165,7 @@ def aggregate_evaluation_window(monthly_records: List[Dict[str, Any]], window_si
     mean_inf_fem = float(np.mean([m["informality_female"] for m in eval_slice]))
     mean_inf_male = float(np.mean([m["informality_male"] for m in eval_slice]))
     mean_gap = float(np.mean([m["gender_gap"] for m in eval_slice]))
+    mean_gini = float(np.mean([m.get("gini_index", 0.0) for m in eval_slice]))
     mean_exit_rate = float(np.mean([m["annual_exit_rate"] for m in eval_slice]))
     mean_fiscal = float(np.mean([m["fiscal_revenue"] for m in eval_slice]))
 
@@ -162,6 +190,7 @@ def aggregate_evaluation_window(monthly_records: List[Dict[str, Any]], window_si
         "mean_informality_female": round(mean_inf_fem, 2),
         "mean_informality_male": round(mean_inf_male, 2),
         "mean_gender_gap": round(mean_gap, 2),
+        "mean_gini_index": round(mean_gini, 4),
         "mean_annual_exit_rate": round(mean_exit_rate, 2),
         "mean_fiscal_revenue": round(mean_fiscal, 2),
         "gradients": {

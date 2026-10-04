@@ -269,7 +269,7 @@ def run_loco_cross_validation(
     print(f"\nTabla 3 generada en {t3_csv} y {t3_md}")
     generate_loco_inputs_documentation(output_dir)
 
-    return {
+    loco_results = {
         "fold_details": fold_details,
         "maes": {
             "itdt": mae_itdt,
@@ -279,6 +279,12 @@ def run_loco_cross_validation(
             "itdt_no_care": mae_no_care,
         },
     }
+    loco_json_path = os.path.join(output_dir, "loco_results.json")
+    with open(loco_json_path, "w", encoding="utf-8") as f:
+        json.dump(loco_results, f, indent=2, ensure_ascii=False)
+    print(f"Resultados LOCO guardados en {loco_json_path}")
+
+    return loco_results
 
 
 def _worker_baseline_eval(args: Tuple[str, str, Dict[str, Any]]) -> Tuple[str, str, float, float, float]:
