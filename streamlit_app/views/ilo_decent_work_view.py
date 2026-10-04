@@ -18,11 +18,16 @@ from streamlit_app.utils.ui_components import (
 def render_ilo_decent_work_view():
     """Renders the ILO Decent Work Standards & SDG 8 assessment module."""
     country_code = st.session_state.get("country", "KENYA")
-    scenario = st.session_state.get("scenario", "BASELINE")
+    scenario = st.session_state.get("scenario", "A")
+    if scenario in ("BASELINE", "STATUS_QUO"):
+        scenario = "A"
+    st.session_state.scenario = scenario
+
     month = st.session_state.get("month", 0)
     policy_params = st.session_state.get("policy_params", {})
     profile = COUNTRY_PROFILES.get(country_code, COUNTRY_PROFILES["KENYA"])
     metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
+    gender_gap = metrics.get("genderGap", 0.0)
 
     # Header
     st.markdown(f"""
@@ -37,13 +42,36 @@ def render_ilo_decent_work_view():
                     Marco de Medición Oficial OIT &bull; 10 Dimensiones de Trabajo Decente &bull; Metas 2030
                 </p>
             </div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <span class="glow-badge badge-emerald">Índice Global: {metrics['decentWorkIndex']}/100</span>
                 <span class="glow-badge badge-cyan">{profile['flag']} {profile['name']}</span>
+                <span class="glow-badge badge-purple">Escenario {scenario}</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Scenario Quick Selector
+    scen_cols = st.columns([2, 4])
+    with scen_cols[0]:
+        sc_keys = ["A", "B1", "B2", "C", "D"]
+        sc_labels = {
+            "A": "A: Status Quo",
+            "B1": "B1: GovTech Moderado",
+            "B2": "B2: GovTech Sanciones 3×",
+            "C": "C: Red de Cuidados",
+            "D": "D: Integrado",
+        }
+        sel_sc = st.selectbox(
+            "Escenario Activo",
+            options=sc_keys,
+            format_func=lambda s: sc_labels.get(s, s),
+            index=sc_keys.index(scenario) if scenario in sc_keys else 0,
+            key="ilo_scenario_select"
+        )
+        if sel_sc != scenario:
+            st.session_state.scenario = sel_sc
+            st.rerun()
 
     # 4 Quick KPIs
     k1, k2, k3, k4 = st.columns(4)
@@ -52,9 +80,11 @@ def render_ilo_decent_work_view():
     with k2:
         render_metric_card("Tasa de Empleo Informal", f"{metrics['informalityRate']}%", delta="Meta OIT: 45%", delta_positive=(metrics['informalityRate'] <= 45), icon="📉")
     with k3:
-        render_metric_card("Brecha Salarial Género", "14.2%", delta="Meta OIT: 8%", delta_positive=False, icon="🚻")
+        render_metric_card("Brecha Salarial / Cuidado", f"{gender_gap:+.1f} p.p.", delta="F vs M", delta_positive=(abs(gender_gap) <= 3.0), icon="🚻")
     with k4:
-        render_metric_card("Cobertura Seg. Social", f"{int(55 + (100 - metrics['informalityRate'])*0.4)}%", delta="Meta OIT: 70%", delta_positive=True, icon="🏥")
+        formal_pct = round(100.0 - metrics['informalityRate'], 1)
+        render_metric_card("Cobertura Seg. Social", f"{formal_pct}%", delta="Empleo Formal", delta_positive=True, icon="🏥")
+
 
     st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 

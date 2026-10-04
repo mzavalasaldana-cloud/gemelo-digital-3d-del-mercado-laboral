@@ -192,45 +192,56 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = ({
       <div className="absolute top-20 left-6 z-20 pointer-events-auto space-y-2">
         <div className="hud-glass p-1.5 rounded-2xl border border-cyan-500/30 flex items-center gap-1.5 shadow-xl backdrop-blur-md">
           <button
-            onClick={() => onSelectScenario('BASELINE')}
+            onClick={() => onSelectScenario('A')}
             className={`px-3 py-1.5 rounded-xl text-xs font-mono-hud transition-all cursor-pointer ${
-              scenario === 'BASELINE'
+              scenario === 'A' || scenario === 'BASELINE'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 glow-cyan'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Línea Base
+            A: Status Quo
           </button>
           <button
-            onClick={() => onSelectScenario('SCENARIO_A_REGISTRATION')}
+            onClick={() => onSelectScenario('B1')}
             className={`px-3 py-1.5 rounded-xl text-xs font-mono-hud transition-all cursor-pointer ${
-              scenario === 'SCENARIO_A_REGISTRATION'
+              scenario === 'B1'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 glow-cyan'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            A: Formalización
+            B1: GovTech Moderado
           </button>
           <button
-            onClick={() => onSelectScenario('SCENARIO_B_WORKER_SUBSIDY')}
+            onClick={() => onSelectScenario('B2')}
             className={`px-3 py-1.5 rounded-xl text-xs font-mono-hud transition-all cursor-pointer ${
-              scenario === 'SCENARIO_B_WORKER_SUBSIDY'
+              scenario === 'B2'
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-400/50 glow-rose'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            B2: GovTech 3×
+          </button>
+          <button
+            onClick={() => onSelectScenario('C')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-mono-hud transition-all cursor-pointer ${
+              scenario === 'C'
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-400/50'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            C: Cuidados
+          </button>
+          <button
+            onClick={() => onSelectScenario('D')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-mono-hud transition-all cursor-pointer ${
+              scenario === 'D'
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            B: Subsidio MiPyME
+            D: Integrado
           </button>
-          <button
-            onClick={() => onSelectScenario('SCENARIO_E_AUTOMATION_SHOCK')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-mono-hud transition-all cursor-pointer ${
-              scenario === 'SCENARIO_E_AUTOMATION_SHOCK'
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-400/50'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            E: Choque Tech
-          </button>
+
 
           <div className="h-4 w-px bg-slate-700 mx-1" />
 

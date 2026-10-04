@@ -69,11 +69,17 @@ export interface PolicyParameters {
 }
 
 export type ScenarioPreset = 
+  | 'A'
+  | 'B1'
+  | 'B2'
+  | 'C'
+  | 'D'
   | 'BASELINE'
   | 'SCENARIO_A_REGISTRATION'
   | 'SCENARIO_B_WORKER_SUBSIDY'
   | 'SCENARIO_E_AUTOMATION_SHOCK'
   | 'CUSTOM';
+
 
 export interface StructuralMetrics {
   informalityRate: number; // %

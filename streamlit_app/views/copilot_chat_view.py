@@ -131,7 +131,11 @@ def fetch_copilot_chat_response(
 def render_copilot_chat_view():
     """Renderiza la interfaz del Copiloto IA de Economía Laboral en Streamlit."""
     country_code = st.session_state.get("country", "KENYA")
-    scenario = st.session_state.get("scenario", "BASELINE")
+    scenario = st.session_state.get("scenario", "A")
+    if scenario in ("BASELINE", "STATUS_QUO"):
+        scenario = "A"
+    st.session_state.scenario = scenario
+
     month = st.session_state.get("month", 0)
     policy_params = st.session_state.get("policy_params", {})
     metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
@@ -172,6 +176,7 @@ def render_copilot_chat_view():
                 <span class="glow-badge badge-emerald">PostgreSQL Conectado</span>
                 <span class="glow-badge badge-cyan">Langflow Desktop Online</span>
                 <span class="glow-badge badge-cyan">{profile['flag']} {profile['name']}</span>
+                <span class="glow-badge badge-purple">Escenario {scenario}</span>
                 <span class="glow-badge badge-emerald">Mes {month} (Año {2024 + month // 12})</span>
             </div>
         </div>
@@ -191,11 +196,12 @@ def render_copilot_chat_view():
 
     p_cols = st.columns(4)
     suggested = [
-        "¿Por qué la informalidad es de este nivel en este escenario?",
-        "¿Cuál es el impacto fiscal y el balance neto?",
-        "¿Qué efecto tiene la reducción de costos de registro?",
-        "¿Cómo se evalúa el cumplimiento de trabajo decente?",
+        "¿Qué escenario reduce más la informalidad entre A, B1, B2, C y D?",
+        "¿Cuál es el impacto distributivo de la red de cuidados (Escenario C)?",
+        "¿Por qué el Escenario B2 aumenta los cierres anuales de empresas?",
+        "¿Cómo equilibra el Escenario D la formalización con subsidio al DCC?",
     ]
+
     for i, col in enumerate(p_cols):
         with col:
             if st.button(suggested[i], key=f"sug_btn_{i}", use_container_width=True):

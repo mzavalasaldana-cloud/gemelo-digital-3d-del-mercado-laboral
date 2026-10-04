@@ -94,10 +94,11 @@ def main():
         )
         if selected_country != current_country:
             st.session_state.country = selected_country
-            st.session_state.scenario = "BASELINE"
+            st.session_state.scenario = "A"
             st.session_state.month = 0
             play_holo_sound_js("wave")
             st.rerun()
+
 
         st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 

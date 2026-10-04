@@ -404,62 +404,81 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </span>
               <div className="grid grid-cols-1 gap-1.5">
                 <button
-                  onClick={() => onSelectScenario('BASELINE')}
+                  onClick={() => onSelectScenario('A')}
                   className={`p-2.5 rounded-xl text-left text-xs font-mono-hud transition-all border flex items-center justify-between cursor-pointer ${
-                    scenario === 'BASELINE'
-                      ? isLight ? 'bg-sky-50 text-sky-900 border-sky-400 shadow-sm' : 'bg-cyan-500/20 text-cyan-300 border-cyan-400 glow-cyan'
-                      : isLight ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <span className="font-medium">{t('scenarioBaseline', language)}</span>
-                  {scenario === 'BASELINE' && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500" />}
-                </button>
-
-                <button
-                  onClick={() => onSelectScenario('SCENARIO_A_REGISTRATION')}
-                  className={`p-2.5 rounded-xl text-left text-xs font-mono-hud transition-all border flex items-center justify-between cursor-pointer ${
-                    scenario === 'SCENARIO_A_REGISTRATION'
+                    scenario === 'A' || scenario === 'BASELINE'
                       ? isLight ? 'bg-sky-50 text-sky-900 border-sky-400 shadow-sm' : 'bg-cyan-500/20 text-cyan-300 border-cyan-400 glow-cyan'
                       : isLight ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{t('scenarioRegistration', language)}</span>
-                    <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>-80% {language === 'en' ? 'registration cost' : 'costo formalización'}</span>
+                    <span className="font-medium">Escenario A: Status Quo</span>
+                    <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Inercial con cobertura digital básica (+0.15 p.p./mes)</span>
                   </div>
-                  {scenario === 'SCENARIO_A_REGISTRATION' && <Sparkles className="w-3.5 h-3.5 text-cyan-500" />}
+                  {(scenario === 'A' || scenario === 'BASELINE') && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500" />}
                 </button>
 
                 <button
-                  onClick={() => onSelectScenario('SCENARIO_B_WORKER_SUBSIDY')}
+                  onClick={() => onSelectScenario('B1')}
                   className={`p-2.5 rounded-xl text-left text-xs font-mono-hud transition-all border flex items-center justify-between cursor-pointer ${
-                    scenario === 'SCENARIO_B_WORKER_SUBSIDY'
-                      ? isLight ? 'bg-emerald-50 text-emerald-900 border-emerald-400 shadow-sm' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400'
+                    scenario === 'B1'
+                      ? isLight ? 'bg-sky-50 text-sky-900 border-sky-400 shadow-sm' : 'bg-cyan-500/20 text-cyan-300 border-cyan-400 glow-cyan'
                       : isLight ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{t('scenarioSubsidy', language)}</span>
-                    <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>$75/mo + 60% {language === 'en' ? 'skilling' : 'capacitación'}</span>
+                    <span className="font-medium">Escenario B1: GovTech Moderado</span>
+                    <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Auditoría digital κ×2.5 + facturación electrónica</span>
                   </div>
-                  {scenario === 'SCENARIO_B_WORKER_SUBSIDY' && <Sparkles className="w-3.5 h-3.5 text-emerald-500" />}
+                  {scenario === 'B1' && <Sparkles className="w-3.5 h-3.5 text-cyan-500" />}
                 </button>
 
                 <button
-                  onClick={() => onSelectScenario('SCENARIO_E_AUTOMATION_SHOCK')}
+                  onClick={() => onSelectScenario('B2')}
                   className={`p-2.5 rounded-xl text-left text-xs font-mono-hud transition-all border flex items-center justify-between cursor-pointer ${
-                    scenario === 'SCENARIO_E_AUTOMATION_SHOCK'
+                    scenario === 'B2'
                       ? isLight ? 'bg-rose-50 text-rose-900 border-rose-400 shadow-sm' : 'bg-rose-500/20 text-rose-300 border-rose-400'
                       : isLight ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium text-rose-600 dark:text-rose-300">{t('scenarioAutomation', language)}</span>
-                    <span className="text-[10px] text-rose-500/80">{language === 'en' ? 'Displacement from AI & tech' : 'Desplazamiento por automatización'}</span>
+                    <span className="font-medium text-rose-600 dark:text-rose-300">Escenario B2: GovTech Intensivo</span>
+                    <span className="text-[10px] text-rose-500/80">GovTech + triplicación de sanciones (μ0, μ1 × 3)</span>
                   </div>
-                  {scenario === 'SCENARIO_E_AUTOMATION_SHOCK' && <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
+                  {scenario === 'B2' && <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
+                </button>
+
+                <button
+                  onClick={() => onSelectScenario('C')}
+                  className={`p-2.5 rounded-xl text-left text-xs font-mono-hud transition-all border flex items-center justify-between cursor-pointer ${
+                    scenario === 'C'
+                      ? isLight ? 'bg-purple-50 text-purple-900 border-purple-400 shadow-sm' : 'bg-purple-500/20 text-purple-300 border-purple-400'
+                      : isLight ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-purple-600 dark:text-purple-300">Escenario C: Red de Cuidados</span>
+                    <span className="text-[10px] text-purple-500/80">Reducción 60% cuidado infantil no remunerado en mujeres</span>
+                  </div>
+                  {scenario === 'C' && <Sparkles className="w-3.5 h-3.5 text-purple-500" />}
+                </button>
+
+                <button
+                  onClick={() => onSelectScenario('D')}
+                  className={`p-2.5 rounded-xl text-left text-xs font-mono-hud transition-all border flex items-center justify-between cursor-pointer ${
+                    scenario === 'D'
+                      ? isLight ? 'bg-emerald-50 text-emerald-900 border-emerald-400 shadow-sm' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400'
+                      : isLight ? 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300' : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-emerald-600 dark:text-emerald-300">Escenario D: Integrado</span>
+                    <span className="text-[10px] text-emerald-500/80">B2 + C + subsidio 80% DCC (L≤10) + protección social</span>
+                  </div>
+                  {scenario === 'D' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
                 </button>
               </div>
+
             </div>
 
             {/* Policy Tuning Sliders */}

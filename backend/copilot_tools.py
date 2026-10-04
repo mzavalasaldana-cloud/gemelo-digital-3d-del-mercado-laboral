@@ -9,19 +9,24 @@ from .simulation_engine import SimulationEngine, COUNTRY_BASELINES
 
 def get_simulation_metrics(
     country: str = "KENYA",
-    scenario: str = "BASELINE",
+    scenario: str = "A",
     month: int = 0,
     policy_params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Calcula y extrae métricas estructurales verificadas y deterministas
     del motor de simulación para un país, escenario, mes y parámetros dados.
+    Conectado directamente a itdt.model.ITDTModel y outputs/.
     """
     country_clean = country.upper() if country else "KENYA"
     if country_clean not in COUNTRY_BASELINES:
         country_clean = "KENYA"
 
-    sim = SimulationEngine(country=country_clean, scenario=scenario or "BASELINE")
+    sc_clean = scenario.upper().strip() if scenario else "A"
+    if sc_clean == "BASELINE":
+        sc_clean = "A"
+
+    sim = SimulationEngine(country=country_clean, scenario=sc_clean)
     sim.month = max(0, min(120, int(month)))
     if policy_params:
         sim.set_policy_params(policy_params)
@@ -31,12 +36,15 @@ def get_simulation_metrics(
 
     return {
         "country": country_clean,
-        "scenario": scenario or "BASELINE",
+        "scenario": sc_clean,
         "month": sim.month,
         "year": 2024 + (sim.month // 12),
         "baseInformalityRate": baseline["baseInformality"],
         "baseGiniIndex": baseline["baseGini"],
         "informalityRate": metrics["informalityRate"],
+        "informalityFemale": metrics.get("informalityFemale", metrics["informalityRate"]),
+        "informalityMale": metrics.get("informalityMale", metrics["informalityRate"]),
+        "genderGap": metrics.get("genderGap", 0.0),
         "giniIndex": metrics["giniIndex"],
         "formalWorkersCount": metrics["formalWorkersCount"],
         "informalWorkersCount": metrics["informalWorkersCount"],
@@ -44,7 +52,9 @@ def get_simulation_metrics(
         "avgFormalWageUSD": metrics["avgFormalWageUSD"],
         "avgInformalWageUSD": metrics["avgInformalWageUSD"],
         "fiscalRevenueMillionUSD": metrics["fiscalRevenueMillionUSD"],
-        "policyCostMillionUSD": metrics["policyCostMillionUSD"],
+        "policyCostMillionUSD": metrics.get("policyCostMillionUSD", 0.0),
+        "annualExitRate": metrics.get("annualExitRate", 0.0),
         "decentWorkIndex": metrics["decentWorkIndex"],
         "policy_params": sim.policy_params,
     }
+

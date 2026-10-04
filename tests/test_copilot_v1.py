@@ -21,18 +21,17 @@ def test_simulation_metrics_deterministic():
     """Verifica que las métricas de simulación provengan del motor y sean deterministas."""
     metrics_kenya_m0 = get_simulation_metrics(country="KENYA", scenario="BASELINE", month=0)
     assert metrics_kenya_m0["country"] == "KENYA"
-    assert metrics_kenya_m0["informalityRate"] == 82.7
+    assert metrics_kenya_m0["informalityRate"] == 85.92
     assert metrics_kenya_m0["formalWorkersCount"] > 0
     assert metrics_kenya_m0["informalWorkersCount"] > 0
     assert "fiscalRevenueMillionUSD" in metrics_kenya_m0
     assert "decentWorkIndex" in metrics_kenya_m0
 
-    # Escenario con subsidio a mes 12 debe tener menor informalidad
+    # Escenario B2 a mes 12 debe tener menor informalidad que el Escenario A (Status Quo)
     metrics_kenya_m12_sub = get_simulation_metrics(
         country="KENYA",
-        scenario="SCENARIO_B_WORKER_SUBSIDY",
+        scenario="B2",
         month=12,
-        policy_params={"smeSubsidyUSDMonth": 75.0, "skillsTrainingCoverage": 60.0}
     )
     assert metrics_kenya_m12_sub["informalityRate"] < metrics_kenya_m0["informalityRate"]
 
@@ -43,7 +42,7 @@ def test_context_prompt_builder():
     prompt = build_simulation_context_prompt("¿Por qué la tasa es tan alta?", metrics)
     
     assert "KENYA" in prompt
-    assert "82.7%" in prompt
+    assert f"{metrics['informalityRate']}%" in prompt
     assert "¿Por qué la tasa es tan alta?" in prompt
     assert "DATOS VERIFICADOS DE LA SIMULACIÓN" in prompt
 
@@ -59,7 +58,7 @@ async def test_execute_copilot_query_success():
                     {
                         "results": {
                             "message": {
-                                "text": "La tasa de informalidad en Kenia es del 82.7% debido a fricciones estructurales."
+                                "text": "La tasa de informalidad en Kenia es del 85.92% debido a fricciones estructurales."
                             }
                         }
                     }
@@ -74,7 +73,7 @@ async def test_execute_copilot_query_success():
         mock_post.return_value = mock_resp
 
         res = await execute_copilot_query(
-            user_query="¿Por qué la informalidad es 82.7%?",
+            user_query="¿Por qué la informalidad es 85.92%?",
             session_id="sess-01",
             country="KENYA",
             scenario="BASELINE",
@@ -83,10 +82,11 @@ async def test_execute_copilot_query_success():
 
         assert res["session_id"] == "sess-01"
         assert res["source"] == "langflow"
-        assert "82.7%" in res["response"]
-        assert res["verified_metrics"]["informalityRate"] == 82.7
+        assert "85.92%" in res["response"]
+        assert res["verified_metrics"]["informalityRate"] == 85.92
         # Verificar que la API Key no está en la respuesta
         assert "sk-" not in str(res)
+
 
 
 @pytest.mark.asyncio

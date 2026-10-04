@@ -1,9 +1,9 @@
 """
 streamlit_app.simulation_engine: Adaptador del motor de simulación para Streamlit.
-Delega toda la lógica de simulación al paquete compartido 'itdt'.
+Delega la lógica visual a 'web_demo.simulation' conectada con 'itdt.model.ITDTModel' y 'outputs/'.
 """
 
-from itdt.simulation import (
+from web_demo.simulation import (
     calculate_structural_metrics,
     generate_worker_population,
     update_worker_positions_for_month,
@@ -11,6 +11,8 @@ from itdt.simulation import (
     MOCK_FIRMS_COORDS,
     terrain_elevation,
     SimulationEngine,
+    load_outputs_data,
+    SCENARIO_CONFIGS,
 )
 
 __all__ = [
@@ -21,4 +23,7 @@ __all__ = [
     "MOCK_FIRMS_COORDS",
     "terrain_elevation",
     "SimulationEngine",
+    "load_outputs_data",
+    "SCENARIO_CONFIGS",
 ]
+

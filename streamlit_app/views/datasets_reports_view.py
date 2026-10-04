@@ -25,11 +25,16 @@ from streamlit_app.utils.ui_components import (
 def render_datasets_reports_view():
     """Renders the Datasets Catalog, Profiler, and Executive Reports Generator."""
     country_code = st.session_state.get("country", "KENYA")
-    scenario = st.session_state.get("scenario", "BASELINE")
+    scenario = st.session_state.get("scenario", "A")
+    if scenario in ("BASELINE", "STATUS_QUO"):
+        scenario = "A"
+    st.session_state.scenario = scenario
+
     month = st.session_state.get("month", 0)
     policy_params = st.session_state.get("policy_params", {})
     profile = COUNTRY_PROFILES.get(country_code, COUNTRY_PROFILES["KENYA"])
     metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
+
 
     # Header
     st.markdown("""
@@ -121,17 +126,35 @@ def render_datasets_reports_view():
     with tab_reports:
         render_section_header("Generador Oficial de Informes y Resúmenes de Política", icon="📑", badge="Multi-Formato")
 
+        rep_scen_keys = ["A", "B1", "B2", "C", "D"]
+        rep_labels = {
+            "A": "Escenario A: Status Quo (Inercial)",
+            "B1": "Escenario B1: GovTech Moderado",
+            "B2": "Escenario B2: GovTech Intensivo (Sanciones 3×)",
+            "C": "Escenario C: Red de Cuidados (-60% Cuidado)",
+            "D": "Escenario D: Integrado (GovTech + Cuidados + Subsidio)",
+        }
+        report_scenario = st.selectbox(
+            "Seleccionar Escenario para el Informe",
+            options=rep_scen_keys,
+            format_func=lambda s: rep_labels.get(s, s),
+            index=rep_scen_keys.index(scenario) if scenario in rep_scen_keys else 0,
+            key="report_scenario_select"
+        )
+        report_metrics = calculate_structural_metrics(country_code, policy_params, report_scenario, month)
+
         st.markdown(f"""
         <div class="holo-card" style="margin-bottom: 16px;">
             <div style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-bottom: 6px;">
-                Resumen Ejecutivo: {profile['name']} &mdash; Escenario {scenario}
+                Resumen Ejecutivo: {profile['name']} &mdash; {rep_labels.get(report_scenario, report_scenario)}
             </div>
             <div style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.6;">
-                Informe técnico estructurado con evaluación de impacto fiscal, cumplimiento de directrices OIT (ODS 8), 
-                curva de concentración de Gini y recomendaciones estratégicas de políticas públicas.
+                Informe técnico estructurado con evaluación de impacto macroeconómico, cumplimiento OIT (ODS 8),
+                informalidad simulada ({report_metrics['informalityRate']}%) y balance fiscal (${report_metrics['fiscalRevenueMillionUSD']}M USD).
             </div>
         </div>
         """, unsafe_allow_html=True)
+
 
         # Generate Report Binaries
         pdf_bytes = generate_pdf_report(profile["name"], scenario, metrics, policy_params)

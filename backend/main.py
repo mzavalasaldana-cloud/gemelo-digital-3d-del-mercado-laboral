@@ -54,7 +54,12 @@ from .ml_engine import (
     DATA_STORE_DIR,
     MODELS_STORE_DIR,
 )
-from .simulation_engine import SimulationEngine
+from .simulation_engine import (
+    SimulationEngine,
+    calculate_structural_metrics,
+    load_outputs_data,
+    SCENARIO_CONFIGS,
+)
 
 # Configure Logging
 logging.basicConfig(
@@ -572,6 +577,34 @@ async def save_simulation_run(
     return {"status": "saved", "run": new_run.to_dict()}
 
 
+@app.get("/api/v1/simulation/scenarios")
+async def get_simulation_scenarios():
+    """
+    Retorna la configuración y definiciones de los escenarios canónicos
+    A, B1, B2, C y D del artículo, acompañados de las estimaciones en outputs/.
+    """
+    outputs = load_outputs_data()
+    return {
+        "scenarios": SCENARIO_CONFIGS,
+        "table5_levels": outputs.get("table5_levels", []),
+        "table6_changes": outputs.get("table6_changes", []),
+        "table7_contrasts": outputs.get("table7_contrasts", []),
+    }
+
+
+@app.get("/api/v1/simulation/metrics")
+async def get_structural_metrics_endpoint(
+    country: str = Query(default="KENYA"),
+    scenario: str = Query(default="A"),
+    month: int = Query(default=0),
+):
+    """
+    Calcula y expone métricas macroeconómicas auténticas generadas directamente
+    por itdt.model.ITDTModel para el país, escenario y mes seleccionados.
+    """
+    return calculate_structural_metrics(country_code=country, scenario=scenario, month=month)
+
+
 # =====================================================================
 # 4. WEBSOCKET REAL-TIME STREAMING (FULL-DUPLEX COMPACT 2,500 BOIDS)
 # =====================================================================
@@ -581,11 +614,12 @@ async def websocket_simulation_endpoint(websocket: WebSocket):
     """
     High-frequency full-duplex WebSocket orchestrating monthly boid kinematics
     and dynamic macro equilibrium without blocking the main event loop.
+    Conectado a itdt.model.ITDTModel para escenarios A, B1, B2, C y D.
     """
     await websocket.accept()
     logger.info("WebSocket client connected to /ws/simulation")
 
-    sim = SimulationEngine(country="KENYA", scenario="BASELINE")
+    sim = SimulationEngine(country="KENYA", scenario="A")
     sim.is_playing = False
     is_connected = True
 
@@ -609,12 +643,13 @@ async def websocket_simulation_endpoint(websocket: WebSocket):
                     elif action == "set_country":
                         sim.set_country(data.get("country", "KENYA"))
                     elif action == "set_scenario":
-                        sim.set_scenario(data.get("scenario", "BASELINE"))
+                        sim.set_scenario(data.get("scenario", "A"))
                     elif action == "set_policy":
                         sim.set_policy_params(data.get("policy_params", {}))
                     elif action == "reset":
                         sim.month = 0
                         sim.is_playing = False
+
 
                     # Immediately send an updated snapshot on interactive user seek/change
                     if action in ("seek", "set_country", "set_scenario", "set_policy", "reset"):

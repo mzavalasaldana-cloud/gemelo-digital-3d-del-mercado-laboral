@@ -132,7 +132,7 @@ def init_session_state():
         st.session_state.role = "ADMIN"
 
     if "scenario" not in st.session_state:
-        st.session_state.scenario = "BASELINE"
+        st.session_state.scenario = "A"
 
     if "policy_params" not in st.session_state:
         st.session_state.policy_params = dict(INITIAL_POLICY_STATE)

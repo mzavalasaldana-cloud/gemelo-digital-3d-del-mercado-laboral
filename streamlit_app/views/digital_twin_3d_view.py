@@ -29,7 +29,11 @@ def get_cached_workers(country_code: str):
 def render_digital_twin_3d_view():
     """Renders the 3D Spatial Agent-Based Simulation View."""
     country_code = st.session_state.get("country", "KENYA")
-    scenario = st.session_state.get("scenario", "BASELINE")
+    scenario = st.session_state.get("scenario", "A")
+    if scenario in ("BASELINE", "STATUS_QUO"):
+        scenario = "A"
+    st.session_state.scenario = scenario
+
     month = st.session_state.get("month", 0)
     policy_params = st.session_state.get("policy_params", {})
     profile = COUNTRY_PROFILES.get(country_code, COUNTRY_PROFILES["KENYA"])
@@ -50,40 +54,63 @@ def render_digital_twin_3d_view():
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
                 <span style="font-size: 1.25rem; font-weight: 800; color: #00f0ff;">🌐 ESPACIO 3D GEMELO DIGITAL &mdash; {profile['flag']} {profile['name']}</span>
-                <span style="margin-left: 12px; color: #94a3b8; font-size: 0.85rem;">2,500 Partículas Agente | 7 Hubs Productivos</span>
+                <span style="margin-left: 12px; color: #94a3b8; font-size: 0.85rem;">2,500 Partículas Agente | 5 Hubs Productivos</span>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <span class="glow-badge badge-cyan">Línea de Tiempo: {cur_month_name} {cur_year} (Mes {month}/120)</span>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span class="glow-badge badge-cyan">Mes {month}/120 ({cur_month_name} {cur_year})</span>
+                <span class="glow-badge badge-emerald">Escenario {scenario}</span>
                 <span class="glow-badge badge-amber">Informalidad: {metrics['informalityRate']}%</span>
-                <span class="glow-badge badge-purple">Gini: {metrics['giniIndex']}</span>
+                <span class="glow-badge badge-purple">Brecha F−M: {metrics.get('genderGap', 0):+.1f} p.p.</span>
                 <span class="glow-badge badge-emerald">OIT: {metrics['decentWorkIndex']}/100</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Controls Bar: Camera View & Sector Filter
-    c_cam, c_filt, c_speed = st.columns([1.2, 1.2, 1.0])
+    # Controls Bar: Scenario, Camera View & Sector Filter
+    c_scen, c_cam, c_filt, c_speed = st.columns([1.1, 1.1, 1.1, 0.9])
+
+    with c_scen:
+        scen_options = ["A", "B1", "B2", "C", "D"]
+        scen_labels = {
+            "A": "A: Status Quo",
+            "B1": "B1: GovTech Moderado",
+            "B2": "B2: GovTech Sanciones 3×",
+            "C": "C: Red de Cuidados",
+            "D": "D: Integrado",
+        }
+        sel_scen = st.selectbox(
+            "Escenario Canónico",
+            options=scen_options,
+            format_func=lambda s: scen_labels.get(s, s),
+            index=scen_options.index(scenario) if scenario in scen_options else 0,
+            key="3d_scenario_selector"
+        )
+        if sel_scen != scenario:
+            st.session_state.scenario = sel_scen
+            play_holo_sound_js("wave")
+            st.rerun()
 
     with c_cam:
         cam_preset = st.radio(
             "Perspectiva de Cámara 3D",
-            options=["📐 Isométrica 3D", "🛰️ Satelital (Cénit)", "🚶 Nivel de Calle"],
+            options=["📐 Isométrica", "🛰️ Satelital", "🚶 Calle"],
             horizontal=True,
             key="cam_preset_radio"
         )
     with c_filt:
         sector_filter = st.selectbox(
-            "Filtrar Población Visible",
-            options=["Todos los Sectores (2,500)", "Solo Formales (Órbitas)", "Solo Informales (Valles)", "Solo Desempleados"],
+            "Filtrar Población",
+            options=["Todos (2,500)", "Solo Formales", "Solo Informales"],
             key="sector_filter_select"
         )
     with c_speed:
         speed_factor = st.selectbox(
-            "Velocidad de Simulación",
-            options=["1x (Tiempo Estándar)", "2x (Acelerado)", "5x (Rápido)", "10x (Ultra Rápido)"],
+            "Velocidad",
+            options=["1x (Normal)", "2x (Acelerado)", "5x (Rápido)"],
             key="speed_select"
         )
+
 
     # Camera settings based on preset
     if "Satelital" in cam_preset:
