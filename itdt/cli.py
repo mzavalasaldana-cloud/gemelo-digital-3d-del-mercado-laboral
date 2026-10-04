@@ -223,6 +223,26 @@ def cmd_all():
     print("======================================================================")
 
 
+def cmd_help():
+    """Muestra la ayuda de los comandos disponibles."""
+    print("======================================================================")
+    print(" ITDT: Paquete de Replicación del Artículo")
+    print("======================================================================")
+    print("Comandos disponibles:")
+    print("  smoke        - Pruebas unitarias, metamórficas y corrida rápida (< 1 min)")
+    print("  calibrate    - Calibración SMM basal (Tablas 2 y 11, Figura 4)")
+    print("  calib_se     - Calibración con errores estándar (10 conjuntos de semillas)")
+    print("  loco         - Validación fuera de muestra LOCO (Tabla 3, loco_insumos.md)")
+    print("  baselines    - Modelos de referencia E1–E4 dentro de muestra (Tabla 4)")
+    print("  sweep        - Barrido de intensidad de sanciones 1 a 4 bajo B1 (Figura 5)")
+    print("  scenarios    - Escenarios A, B1, B2, C, D (Tablas 5, 6, 7, Figuras 6 y 7)")
+    print("  mechanism    - Ablación de B2 frente a A con recalibración (Tabla 8)")
+    print("  sensitivity  - Sensibilidad +-20%, CES y choque de demanda (Tabla 9)")
+    print("  cost         - Benchmarking de costo computacional (Tabla 10)")
+    print("  all          - Regenera outputs/ desde cero y reporta el tiempo total")
+    print("======================================================================")
+
+
 CLI_DISPATCH = {
     "smoke": cmd_smoke,
     "calibrate": cmd_calibrate,
@@ -235,6 +255,7 @@ CLI_DISPATCH = {
     "sensitivity": cmd_sensitivity,
     "cost": cmd_cost,
     "all": cmd_all,
+    "help": cmd_help,
 }
 
 

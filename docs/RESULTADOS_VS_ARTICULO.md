@@ -3,88 +3,86 @@
 **Fecha de ejecución:** Octubre 2026  
 **Rama Git:** `itdt-articulo`  
 **Referencia:** *ITDT: Un gemelo digital multi-agente calibrado con ILOSTAT para evaluar políticas de formalización con perspectiva de género en cuatro economías del Sur Global*  
-**Principio metodológico:** Todas las cifras presentadas en este informe provienen **exclusivamente de la simulación computacional ejecutada desde cero** mediante `make all` (`itdt.cli all`). No se forzó ni modificó ningún parámetro del modelo para ajustar artificialmente los números a los del artículo.
+**Principio metodológico:** Todas las cifras obtenidas provienen de la simulación computacional ejecutada desde cero mediante `make all` (`itdt.cli all`). Cuando una cifra difiere de la reportada en el artículo y no se conoce con certeza técnica demostrada el motivo exacto, se clasifica rigurosamente como «diferencia no explicada», sin atribuir al artículo métodos o entornos que no menciona explícitamente.
+
+> **Nota Crítica sobre Dinámica Empresarial:** En los escenarios de alta fiscalización **B2 (GovTech Intensivo)** y **D (Integrado)**, la tasa anual de cierres de empresas simulada en el modelo actual es **mucho mayor que en el artículo** (52.89% obtenido vs. 18.55% en el artículo para B2; 20.68% obtenido vs. 6.61% en el artículo para D).
 
 ---
 
 ## 1. Resumen de la Ejecución y Entorno de Cómputo
 
-- **Comando ejecutado:** `python -m itdt.cli all` (equivalente a `make all`)
-- **Tiempo total de ejecución:** **1 511.02 segundos (25 minutos y 11 segundos)**
-- **Hardware utilizado:**
-  - **Procesador (CPU):** AMD Ryzen 7 4800H with Radeon Graphics (8 núcleos físicos, 16 subprocesos/hilos lógicos, reloj base 2.90 GHz, turbo hasta 4.20 GHz).
-  - **Memoria RAM:** 16.0 GB DDR4 (15.42 GB detectados por el sistema operativo).
-  - **Sistema Operativo:** Microsoft Windows 11 Home Single Language 64-bit (Compilación 10.0.26200).
-  - **Intérprete de Python:** Python 3.14.4 (Windows AMD64).
-  - **Paralelización:** `ProcessPoolExecutor` utilizando 8 procesos trabajadores concurrentes para tareas de calibración, validación fuera de muestra y réplicas de política.
-- **Resultado de pruebas automatizadas (`pytest`):** **15 pruebas pasadas al 100% en 3.99 segundos**.
+- **Comando ejecutado:** `make all` (`python -m itdt.cli all`)
+- **Tiempo total de ejecución (`make all`):** **1 203.28 segundos (20 minutos y 3 segundos)**
+- **Entorno de ejecución:**
+  - **Sistema Operativo:** Microsoft Windows 11 Home Single Language 64-bit
+  - **Intérprete:** Python 3.14.4
+  - **Paralelización:** `ProcessPoolExecutor` (8 trabajadores concurrentes)
+- **Verificación de pruebas (`pytest`):** **24 pruebas pasadas al 100% en 4.77 segundos**.
 
 ---
 
-## 2. Comparación Numérica Detallada (Tablas 2 a 10)
+## 2. Comparación Numérica Detallada (Tablas 2 a 12)
 
-A continuación se presenta la comparación exhaustiva, celda por celda, de cada cifra reportada en el texto del artículo frente a la obtenida en la réplica actual, calculando la diferencia absoluta o relativa ($\Delta = \text{Obtenido} - \text{Artículo}$).
-
-### Tabla 2: Calibración SMM y Momentos Observados vs. Simulados
+### Tabla 2: Momentos Observados, Momentos Simulados y Parámetros Estimados por SMM
 
 | País (año) | Métrica / Parámetro | Valor Artículo | Valor Obtenido | Diferencia ($\Delta$) | Observación |
 | :--- | :--- | :---: | :---: | :---: | :--- |
 | **Kenia (2019)** | $s_F$ (empleo femenino) | 0.476 | 0.476 | 0.000 | ILOSTAT oficial (`data/ilostat_s_F.csv`) |
-| | $F_{obs}$ / $F_{sim}$ (%) | 90.19 / 89.66 | 90.19 / 90.25 | +0.59 p.p. | Mayor convergencia a $F_{obs}$ en la bisección actual |
-| | $M_{obs}$ / $M_{sim}$ (%) | 83.13 / 82.34 | 83.13 / 83.16 | +0.82 p.p. | Calibración precisa (error = 0.03 p.p.) |
-| | $T_{obs}$ / $T_{sim}$ (%) | 86.49 / 85.82 | 86.49 / 86.54 | +0.72 p.p. | Verificación de consistencia contable |
-| | $\phi_0$ (EE) | 3.08 (0.56) | 3.59 (0.68) | +0.51 (+0.12) | Mismo orden de magnitud y dispersión |
-| | $\gamma_0$ (EE) | 0.461 (0.023) | 0.460 (0.010) | -0.001 (-0.013) | Coincidencia en el parámetro conductual de cuidados |
+| | $F_{obs}$ / $F_{sim}$ (%) | 90.19 / 89.66 | 90.19 / 90.25 | +0.59 p.p. | diferencia no explicada |
+| | $M_{obs}$ / $M_{sim}$ (%) | 83.13 / 82.34 | 83.13 / 83.16 | +0.82 p.p. | diferencia no explicada |
+| | $T_{obs}$ / $T_{sim}$ (%) | 86.49 / 85.82 | 86.49 / 86.54 | +0.72 p.p. | Relación contable $s_F F + (1-s_F) M$ |
+| | $\phi_0$ (EE) | 3.08 (0.56) | 3.59 (0.68) | +0.51 (+0.12) | diferencia no explicada |
+| | $\gamma_0$ (EE) | 0.461 (0.023) | 0.460 (0.011) | -0.001 (-0.012) | Coincidencia cercana |
 | **Nigeria (2024)** | $s_F$ (empleo femenino) | 0.504 | 0.504 | 0.000 | ILOSTAT oficial (`data/ilostat_s_F.csv`) |
-| | $F_{obs}$ / $F_{sim}$ (%) | 96.39 / 96.40 | 96.39 / 96.46 | +0.06 p.p. | Ajuste exacto al momento empírico |
-| | $M_{obs}$ / $M_{sim}$ (%) | 89.92 / 89.99 | 89.92 / 89.88 | -0.11 p.p. | Error de calibración de solo 0.04 p.p. |
-| | $T_{obs}$ / $T_{sim}$ (%) | 93.18 / 93.22 | 93.18 / 93.20 | -0.02 p.p. | Prácticamente indistinguible de la tasa oficial |
-| | $\phi_0$ (EE) | 8.96 (0.31) | 11.25 (1.15) | +2.29 (+0.84) | Zona plana de identificación (nota al pie Tabla 2) |
-| | $\gamma_0$ (EE) | 0.620 (< 0.012) | 0.621 (0.012) | +0.001 (—) | Coincidencia exacta a 3 decimales |
-| **India (2024)** | $s_F$ (empleo femenino) | 0.309 | 0.309 | 0.000 | ILOSTAT oficial (`data/ilostat_s_F.csv`) |
-| | $F_{obs}$ / $F_{sim}$ (%) | 91.93 / 92.13 | 91.93 / 91.94 | -0.19 p.p. | Error de calibración nulo (0.01 p.p.) |
-| | $M_{obs}$ / $M_{sim}$ (%) | 86.76 / 86.71 | 86.76 / 86.71 | 0.00 p.p. | Réplica exacta |
-| | $T_{obs}$ / $T_{sim}$ (%) | 88.36 / 88.39 | 88.36 / 88.33 | -0.06 p.p. | Coincidencia en tasa agregada |
-| | $\phi_0$ (EE) | 4.84 (0.35) | 6.00 (0.95) | +1.16 (+0.60) | Estimación compatible en el dominio [0, 12] |
-| | $\gamma_0$ (EE) | 0.464 (0.014) | 0.445 (0.013) | -0.019 (-0.001) | Coincidencia cercana en rigidez de cuidados |
+| | $F_{obs}$ / $F_{sim}$ (%) | 96.39 / 96.40 | 96.39 / 96.46 | +0.06 p.p. | Ajuste muy cercano al momento empírico |
+| | $M_{obs}$ / $M_{sim}$ (%) | 89.92 / 89.99 | 89.92 / 89.88 | -0.11 p.p. | Error de calibración de 0.04 p.p. |
+| | $T_{obs}$ / $T_{sim}$ (%) | 93.18 / 93.22 | 93.18 / 93.20 | -0.02 p.p. | Consistencia contable verificada |
+| | $\phi_0$ (EE) | 8.96 (0.31) | 11.25 (1.16) | +2.29 (+0.85) | diferencia no explicada |
+| | $\gamma_0$ (EE) | 0.620 (< 0.012) | 0.621 (0.012) | +0.001 (—) | Coincidencia a nivel de milésimas |
+| **India (2024)** | $s_F$ (empleo femenino) | 0.309 | 0.311 | +0.002 | ILOSTAT SDMX oficial (`data/ilostat_s_F.csv`) |
+| | $F_{obs}$ / $F_{sim}$ (%) | 91.93 / 92.13 | 91.93 / 91.90 | -0.23 p.p. | Calibración con error de 0.03 p.p. |
+| | $M_{obs}$ / $M_{sim}$ (%) | 86.76 / 86.71 | 86.76 / 86.74 | +0.03 p.p. | Ajuste de alta precisión |
+| | $T_{obs}$ / $T_{sim}$ (%) | 88.36 / 88.39 | 88.36 / 88.34 | -0.05 p.p. | Consistencia contable verificada |
+| | $\phi_0$ (EE) | 4.84 (0.35) | 5.86 (0.86) | +1.02 (+0.51) | diferencia no explicada |
+| | $\gamma_0$ (EE) | 0.464 (0.014) | 0.442 (0.008) | -0.022 (-0.006) | diferencia no explicada |
 | **Bangladés (2023)**| $s_F$ (empleo femenino) | 0.345 | 0.345 | 0.000 | ILOSTAT oficial (`data/ilostat_s_F.csv`) |
-| | $F_{obs}$ / $F_{sim}$ (%) | 95.77 / 95.66 | 95.77 / 95.54 | -0.12 p.p. | Captura la máxima informalidad observada |
-| | $M_{obs}$ / $M_{sim}$ (%) | 78.08 / 78.33 | 78.08 / 78.18 | -0.15 p.p. | Reproduce la menor tasa masculina del grupo |
-| | $T_{obs}$ / $T_{sim}$ (%) | 84.19 / 84.31 | 84.19 / 84.18 | -0.13 p.p. | Ajuste total de 84.2% |
-| | $\phi_0$ (EE) | 2.03 (0.36) | 2.30 (0.50) | +0.27 (+0.14) | Menor costo de cumplimiento relativo |
-| | $\gamma_0$ (EE) | 0.763 (0.014) | 0.744 (0.010) | -0.019 (-0.004) | Máxima penalización de cuidado del grupo |
+| | $F_{obs}$ / $F_{sim}$ (%) | 95.77 / 95.66 | 95.77 / 95.82 | +0.16 p.p. | Ajuste con error de 0.05 p.p. |
+| | $M_{obs}$ / $M_{sim}$ (%) | 78.08 / 78.33 | 78.08 / 78.00 | -0.33 p.p. | Error de 0.08 p.p. frente a $M_{obs}$ |
+| | $T_{obs}$ / $T_{sim}$ (%) | 84.19 / 84.31 | 84.19 / 84.15 | -0.16 p.p. | Consistencia contable verificada |
+| | $\phi_0$ (EE) | 2.03 (0.36) | 2.25 (0.54) | +0.22 (+0.18) | Coincidencia en orden de magnitud |
+| | $\gamma_0$ (EE) | 0.763 (0.014) | 0.762 (0.009) | -0.001 (-0.005) | Coincidencia a nivel de milésimas |
 
 ---
 
-### Tabla 3: Predicción Fuera de Muestra Dejando un País Fuera (LOCO)
+### Tabla 3: Predicción de la Informalidad Femenina Dejando un País Fuera (LOCO)
 
 | País Excluido | Modelo Alternativo | Pronóstico Artículo (%) | Pronóstico Obtenido (%) | Diferencia ($\Delta$) | Error Absoluto Obtenido |
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | **Kenia** ($F_{obs} = 90.19$) | **ITDT ($\gamma_0$ común)** | 95.36 ($\gamma_0=0.7$) | 95.73 ($\gamma_0=0.7$) | +0.37 p.p. | 5.54 p.p. |
 | | Brecha media | 92.91 | 92.91 | 0.00 p.p. | 2.72 p.p. |
 | | Razón media | 93.05 | 93.05 | 0.00 p.p. | 2.86 p.p. |
-| | Regresión lineal | 91.40 | 91.41 | +0.01 p.p. | 1.22 p.p. |
-| | ITDT sin cuidado | 86.01 | 82.96 | -3.05 p.p. | 7.23 p.p. |
+| | Regresión lineal | 91.40 | 91.36 | -0.04 p.p. | 1.17 p.p. |
+| | ITDT sin cuidado | 86.01 | 82.95 | -3.06 p.p. | 7.24 p.p. |
 | **Nigeria** ($F_{obs} = 96.39$) | **ITDT ($\gamma_0$ común)** | 94.32 ($\gamma_0=0.5$) | 94.79 ($\gamma_0=0.5$) | +0.47 p.p. | 1.60 p.p. |
 | | Brecha media | 99.89 | 99.89 | 0.00 p.p. | 3.50 p.p. |
 | | Razón media | 100.00 | 100.00 | 0.00 p.p. | 3.61 p.p. |
-| | Regresión lineal | 98.17 | 98.20 | +0.03 p.p. | 1.81 p.p. |
+| | Regresión lineal | 98.17 | 98.11 | -0.06 p.p. | 1.72 p.p. |
 | | ITDT sin cuidado | 93.45 | 90.05 | -3.40 p.p. | 6.34 p.p. |
 | **India** ($F_{obs} = 91.93$) | **ITDT ($\gamma_0$ común)** | 96.17 ($\gamma_0=0.7$) | 94.74 ($\gamma_0=0.6$) | -1.43 p.p. | 2.81 p.p. |
 | | Brecha media | 97.17 | 97.17 | 0.00 p.p. | 5.24 p.p. |
 | | Razón media | 97.85 | 97.85 | 0.00 p.p. | 5.92 p.p. |
-| | Regresión lineal | 106.97 | 107.01 | +0.04 p.p. | 15.08 p.p. |
-| | ITDT sin cuidado | 87.31 | 86.67 | -0.64 p.p. | 5.26 p.p. |
+| | Regresión lineal | 106.97 | 106.88 | -0.09 p.p. | 14.95 p.p. |
+| | ITDT sin cuidado | 87.31 | 86.63 | -0.68 p.p. | 5.30 p.p. |
 | **Bangladés** ($F_{obs} = 95.77$)| **ITDT ($\gamma_0$ común)** | 87.89 ($\gamma_0=0.5$) | 88.88 ($\gamma_0=0.5$) | +0.99 p.p. | 6.89 p.p. |
 | | Brecha media | 84.31 | 84.31 | 0.00 p.p. | 11.46 p.p. |
 | | Razón media | 83.71 | 83.71 | 0.00 p.p. | 12.06 p.p. |
-| | Regresión lineal | 83.61 | 83.61 | 0.00 p.p. | 12.16 p.p. |
-| | ITDT sin cuidado | 83.42 | 77.95 | -5.47 p.p. | 17.82 p.p. |
-| **MAE Agregado (p.p.)** | **ITDT ($\gamma_0$ común)** | **4.84** | **4.21** | **-0.63 p.p.** | **ITDT obtiene el menor MAE global** |
-| | Brecha media | 5.73 | 5.73 | 0.00 p.p. | Segunda mejor alternativa |
+| | Regresión lineal | 83.61 | 83.60 | -0.01 p.p. | 12.17 p.p. |
+| | ITDT sin cuidado | 83.42 | 77.94 | -5.48 p.p. | 17.83 p.p. |
+| **MAE Global (p.p.)** | **ITDT ($\gamma_0$ común)** | **4.84** | **4.21** | **-0.63 p.p.** | **Menor MAE de todos los modelos** |
+| | Brecha media | 5.73 | 5.73 | 0.00 p.p. | Segunda alternativa |
 | | Razón media | 6.11 | 6.11 | 0.00 p.p. | Tercera alternativa |
-| | Regresión lineal | 7.55 | 7.56 | +0.01 p.p. | Falla con predicción absurda > 100% en India |
-| | ITDT sin cuidado | 6.02 | 9.16 | +3.14 p.p. | El peor desempeño fuera de muestra |
+| | Regresión lineal | 7.55 | 7.50 | -0.05 p.p. | Falla con predicción > 100% en India |
+| | ITDT sin cuidado | 6.02 | 9.18 | +3.16 p.p. | Mayor error fuera de muestra |
 
 ---
 
@@ -92,40 +90,40 @@ A continuación se presenta la comparación exhaustiva, celda por celda, de cada
 
 | Modelo Estructural | Parámetros Libres | MAE 8 Momentos (Artículo) | MAE 8 Momentos (Obtenido) | Brecha F−M Simulada (Artículo) | Brecha F−M Simulada (Obtenida) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **E1: Agente representativo** | $\phi_0$ | 4.58 p.p. | 4.57 p.p. | -0.07 p.p. | -0.04 p.p. |
-| **E2: ABM lewisiano** | $\phi_0$ | 4.57 p.p. | 4.55 p.p. | -0.05 p.p. | 0.00 p.p. |
-| **E3: ITDT sin cuidado** | $\phi_0$ | 4.62 p.p. | 4.55 p.p. | -0.14 p.p. | 0.00 p.p. |
-| **E4: Racionalidad perfecta**| $\phi_0, \gamma_0$ | 0.25 p.p. | 1.60 p.p. | +9.53 p.p. | +7.97 p.p. |
-| **ITDT (Canónico)** | $\phi_0, \gamma_0$ | **0.25 p.p.** | **0.07 p.p.** | **+9.12 p.p.** | **+9.06 p.p.** |
+| **E1: Agente representativo** | $\phi_0$ | 4.58 p.p. | 4.57 p.p. | -0.07 p.p. | -0.05 p.p. |
+| **E2: ABM lewisiano** | $\phi_0$ | 4.57 p.p. | 4.55 p.p. | -0.05 p.p. | -0.01 p.p. |
+| **E3: ITDT sin cuidado** | $\phi_0$ | 4.62 p.p. | 4.55 p.p. | -0.14 p.p. | -0.01 p.p. |
+| **E4: Racionalidad perfecta**| $\phi_0, \gamma_0$ | 0.25 p.p. | 1.73 p.p. | +9.53 p.p. | +7.87 p.p. |
+| **ITDT (Canónico)** | $\phi_0, \gamma_0$ | **0.25 p.p.** | **0.05 p.p.** | **+9.12 p.p.** | **+9.16 p.p.** |
 
-*Nota:* La brecha media observada de los cuatro países es **9.10 p.p.**. Los modelos E1, E2 y E3 fallan totalmente en reproducir la brecha de género (brechas simuladas de ~0.00 p.p.), concentrando todo su error en la equidad distributiva. ITDT canónico alcanza un MAE dentro de muestra de **0.07 p.p.** reproduciendo la brecha observada con precisión milimétrica (+9.06 p.p.).
+*Nota:* Brecha media observada de los cuatro países = 9.10 p.p.
 
 ---
 
-### Tabla 5: Niveles por Escenario en los Meses 109–120 (Media de 4 Países)
+### Tabla 5: Niveles por Escenario en los Meses 109–120 (Media de los Cuatro Países)
 
 | Escenario | Informalidad Total (%) | Mujeres (%) | Hombres (%) | Brecha F − M (p.p.) | Cierre Anual Empresas (%) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **A: Status Quo** | | | | | |
 | • Artículo | 87.14 (2.20) | 93.20 (1.20) | 83.32 (2.93) | 9.88 | 0.07 (0.05) |
-| • Obtenido | 88.76 (2.25) | 93.93 (1.23) | 85.47 (2.98) | 8.46 | 0.03 (0.08) |
-| • Diferencia ($\Delta$) | +1.62 p.p. | +0.73 p.p. | +2.15 p.p. | -1.42 p.p. | -0.04 p.p. |
+| • Obtenido | 88.74 (2.06) | 93.95 (1.12) | 85.44 (2.77) | 8.51 | 0.03 (0.09) |
+| • Diferencia ($\Delta$) | +1.60 p.p. | +0.75 p.p. | +2.12 p.p. | -1.37 p.p. | -0.04 p.p. |
 | **B1: GovTech Moderado** | | | | | |
 | • Artículo | 87.21 (2.23) | 93.24 (1.22) | 83.41 (2.96) | 9.83 | 0.04 (0.04) |
-| • Obtenido | 88.79 (2.21) | 93.95 (1.20) | 85.52 (2.95) | 8.42 | 0.00 (0.00) |
-| • Diferencia ($\Delta$) | +1.58 p.p. | +0.71 p.p. | +2.11 p.p. | -1.41 p.p. | -0.04 p.p. |
+| • Obtenido | 88.82 (2.04) | 93.99 (1.09) | 85.55 (2.74) | 8.44 | 0.00 (0.00) |
+| • Diferencia ($\Delta$) | +1.61 p.p. | +0.75 p.p. | +2.14 p.p. | -1.39 p.p. | -0.04 p.p. |
 | **B2: GovTech Intensivo**| | | | | |
-| • Artículo | 54.74 (1.18) | 77.98 (0.89) | 38.74 (1.68) | 39.25 | 18.55 (1.33) |
-| • Obtenido | 55.07 (1.44) | 77.56 (0.97) | 39.47 (1.90) | 38.09 | 52.77 (4.97) |
-| • Diferencia ($\Delta$) | +0.33 p.p. | -0.42 p.p. | +0.73 p.p. | -1.16 p.p. | +34.22 p.p. |
+| • Artículo | 54.74 (1.18) | 77.98 (0.89) | 38.74 (1.68) | 39.25 | **18.55 (1.33)** |
+| • Obtenido | 55.40 (1.50) | 77.75 (0.96) | 39.86 (1.96) | 37.89 | **52.89 (4.87)** |
+| • Diferencia ($\Delta$) | +0.66 p.p. | -0.23 p.p. | +1.12 p.p. | -1.36 p.p. | **+34.34 p.p.** *(cierres mucho mayores)* |
 | **C: Red de Cuidados** | | | | | |
 | • Artículo | 86.08 (2.34) | 86.51 (2.40) | 85.82 (2.38) | 0.69 | 0.05 (0.04) |
-| • Obtenido | 87.93 (2.15) | 88.34 (2.12) | 87.68 (2.22) | 0.66 | 0.01 (0.05) |
-| • Diferencia ($\Delta$) | +1.85 p.p. | +1.83 p.p. | +1.86 p.p. | -0.03 p.p. | -0.04 p.p. |
+| • Obtenido | 87.88 (2.09) | 88.29 (2.01) | 87.63 (2.20) | 0.66 | 0.01 (0.05) |
+| • Diferencia ($\Delta$) | +1.80 p.p. | +1.78 p.p. | +1.81 p.p. | -0.03 p.p. | -0.04 p.p. |
 | **D: Integrado** | | | | | |
-| • Artículo | 53.92 (3.19) | 55.09 (3.33) | 53.14 (3.25) | 1.94 | 6.61 (0.76) |
-| • Obtenido | 55.89 (2.98) | 56.85 (3.04) | 55.23 (3.09) | 1.62 | 20.77 (2.90) |
-| • Diferencia ($\Delta$) | +1.97 p.p. | +1.76 p.p. | +2.09 p.p. | -0.32 p.p. | +14.16 p.p. |
+| • Artículo | 53.92 (3.19) | 55.09 (3.33) | 53.14 (3.25) | 1.94 | **6.61 (0.76)** |
+| • Obtenido | 55.94 (2.76) | 56.93 (2.82) | 55.27 (2.89) | 1.67 | **20.68 (3.20)** |
+| • Diferencia ($\Delta$) | +2.02 p.p. | +1.84 p.p. | +2.13 p.p. | -0.27 p.p. | **+14.07 p.p.** *(cierres mucho mayores)* |
 
 ---
 
@@ -133,163 +131,142 @@ A continuación se presenta la comparación exhaustiva, celda por celda, de cada
 
 | Escenario | Métrica | Estimación Artículo [IC 95%] | Estimación Obtenida [IC 95%] | Diferencia Puntual ($\Delta$) |
 | :--- | :--- | :---: | :---: | :---: |
-| **B1** | Total (p.p.) | +0.07 [-0.08, 0.23] | +0.03 [-0.09, 0.15] | -0.04 p.p. |
-| | Mujeres (p.p.) | +0.04 [-0.04, 0.14] | +0.02 [-0.05, 0.09] | -0.02 p.p. |
-| | Hombres (p.p.) | +0.09 [-0.12, 0.30] | +0.05 [-0.11, 0.22] | -0.04 p.p. |
-| | Brecha (p.p.) | -0.05 [-0.20, 0.09] | -0.03 [-0.14, 0.07] | +0.02 p.p. |
+| **B1** | Total (p.p.) | +0.07 [-0.08, 0.23] | +0.08 [-0.03, 0.18] | +0.01 p.p. |
+| | Mujeres (p.p.) | +0.04 [-0.04, 0.14] | +0.04 [-0.02, 0.10] | 0.00 p.p. |
+| | Hombres (p.p.) | +0.09 [-0.12, 0.30] | +0.11 [-0.03, 0.25] | +0.02 p.p. |
+| | Brecha (p.p.) | -0.05 [-0.20, 0.09] | -0.07 [-0.18, 0.02] | -0.02 p.p. |
 | | Cierres (p.p./año) | -0.03 [-0.04, -0.02] | -0.03 [-0.05, -0.02] | 0.00 p.p. |
-| | Recaudación (%) | +1.1 [-1.3, 4.1] | -0.3 [-1.9, 0.9] | -1.4 % |
-| **B2** | Total (p.p.) | -32.40 [-38.79, -25.38] | -33.69 [-39.99, -27.12] | -1.29 p.p. |
-| | Mujeres (p.p.) | -15.21 [-21.52, -8.67] | -16.37 [-23.28, -9.45] | -1.16 p.p. |
-| | Hombres (p.p.) | -44.58 [-50.52, -35.99] | -46.01 [-51.62, -38.61] | -1.43 p.p. |
-| | Brecha (p.p.) | +29.37 [25.78, 35.44] | +29.63 [24.86, 35.99] | +0.26 p.p. |
-| | Cierres (p.p./año) | +18.48 [13.58, 24.43] | +52.73 [40.27, 68.18] | +34.25 p.p. |
-| | Recaudación (%) | +270.4 [158.5, 434.6] | +295.5 [161.6, 468.7] | +25.1 % |
-| **C** | Total (p.p.) | -1.06 [-1.52, -0.64] | -0.83 [-1.33, -0.31] | +0.23 p.p. |
-| | Mujeres (p.p.) | -6.68 [-11.61, -3.82] | -5.59 [-9.92, -2.74] | +1.09 p.p. |
-| | Hombres (p.p.) | +2.51 [1.35, 4.02] | +2.20 [1.17, 3.44] | -0.31 p.p. |
-| | Brecha (p.p.) | -9.19 [-15.57, -5.30] | -7.79 [-13.29, -4.15] | +1.40 p.p. |
+| | Recaudación (%) | +1.1 [-1.3, 4.1] | -0.6 [-2.0, 0.5] | -1.7 % *(diferencia no explicada)* |
+| **B2** | Total (p.p.) | -32.40 [-38.79, -25.38] | -33.34 [-39.30, -26.78] | -0.94 p.p. |
+| | Mujeres (p.p.) | -15.21 [-21.52, -8.67] | -16.20 [-23.14, -9.13] | -0.99 p.p. |
+| | Hombres (p.p.) | -44.58 [-50.52, -35.99] | -45.58 [-51.46, -37.99] | -1.00 p.p. |
+| | Brecha (p.p.) | +29.37 [25.78, 35.44] | +29.38 [24.29, 35.92] | +0.01 p.p. |
+| | Cierres (p.p./año) | **+18.48 [13.58, 24.43]** | **+52.86 [40.45, 68.08]** | **+34.38 p.p.** *(cierres mucho mayores)* |
+| | Recaudación (%) | +270.4 [158.5, 434.6] | +291.8 [158.3, 471.1] | +21.4 % |
+| **C** | Total (p.p.) | -1.06 [-1.52, -0.64] | -0.86 [-1.43, -0.28] | +0.20 p.p. |
+| | Mujeres (p.p.) | -6.68 [-11.61, -3.82] | -5.66 [-10.15, -2.73] | +1.02 p.p. |
+| | Hombres (p.p.) | +2.51 [1.35, 4.02] | +2.19 [1.22, 3.34] | -0.32 p.p. |
+| | Brecha (p.p.) | -9.19 [-15.57, -5.30] | -7.85 [-13.42, -4.17] | +1.34 p.p. |
 | | Cierres (p.p./año) | -0.02 [-0.03, -0.01] | -0.02 [-0.04, 0.00] | 0.00 p.p. |
-| | Recaudación (%) | +10.8 [6.2, 15.7] | +9.9 [7.4, 12.2] | -0.9 % |
-| **D** | Total (p.p.) | -33.22 [-38.33, -28.23] | -32.86 [-38.50, -27.40] | +0.36 p.p. |
-| | Mujeres (p.p.) | -38.11 [-41.21, -35.20] | -37.08 [-40.19, -33.85] | +1.03 p.p. |
-| | Hombres (p.p.) | -30.17 [-36.73, -23.45] | -30.24 [-37.21, -23.28] | -0.07 p.p. |
-| | Brecha (p.p.) | -7.94 [-14.35, -3.82] | -6.84 [-12.34, -2.97] | +1.10 p.p. |
-| | Cierres (p.p./año) | +6.54 [3.34, 10.37] | +20.74 [12.43, 31.05] | +14.20 p.p. |
-| | Recaudación (%) | +220.9 [118.7, 375.3] | +254.1 [126.5, 427.1] | +33.2 % |
+| | Recaudación (%) | +10.8 [6.2, 15.7] | +9.9 [6.5, 12.8] | -0.9 % |
+| **D** | Total (p.p.) | -33.22 [-38.33, -28.23] | -32.80 [-38.23, -27.51] | +0.42 p.p. |
+| | Mujeres (p.p.) | -38.11 [-41.21, -35.20] | -37.02 [-40.19, -33.82] | +1.09 p.p. |
+| | Hombres (p.p.) | -30.17 [-36.73, -23.45] | -30.17 [-36.91, -23.40] | 0.00 p.p. |
+| | Brecha (p.p.) | -7.94 [-14.35, -3.82] | -6.85 [-12.34, -2.97] | +1.09 p.p. |
+| | Cierres (p.p./año) | **+6.54 [3.34, 10.37]** | **+20.65 [12.23, 31.13]** | **+14.11 p.p.** *(cierres mucho mayores)* |
+| | Recaudación (%) | +220.9 [118.7, 375.3] | +251.6 [127.4, 432.0] | +30.7 % |
 
 ---
 
 ### Tabla 7: Contrastes por País Frente al Escenario A ($R=40, gl=39$)
 
-| Contraste | País | Dif. Media (DE) Artículo | Dif. Media (DE) Obtenida | $t(39)$ Art. / Obt. | $d_z$ Art. / Obt. | $p$-val (Bonferroni) |
+| Contraste | País | Dif. Media (DE) Artículo | Dif. Media (DE) Obtenida | $t(39)$ Art. / Obt. | $d_z$ Art. / Obt. | $p$-val (Bonferroni / Wilcoxon) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **B2: mujeres** | Kenia | -20.57 (1.79) | -21.40 (1.63) | -72.8 / -83.1 | -11.50 / -13.14 | < 0.001 |
-| | Nigeria | -13.28 (1.01) | -13.68 (0.94) | -82.9 / -91.8 | -13.10 / -14.51 | < 0.001 |
-| | India | -22.31 (1.40) | -24.87 (1.80) | -100.7 / -87.3 | -15.91 / -13.80 | < 0.001 |
-| | Bangladés | -4.70 (0.73) | -5.52 (0.78) | -40.6 / -44.7 | -6.43 / -7.07 | < 0.001 |
-| **B2: brecha** | Kenia | +25.34 (1.89) | +24.95 (1.82) | 84.6 / 86.8 | 13.37 / 13.73 | < 0.001 |
-| | Nigeria | +38.33 (1.68) | +39.40 (1.83) | 144.2 / 136.5 | 22.80 / 21.58 | < 0.001 |
-| | India | +26.82 (1.99) | +24.86 (2.21) | 85.3 / 71.3 | 13.48 / 11.27 | < 0.001 |
-| | Bangladés | +26.98 (3.51) | +29.32 (3.01) | 48.5 / 61.5 | 7.68 / 9.73 | < 0.001 |
-| **D: total** | Kenia | -30.59 (2.03) | -29.31 (2.44) | -95.5 / -75.9 | -15.11 / -11.99 | < 0.001 |
-| | Nigeria | -40.74 (3.06) | -40.17 (3.05) | -84.1 / -83.4 | -13.30 / -13.18 | < 0.001 |
-| | India | -35.42 (2.62) | -36.16 (2.71) | -85.5 / -84.5 | -13.52 / -13.36 | < 0.001 |
-| | Bangladés | -26.12 (2.08) | -25.80 (1.69) | -79.4 / -96.5 | -12.56 / -15.26 | < 0.001 |
-| **D: brecha** | Kenia | -6.60 (1.82) | -6.10 (1.94) | -22.9 / -19.9 | -3.63 / -3.15 | < 0.001 |
-| | Nigeria | -3.59 (1.70) | -2.62 (2.04) | -13.3 / -8.1 | -2.11 / -1.29 | < 0.001 |
-| | India | -4.18 (1.65) | -3.44 (1.78) | -16.0 / -12.2 | -2.54 / -1.93 | < 0.001 |
-| | Bangladés | -17.38 (3.58) | -15.18 (2.97) | -30.7 / -32.4 | -4.85 / -5.12 | < 0.001 |
+| **B2: mujeres** | Kenia | -20.57 (1.79) | -21.41 (1.63) | -72.8 / -83.2 | -11.50 / -13.16 | < 0.001 / < 0.001 |
+| | Nigeria | -13.28 (1.01) | -13.70 (0.94) | -82.9 / -91.9 | -13.10 / -14.54 | < 0.001 / < 0.001 |
+| | India | -22.31 (1.40) | -24.63 (1.61) | -100.7 / -96.5 | -15.91 / -15.26 | < 0.001 / < 0.001 |
+| | Bangladés | -4.70 (0.73) | -5.07 (0.54) | -40.6 / -59.4 | -6.43 / -9.39 | < 0.001 / < 0.001 |
+| **B2: brecha** | Kenia | +25.34 (1.89) | +24.96 (1.82) | 84.6 / 87.0 | 13.37 / 13.75 | < 0.001 / < 0.001 |
+| | Nigeria | +38.33 (1.68) | +39.40 (1.84) | 144.2 / 135.7 | 22.80 / 21.45 | < 0.001 / < 0.001 |
+| | India | +26.82 (1.99) | +23.85 (2.47) | 85.3 / 61.1 | 13.48 / 9.66 | < 0.001 / < 0.001 |
+| | Bangladés | +26.98 (3.51) | +29.30 (2.54) | 48.5 / 73.1 | 7.68 / 11.55 | < 0.001 / < 0.001 |
+| **D: total** | Kenia | -30.59 (2.03) | -29.31 (2.44) | -95.5 / -75.9 | -15.11 / -12.00 | < 0.001 / < 0.001 |
+| | Nigeria | -40.74 (3.06) | -40.26 (3.04) | -84.1 / -83.7 | -13.30 / -13.24 | < 0.001 / < 0.001 |
+| | India | -35.42 (2.62) | -35.53 (2.38) | -85.5 / -94.3 | -13.52 / -14.91 | < 0.001 / < 0.001 |
+| | Bangladés | -26.12 (2.08) | -26.08 (2.02) | -79.4 / -81.8 | -12.56 / -12.93 | < 0.001 / < 0.001 |
+| **D: brecha** | Kenia | -6.60 (1.82) | -6.10 (1.94) | -22.9 / -19.9 | -3.63 / -3.15 | < 0.001 / < 0.001 |
+| | Nigeria | -3.59 (1.70) | -2.63 (2.01) | -13.3 / -8.3 | -2.11 / -1.31 | < 0.001 / < 0.001 |
+| | India | -4.18 (1.65) | -3.42 (1.57) | -16.0 / -13.8 | -2.54 / -2.18 | < 0.001 / < 0.001 |
+| | Bangladés | -17.38 (3.58) | -15.23 (2.60) | -30.7 / -37.0 | -4.85 / -5.85 | < 0.001 / < 0.001 |
 
-*Nota:* Tanto con la prueba paramétrica $t(39)$ como con la no paramétrica de Wilcoxon, todos los contrastes son estadísticamente significativos ($p < 0.001$) tras la corrección de Bonferroni para la familia de 20 contrastes por país.
+*Nota:* Todos los contrastes son estadísticamente significativos ($p < 0.001$) bajo Bonferroni y Wilcoxon.
 
 ---
 
-### Tabla 8: Descomposición del Efecto de B2 Frente a A (Media de 4 Países)
+### Tabla 8: Descomposición del Efecto de B2 Frente a A (Media de los Cuatro Países)
 
-| Variante del Modelo | $\Delta$ Mujeres (p.p.) Art. / Obt. | $\Delta$ Hombres (p.p.) Art. / Obt. | $\Delta$ Brecha (p.p.) Art. / Obt. | $\Delta$ Cierres (p.p./año) Art. / Obt. | $\Delta$ Empresas Dueña / Dueño (p.p.) |
+| Variante del Modelo | $\Delta$ Mujeres (p.p.) Art. / Obt. | $\Delta$ Hombres (p.p.) Art. / Obt. | $\Delta$ Brecha (p.p.) Art. / Obt. | $\Delta$ Cierres (p.p./año) Art. / Obt. | $\Delta$ Empresas Dueña / Dueño (p.p.) Art. / Obt. |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Completo** | -15.13 / -16.08 | -44.17 / -45.47 | **+29.04 / +29.38** | +18.50 / +52.78 | +22.8 / +27.0 vs. +21.3 / +26.0 |
-| **Sin restricción de cuidado**| -40.65 / -36.13 | -40.67 / -36.20 | **+0.02 / +0.07** | +16.04 / +37.06 | +25.6 / +25.4 vs. +25.9 / +26.6 |
-| **Sin DCC regresivo ($\phi_1=0$)**| -15.02 / -16.19 | -44.09 / -45.58 | **+29.07 / +29.38** | +18.00 / +51.24 | +22.9 / +27.1 vs. +21.3 / +26.3 |
-| **Sin ambos** | -40.67 / -36.73 | -40.67 / -36.76 | **0.00 / +0.03** | +15.83 / +36.41 | +26.2 / +25.9 vs. +26.5 / +26.5 |
+| **Completo** | -15.13 / -15.90 | -44.17 / -45.00 | **+29.04 / +29.11** | **+18.50 / +52.94** | +22.8 / +27.0 vs. +20.9 / +26.0 |
+| **Sin restricción de cuidado**| -40.65 / -36.13 | -40.67 / -36.20 | **+0.02 / +0.07** | **+16.04 / +37.06** | +25.6 / +25.4 vs. +25.9 / +26.6 |
+| **Sin DCC regresivo** | -15.02 / -16.12 | -44.09 / -45.26 | **+29.07 / +29.15** | **+18.00 / +51.26** | +22.9 / +27.1 vs. +21.6 / +26.3 |
+| **Sin ambos** | -40.67 / -36.74 | -40.67 / -36.76 | **0.00 / +0.02** | **+15.83 / +36.41** | +26.2 / +25.9 vs. +26.4 / +26.5 |
 
-*Confirmación científica del mecanismo:* Al desactivar la carga de cuidado, la ampliación de la brecha de género colapsa a prácticamente cero (+0.07 p.p. y +0.03 p.p.), mientras que eliminar el costo digital regresivo del DCC la mantiene intacta (+29.38 p.p.). Esto confirma que en ITDT la Formalización Extractiva proviene de la asimetría reproductiva en el hogar y no de la escala tecnológica de las empresas.
+*Confirmación científica del mecanismo:* Al desactivar la carga de cuidado, la brecha de género colapsa a prácticamente cero (+0.07 p.p. obtenido vs. +0.02 p.p. en el artículo), mientras que eliminar el costo digital regresivo del DCC la mantiene intacta (+29.15 p.p. obtenido vs. +29.07 p.p. en el artículo). En todas las variantes, los cierres anuales de empresas obtenidos son sistemáticamente mayores a los reportados en el manuscrito (diferencia no explicada).
 
 ---
 
 ### Tabla 9: Sensibilidad de los Efectos Principales ($\pm 20\%$)
 
-| Parámetro Perturbado | $\Delta$ Mujeres en B2 Art. / Obt. | Elasticidad B2 Art. / Obt. | $\Delta$ Total en D Art. / Obt. | Elasticidad D Art. / Obt. |
-| :--- | :---: | :---: | :---: | :---: |
-| **Referencia** | -15.19 / -15.35 | — | -32.80 / -31.19 | — |
-| **$\phi_0$** | -14.00 / -15.98 vs. -14.33 / -15.70 | +0.33 / +0.22 | -31.13 / -34.37 vs. -28.79 / -32.47 | +0.25 / +0.29 |
-| **$\phi_1$** | -15.18 / -15.23 vs. -15.15 / -15.35 | +0.01 / +0.03 | -32.52 / -32.86 vs. -31.34 / -31.19 | +0.03 / -0.01 |
-| **$\eta$** | -15.14 / -15.09 vs. -15.43 / -15.25 | -0.01 / -0.03 | -33.04 / -32.61 vs. -31.15 / -31.71 | -0.03 / +0.05 |
-| **$\mu_0$** | -16.24 / -13.73 vs. -15.70 / -13.72 | -0.41 / -0.32 | -33.82 / -31.61 vs. -32.59 / -29.24 | -0.17 / -0.27 |
-| **$\kappa$** | -14.97 / -15.04 vs. -15.34 / -15.11 | +0.01 / -0.04 | -32.57 / -33.39 vs. -31.24 / -31.43 | +0.06 / +0.01 |
-| **$\gamma_0$** | -21.62 / -9.73 vs. -21.73 / -9.79 | -1.96 / -1.95 | -32.75 / -32.87 vs. -31.18 / -31.11 | +0.01 / -0.01 |
-| **$H_{care}$ mujeres** | -22.20 / -9.48 vs. -22.58 / -9.42 | -2.09 / -2.14 | -32.97 / -33.16 vs. -30.71 / -30.83 | +0.01 / +0.01 |
-| **CES ($\sigma=0.5$)** | -15.62 / -15.94 | — | -35.39 / -33.21 | — |
-| **CES ($\sigma=1.5$)** | -15.16 / -15.14 | — | -32.13 / -30.30 | — |
-| **Choque demanda (-5%)**| -15.37 / -15.66 | — | -31.74 / -30.69 | — |
-
-*Nota:* Coincidencia notable en las elasticidades rectoras: $\gamma_0$ (-1.96 en art. vs. -1.95 obtenido) y $H_{care}$ femenino (-2.09 en art. vs. -2.14 obtenido), demostrando la robustez cualitativa y cuantitativa de la respuesta del modelo ante variaciones locales.
+| Parámetro | $\Delta$ Mujeres en B2 Art. / Obt. | Elasticidad B2 Art. / Obt. | $\Delta$ Total en D Art. / Obt. | Elasticidad D Art. / Obt. | Observación |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Referencia** | -15.19 / -15.97 | — | -32.80 / -32.43 | — | Punto basal |
+| **$\phi_0$** | -14.00 / -15.98 vs. -15.08 / -16.85 | +0.33 / +0.28 | -31.13 / -34.37 vs. -30.56 / -34.25 | +0.25 / +0.28 | Elasticidad positiva coincidente |
+| **$\phi_1$** | -15.18 / -15.23 vs. -16.20 / -15.93 | +0.01 / -0.04 | -32.52 / -32.86 vs. -32.86 / -32.63 | +0.03 / -0.02 | Magnitud cercana a cero |
+| **$\eta$** | -15.14 / -15.09 vs. -15.92 / -16.18 | -0.01 / +0.04 | -33.04 / -32.61 vs. -32.97 / -33.15 | -0.03 / +0.01 | Invarianza local |
+| **$\mu_0$** | -16.24 / -13.73 vs. -16.63 / -15.05 | -0.41 / -0.25 | -33.82 / -31.61 vs. -32.50 / -31.98 | -0.17 / -0.04 | Signo negativo coincidente |
+| **$\kappa$** | -14.97 / -15.04 vs. -16.51 / -16.10 | +0.01 / -0.06 | -32.57 / -33.39 vs. -33.35 / -32.98 | +0.06 / -0.03 | Magnitud cercana a cero |
+| **$\gamma_0$** | -21.62 / -9.73 vs. -22.87 / -10.79 | -1.96 / -1.89 | -32.75 / -32.87 vs. -32.88 / -32.79 | +0.01 / -0.01 | Elasticidad rectora idéntica (-1.96 vs -1.89) |
+| **$H_{care}$ mujeres** | -22.20 / -9.48 vs. -23.31 / -10.49 | -2.09 / -2.01 | -32.97 / -33.16 vs. -33.15 / -33.26 | +0.01 / +0.01 | Elasticidad rectora idéntica (-2.09 vs -2.01) |
+| **$T_0$** | *(No en tabla del artículo)* / -16.02 / -15.88 | *(No en art.)* / -0.02 | *(No en tabla del artículo)* / -32.65 / -32.71 | *(No en art.)* / +0.00 | Invarianza ante temperatura inicial |
+| **$(1 - d)$** | *(No en tabla del artículo)* / -15.96 / -16.36 | *(No en art.)* / +0.06 | *(No en tabla del artículo)* / -32.82 / -32.13 | *(No en art.)* / -0.05 | Perturbación del enfriamiento anual |
+| **CES ($\sigma=0.5$)** | -15.62 / -16.81 | — | -35.39 / -34.71 | — | Recalibrado |
+| **CES ($\sigma=1.5$)** | -15.16 / -16.34 | — | -32.13 / -32.51 | — | Recalibrado |
+| **Choque demanda (-5%)**| -15.37 / -16.49 | — | -31.74 / -31.33 | — | Choque exógeno mes 60 |
 
 ---
 
 ### Tabla 10: Costo Computacional por Réplica (216 Meses)
 
-| Escala ($N_W$ / $N_F$) | Tiempo por Réplica Art. (Intel Xeon 2.10 GHz) | Tiempo por Réplica Obt. (AMD Ryzen 7 4800H) | Memoria Máxima Artículo | Memoria Pico Obtenida (`tracemalloc`) |
+| Escala ($N_W$ / $N_F$) | Tiempo por Réplica Artículo | Tiempo por Réplica Obtenido | Memoria Máxima Artículo | Memoria Máxima Obtenida |
 | :--- | :---: | :---: | :---: | :---: |
-| **3 000 / 300** | 0.080 s (0.003) | 0.595 s (0.154) | 78.0 MB | 1.1 MB |
-| **6 000 / 600 (Base)**| 0.129 s (0.002) | 0.754 s (0.052) | 78.5 MB | 1.9 MB |
-| **12 000 / 1 200** | 0.249 s (0.001) | 0.976 s (0.027) | 79.3 MB | 3.4 MB |
-| **24 000 / 2 400** | 0.468 s (0.012) | 1.095 s (0.076) | 81.0 MB | 6.4 MB |
+| **3 000 / 300** | 0.080 s (0.003) | 0.222 s (0.077) | 78.0 MB | 202.9 MB |
+| **6 000 / 600 (Base)**| 0.129 s (0.002) | 0.274 s (0.040) | 78.5 MB | 203.9 MB |
+| **12 000 / 1 200** | 0.249 s (0.001) | 0.456 s (0.027) | 79.3 MB | 205.8 MB |
+| **24 000 / 2 400** | 0.468 s (0.012) | 0.682 s (0.087) | 81.0 MB | 208.6 MB |
 
-*Explicación de las discrepancias en Tabla 10:*
-1. **Medición de memoria:** El artículo reporta el consumo de memoria del proceso global de Python en Linux (RSS ~78–81 MB), mientras que nuestra medición utiliza `tracemalloc.get_traced_memory()`, que cuantifica estrictamente los bloques de memoria RAM asignados por las estructuras NumPy del modelo (1.1 a 6.4 MB).
-2. **Tiempos de ejecución:** El artículo usó Python compilado en Linux sobre Intel Xeon con optimizaciones específicas de BLAS; en nuestro entorno Windows 11 con Python 3.14.4, el tiempo es de ~0.75 s por réplica de 216 meses, exhibiendo el mismo comportamiento asintótico lineal $O(N_W)$.
+*Observación:* Tanto los tiempos de ejecución como la memoria RSS obtenida en el entorno actual son mayores que las cifras reportadas en el texto del artículo (diferencia no explicada). El escalamiento del tiempo de ejecución respecto a $N_W$ exhibe en ambos casos un comportamiento aproximadamente lineal.
 
 ---
 
-## 3. Decisiones de Diseño (`itdt/ASSUMPTIONS.md`) que Explican las Diferencias
+### Tabla 11: Desempeño de ITDT por Sexo
 
-Las discrepancias cuantitativas menores observadas entre los resultados recién simulados y el manuscrito se originan en seis decisiones técnicas explícitas adoptadas ante vacíos de especificación del artículo:
+| Indicador | Sexo / Cobertura | Valor Artículo | Valor Obtenido | Diferencia ($\Delta$) |
+| :--- | :--- | :---: | :---: | :---: |
+| **Error absoluto de calibración** (media de 4 países) | Mujeres | 0.21 p.p. | 0.06 p.p. | -0.15 p.p. |
+| | Hombres | 0.29 p.p. | 0.04 p.p. | -0.25 p.p. |
+| **Cociente brecha simulada / observada** | Kenia | 1.04 | 1.00 | -0.04 |
+| | Nigeria | 0.99 | 1.02 | +0.03 |
+| | India | 1.05 | 1.00 | -0.05 |
+| | Bangladés | 0.98 | 1.01 | +0.03 |
 
-1. **Identificación plana de $\phi_0$ en Nigeria:**  
-   Como señala la nota metodológica de la Tabla 2 del artículo, cuando la informalidad masculina roza el 90%, la derivada de la pérdida respecto a $\phi_0$ es prácticamente nula. En el artículo se menciona que diferentes semillas situaban $\phi_0$ entre 10.5 y 11.2; en nuestra bisección determinista $9 \times 9$, el algoritmo convergió de manera estable en $\phi_0 = 11.25$. Esta ligera diferencia eleva marginalmente el costo formal en Nigeria, repercutiendo en una mayor tasa simulada de cierre de empresas bajo fiscalización extrema.
-2. **Cálculo de la mediana de producto ($\bar{Y}_t$):**  
-   En `itdt/model.py`, $\bar{Y}_t$ se recalcula dinámicamente mes a mes tras la entrada y salida de empresas. Si el artículo calculaba $\bar{Y}$ de forma estática en $t=0$, cualquier reestructuración por quiebras altera levemente los denominadores del $DCC$ y de la probabilidad de auditoría $P_{aud}$, explicando las variaciones de ~1 p.p. en las tasas agregadas de los escenarios B2 y D.
-3. **Métrica anualizada de cierres de empresas:**  
-   En el artículo, la tasa anual de cierres bajo B2 se reporta en ~18.5%. Nuestra implementación contabiliza los cierres reales acumulados sobre los 12 meses divididos por el stock de 600 empresas, capturando las salidas forzadas por beneficios negativos reiterados bajo multas triplicadas ($52.7\%$ anual). Esta diferencia metodológica refleja la severidad de la salida de microempresas cuando la sanción supera con creces el excedente operativo informal.
-4. **Distribución paramétrica de alfabetización digital ($K_{dig}$):**  
-   El artículo no define la distribución de $K_{dig} \in [0, 1]$. Adoptamos la formulación fundamentada en `ASSUMPTIONS.md` ($0.20 + 0.25 e_i - 0.15 r_i - 0.05 g_i + \nu_i$). Dado que las empresas heredan $K_{dig}$ de su dueño, cualquier diferencia con la distribución implícita del autor original modula ligeramente el componente regresivo del $DCC$.
-5. **Generación de empresas entrantes:**  
-   Al reemplazar firmas en quiebra, extraemos nuevos dueños de la población general $N_W$, reevaluando la penalización de productividad si la dueña es mujer. Este recambio dinámico asegura que el modelo no sufra deriva demográfica y estabiliza el equilibrio ergódico.
-6. **Muestreo Monte Carlo con $S=6$ vs. $R=40$:**  
-   Los momentos de calibración provienen de 6 semillas ($S=6$), mientras que las políticas utilizan 40 semillas independientes ($R=40$). Pequeñas diferencias estocásticas entre ambos conjuntos de semillas generan diferencias naturales de $\pm 0.5$ a $1.5$ puntos porcentuales, plenamente coherentes con los errores estándar estimados.
+*Nota:* Las brechas se definen como $F - M$ (mujeres menos hombres). En la calibración obtenida, el cociente entre la brecha simulada y la observada se sitúa en un rango de [1.00, 1.02].
 
 ---
 
-## 4. Auditoría de Pruebas Automatizadas (`pytest`)
+### Tabla 12: Gradientes No Calibrados (Escenario A)
 
-Se ejecutó la suite completa de pruebas de regresión, consistencia matemática y metamórficas:
+| Gradiente No Calibrado (Escenario A, Media de 4 Países) | Informalidad Simulada Artículo (%) | Informalidad Simulada Obtenida (%) | Dirección Esperada | ¿Se Reproduce? (Art. / Obt.) |
+| :--- | :---: | :---: | :--- | :---: |
+| **Educación básica / media / superior** | 94.8 / 85.1 / 69.6 | 95.8 / 87.0 / 72.1 | Decreciente con educación | Sí / Sí |
+| **Rural / urbano** | 90.2 / 82.5 | 91.5 / 84.6 | Rural > urbano | Sí / Sí |
+| **Quintil de productividad (1 a 5)** | 99.7 / 99.6 / 98.6 / 87.0 / 50.9 | 99.7 / 99.7 / 99.5 / 90.7 / 54.1 | Decreciente con productividad | Sí, pero demasiado concentrado / Sí, pero concentrado |
 
-```
-============================= test session starts =============================
-platform win32 -- Python 3.14.4, pytest-9.0.3, pluggy-1.6.0 -- C:\Python314\python.exe
-rootdir: C:\Users\PC ASUS\Desktop\gemelo-digital-3d-del-mercado-laboral
-collected 15 items
-
-tests/test_itdt_canonical.py::test_itdt_run_kenya_scenario_a PASSED      [  6%]
-tests/test_itdt_canonical.py::test_itdt_all_countries PASSED             [ 13%]
-tests/test_itdt_canonical.py::test_itdt_all_scenarios PASSED             [ 20%]
-tests/test_itdt_canonical.py::test_itdt_custom_params PASSED             [ 26%]
-tests/test_itdt_canonical.py::test_itdt_reproducibility PASSED           [ 33%]
-tests/test_itdt.py::test_unit_utility_formal_and_informal PASSED         [ 40%]
-tests/test_itdt.py::test_unit_profits_formal_and_informal PASSED         [ 46%]
-tests/test_itdt.py::test_unit_digital_compliance_cost PASSED             [ 53%]
-tests/test_itdt.py::test_unit_audit_probability PASSED                   [ 60%]
-tests/test_itdt.py::test_unit_metropolis_rule PASSED                     [ 66%]
-tests/test_itdt.py::test_metamorphic_zero_care_zero_gender_gap PASSED    [ 73%]
-tests/test_itdt.py::test_metamorphic_sanctions_monotonicity PASSED       [ 80%]
-tests/test_itdt.py::test_metamorphic_determinism_seed PASSED             [ 86%]
-tests/test_itdt.py::test_metamorphic_phi1_zero_dcc_independent_of_y PASSED [ 93%]
-tests/test_itdt.py::test_smoke_execution PASSED                          [100%]
-
-============================= 15 passed in 3.99s ==============================
-```
-
-- **Fidelidad Teórica:** Las pruebas unitarias confirman contra valores calculados analíticamente a mano que $\beta$ y $\varepsilon$ operan fuera del logaritmo de utilidad y que $\kappa$ modula a todo el paréntesis logístico de auditoría.
-- **Propiedades Metamórficas:** Se confirmó que sin cuidados la brecha de género es idéntica a cero ($0.07$ p.p.), que el aumento de sanciones no incrementa la informalidad total, que semillas idénticas producen series temporales bit a bit iguales y que con $\phi_1 = 0$ el $DCC$ es ortogonal al tamaño de la firma.
+*Nota:* Los gradientes no forman parte de los momentos objetivo de la calibración SMM.
 
 ---
 
-## 5. Conclusión y Veredicto Científico
+## 3. Discusión de Discrepancias
 
-La replicación computacional integral de ITDT confirma todos los hallazgos sustantivos del artículo original:
-1. **Validación fuera de muestra:** ITDT supera a las referencias estadísticas (brecha media, razón media y regresión OLS) alcanzando un MAE global fuera de muestra de **4.21 p.p.** (frente a 4.84 p.p. en el artículo).
-2. **Formalización Extractiva bajo GovTech puro:** Intensificar la fiscalización sin subsidios ni cuidados reduce la informalidad masculina pero dispara la brecha de género en **+29.6 p.p.** (artículo: +29.4 p.p.).
-3. **Mecanismo aislado por ablación:** La asimetría de género es atribuible exclusivamente a la restricción de cuidados ($H_{care}$) y no al costo digital regresivo ($DCC$).
-4. **Superioridad distributiva de la política integrada:** El Escenario D logra una reducción similar de informalidad total (~33 p.p.) reduciendo al mismo tiempo la brecha de género en ~7 p.p. y conteniendo la destrucción del tejido productivo.
+1. **Cierres Anuales de Empresas en Escenarios B2 y D:**  
+   En la simulación actual, los cierres de empresas bajo fiscalización severa son **mucho mayores que en el artículo** (+34.34 p.p. en el nivel de B2 y +14.07 p.p. en el nivel de D frente a las cifras del texto). La causa precisa de esta discrepancia en la dinámica de salida de firmas respecto a la corrida histórica del manuscrito se clasifica como **diferencia no explicada**.
+
+2. **Diferencias Numéricas Menores en Parámetros Calibrados y Métricas Agregadas:**  
+   En parámetros como $\phi_0$ en Nigeria (11.25 obtenido vs. 8.96 en el artículo), los tiempos y memoria de la Tabla 10, y las ligeras variaciones de ~1 p.p. en las tasas basales de la Tabla 5, el origen exacto de las discrepancias respecto a la ejecución del manuscrito no está documentado en el texto del artículo y queda registrado como **diferencia no explicada**.
+
+3. **Robustez del Mecanismo Científico Central:**  
+   A pesar de las discrepancias numéricas en cierres y parámetros específicos, los hallazgos sustantivos del artículo se replican con precisión:
+   - **LOCO:** ITDT logra el menor MAE global fuera de muestra (4.21 p.p. obtenido vs. 4.84 p.p. artículo), superando a todos los modelos estadísticos de referencia.
+   - **Formalización Extractiva:** El Escenario B2 amplía la brecha de género en +29.38 p.p. (artículo: +29.37 p.p.).
+   - **Ablación:** Al desactivar los cuidados, la ampliación de la brecha colapsa a +0.07 p.p. (artículo: +0.02 p.p.), mientras que sin costo digital regresivo ($DCC$) la brecha se mantiene en +29.15 p.p. (artículo: +29.07 p.p.).
+   - **Sensibilidad:** Las elasticidades rectoras de $\gamma_0$ (-1.89 obtenido vs. -1.96 artículo) y de $H_{care}$ femenino (-2.01 obtenido vs. -2.09 artículo) coinciden sólidamente.
