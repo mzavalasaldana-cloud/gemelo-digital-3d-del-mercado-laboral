@@ -63,17 +63,17 @@ const LiveMetricsPill = React.memo<{ metrics: StructuralMetrics }>(({ metrics })
     <div className="flex items-center gap-2">
       <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
       <span className="text-slate-400">Informalidad:</span>
-      <span className="text-cyan-300 font-bold text-sm">{metrics.informalityRate.toFixed(1)}%</span>
+      <span className="text-cyan-300 font-bold text-sm">{(metrics?.informalityRate ?? 0).toFixed(1)}%</span>
     </div>
     <div className="h-4 w-px bg-slate-700" />
     <div className="flex items-center gap-2">
       <span className="text-slate-400">Gini:</span>
-      <span className="text-indigo-300 font-bold text-sm">{metrics.giniIndex.toFixed(3)}</span>
+      <span className="text-indigo-300 font-bold text-sm">{(metrics?.giniIndex ?? 0).toFixed(3)}</span>
     </div>
     <div className="h-4 w-px bg-slate-700" />
     <div className="flex items-center gap-2">
       <span className="text-slate-400">OIT Decente:</span>
-      <span className="text-emerald-400 font-bold text-sm">{metrics.decentWorkIndex}/100</span>
+      <span className="text-emerald-400 font-bold text-sm">{metrics?.decentWorkIndex ?? 50}/100</span>
     </div>
     <div className="h-4 w-px bg-slate-700" />
     <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-mono">

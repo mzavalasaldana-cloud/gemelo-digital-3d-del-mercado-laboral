@@ -74,7 +74,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const profile = COUNTRY_PROFILES[country];
   const baseInformality = profile.baseInformalityRate;
-  const informalityDelta = Number((metrics.informalityRate - baseInformality).toFixed(1));
+  const currentInf = metrics?.informalityRate ?? baseInformality;
+  const informalityDelta = Number((currentInf - baseInformality).toFixed(1));
   const isReduced = informalityDelta <= 0;
   const isLight = theme === 'light';
 
@@ -99,18 +100,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     });
 
     // 2024 (Current)
-    const currentFormal = Number(((100 - metrics.informalityRate) * 0.92).toFixed(1));
-    const currentUnemp = Number((100 - metrics.informalityRate - currentFormal).toFixed(1));
+    const currentFormal = Number(((100 - currentInf) * 0.92).toFixed(1));
+    const currentUnemp = Number((100 - currentInf - currentFormal).toFixed(1));
     data.push({
       year: '2024',
-      informalidad: Number(metrics.informalityRate.toFixed(1)),
+      informalidad: Number(currentInf.toFixed(1)),
       formalidad: currentFormal,
       desempleo: currentUnemp,
       tipo: t('current', language)
     });
 
     // Projected 2025-2034 with policy convergence
-    const targetInf = metrics.informalityRate;
+    const targetInf = currentInf;
     for (let yr = 2025; yr <= 2034; yr++) {
       const step = (yr - 2024) / 10;
       // Convergence towards structural policy impact
@@ -127,12 +128,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
 
     return data;
-  }, [baseInformality, metrics.informalityRate, policyParams.skillsTrainingCoverage, language]);
+  }, [baseInformality, currentInf, policyParams.skillsTrainingCoverage, language]);
 
   // 2. Bar Chart: Baseline vs Current Policy Intervention Comparison
   const comparisonData = useMemo(() => {
     const baseFormal = (100 - baseInformality) * 0.9;
-    const currentFormal = (100 - metrics.informalityRate) * 0.92;
+    const currentFormal = (100 - currentInf) * 0.92;
     const baseFiscalRev = ((2500 * (baseFormal / 100)) * 0.18 * 30) / 10;
     const baseDecentWork = Math.round(60 + (100 - baseInformality) * 0.3);
 
@@ -143,7 +144,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {
         indicador: t('informalityRate', language) + ' (%)',
         [baseKey]: Number(baseInformality.toFixed(1)),
-        [interventionKey]: Number(metrics.informalityRate.toFixed(1)),
+        [interventionKey]: Number(currentInf.toFixed(1)),
       },
       {
         indicador: (language === 'en' ? 'Formal Employment (%)' : 'Empleo Formal (%)'),
@@ -153,15 +154,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {
         indicador: (language === 'en' ? 'Fiscal Revenue ($M)' : 'Recaudación Fiscal ($M)'),
         [baseKey]: Number(baseFiscalRev.toFixed(1)),
-        [interventionKey]: Number(metrics.fiscalRevenueMillionUSD.toFixed(1)),
+        [interventionKey]: Number((metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)),
       },
       {
         indicador: (language === 'en' ? 'Decent Work Index' : 'Índice Empleo Decente'),
         [baseKey]: baseDecentWork,
-        [interventionKey]: metrics.decentWorkIndex,
+        [interventionKey]: metrics?.decentWorkIndex ?? baseDecentWork,
       },
     ];
-  }, [baseInformality, metrics, language]);
+  }, [baseInformality, currentInf, metrics, language]);
 
   // 3. Sector Distribution Composition Data
   const sectorCompositionData = useMemo(() => {
@@ -278,7 +279,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                {metrics.informalityRate.toFixed(1)}%
+                {(metrics?.informalityRate ?? baseInformality).toFixed(1)}%
               </span>
               <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                 Base: {baseInformality}%
@@ -287,7 +288,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className={`mt-3 w-full rounded-full h-1.5 overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-900'}`}>
               <div 
                 className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all duration-500" 
-                style={{ width: `${Math.min(100, metrics.informalityRate)}%` }} 
+                style={{ width: `${Math.min(100, metrics?.informalityRate ?? baseInformality)}%` }} 
               />
             </div>
             <div className={`mt-2 text-[11px] flex justify-between font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -304,7 +305,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-indigo-700' : 'text-indigo-300'}`}>
-                {metrics.giniIndex.toFixed(3)}
+                {(metrics?.giniIndex ?? profile.baseGini).toFixed(3)}
               </span>
               <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                 Base: {profile.baseGini.toFixed(3)}
@@ -313,11 +314,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className={`mt-3 w-full rounded-full h-1.5 overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-900'}`}>
               <div 
                 className="h-full bg-indigo-500 transition-all duration-500" 
-                style={{ width: `${(metrics.giniIndex / 0.6) * 100}%` }} 
+                style={{ width: `${((metrics?.giniIndex ?? profile.baseGini) / 0.6) * 100}%` }} 
               />
             </div>
             <div className={`mt-2 text-[11px] flex justify-between font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              <span>{metrics.giniIndex < 0.42 ? (language === 'en' ? 'Moderate polarization' : 'Moderada polarización') : (language === 'en' ? 'High concentration' : 'Alta concentración')}</span>
+              <span>{(metrics?.giniIndex ?? profile.baseGini) < 0.42 ? (language === 'en' ? 'Moderate polarization' : 'Moderada polarización') : (language === 'en' ? 'High concentration' : 'Alta concentración')}</span>
             </div>
           </div>
 
@@ -330,15 +331,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>
-                +${(metrics.fiscalRevenueMillionUSD - metrics.policyCostMillionUSD).toFixed(1)}M
+                +${((metrics?.fiscalRevenueMillionUSD ?? 0) - (metrics?.policyCostMillionUSD ?? 0)).toFixed(1)}M
               </span>
               <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>USD/{language === 'en' ? 'yr' : 'año'}</span>
             </div>
             <div className={`mt-3 text-[11px] font-mono flex justify-between border-t pt-2 ${
               isLight ? 'border-slate-200 text-slate-600' : 'border-slate-800 text-slate-400'
             }`}>
-              <span>{language === 'en' ? 'Revenue' : 'Recaudación'}: +${metrics.fiscalRevenueMillionUSD.toFixed(1)}M</span>
-              <span className="text-rose-500">{language === 'en' ? 'Cost' : 'Costo'}: -${metrics.policyCostMillionUSD.toFixed(1)}M</span>
+              <span>{language === 'en' ? 'Revenue' : 'Recaudación'}: +${(metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)}M</span>
+              <span className="text-rose-500">{language === 'en' ? 'Cost' : 'Costo'}: -${(metrics?.policyCostMillionUSD ?? 0).toFixed(1)}M</span>
             </div>
           </div>
 
@@ -351,7 +352,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-sky-700' : 'text-cyan-300'}`}>
-                {metrics.decentWorkIndex}
+                {metrics?.decentWorkIndex ?? 50}
               </span>
               <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>/ 100</span>
             </div>

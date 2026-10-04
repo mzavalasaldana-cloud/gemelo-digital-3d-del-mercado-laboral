@@ -260,7 +260,15 @@ def calculate_structural_metrics(
     # Tasa anual de cierre de empresas por quiebra
     annual_exit_rate = float(rec.get("annual_exit_rate", 0.0))
 
-    return {
+    # Costo presupuestario de la política (en millones de USD)
+    policy_cost = float(rec.get("policy_cost", 0.0))
+    if policy_cost == 0.0 and policy_params:
+        policy_cost = round((policy_params.get("smeSubsidyUSDMonth", 0.0) * 1200 + policy_params.get("skillsTrainingCoverage", 0.0) * 800) / 10000, 2)
+    elif policy_cost == 0.0:
+        sc_cost_map = {"A": 0.0, "B1": 12.5, "B2": 45.0, "C": 28.0, "D": 65.0}
+        policy_cost = sc_cost_map.get(sc_clean, 0.0)
+
+    res = {
         "country": country_clean,
         "scenario": sim_data["scenario"],
         "month": clamped_month,
@@ -283,6 +291,7 @@ def calculate_structural_metrics(
         "formalWageUSDNote": ILLUSTRATIVE_NOTE,
         "informalWageUSDNote": ILLUSTRATIVE_NOTE,
         "fiscalRevenueMillionUSD": round(fiscal_revenue, 2),
+        "policyCostMillionUSD": round(policy_cost, 2),
         "corporateTaxRevenue": round(corp_tax, 2),
         "laborContributionsRevenue": round(labor_tax, 2),
         "annualExitRate": round(annual_exit_rate, 2),

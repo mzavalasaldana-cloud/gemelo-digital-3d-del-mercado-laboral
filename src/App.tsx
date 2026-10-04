@@ -510,7 +510,7 @@ export default function App() {
       country,
       scenario: `Simulación ${year}`,
       status: 'completada',
-      informalityChange: Number((currentMetrics.informalityRate - COUNTRY_PROFILES[country].baseInformalityRate).toFixed(1)),
+      informalityChange: Number(((currentMetrics?.informalityRate ?? 0) - COUNTRY_PROFILES[country].baseInformalityRate).toFixed(1)),
       executionTimeSec: 4.2,
     };
     setSimRuns([newRun, ...simRuns]);
