@@ -50,9 +50,6 @@ _session_factory = async_sessionmaker(
     autoflush=False,
 )
 
-def get_sessionmaker():
-    return _session_factory
-
 class AsyncSessionProxy:
     """Proxy that ensures calls always route to the active session factory."""
     def __call__(self, **kwargs):

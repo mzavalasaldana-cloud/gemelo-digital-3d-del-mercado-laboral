@@ -3,12 +3,10 @@ Datasets & Reportes: Microdata Ingestion, Household Survey Catalog, and Multi-fo
 """
 
 import streamlit as st
-import pandas as pd
 import json
 
-from streamlit_app.config import t, COLORS
 from streamlit_app.data.mock_data import PRELOADED_DATASETS, COUNTRY_PROFILES
-from streamlit_app.ml_engine import generate_synthetic_microdata
+from backend.ml_engine import generate_synthetic_microdata
 from streamlit_app.simulation_engine import calculate_structural_metrics
 from streamlit_app.utils.report_generator import (
     generate_pdf_report,
@@ -16,9 +14,7 @@ from streamlit_app.utils.report_generator import (
     generate_html_report
 )
 from streamlit_app.utils.ui_components import (
-    render_metric_card, 
     render_section_header, 
-    play_holo_sound_js,
     render_explainability_card
 )
 
@@ -65,12 +61,12 @@ def render_datasets_reports_view():
     # TAB 1: Datasets Catalog & Uploader
     # -------------------------------------------------------------
     with tab_datasets:
-        render_section_header("Catálogo de Encuestas de Hogares y Fuerza de Trabajo", icon="📚", badge="Armonizado")
+        render_section_header("Catálogo de Encuestas de Hogares y Fuerza de Trabajo", icon="📚", badge="Datos de demostración")
 
         col_cat1, col_cat2 = st.columns([1.4, 1.0])
 
         with col_cat1:
-            st.markdown("#### Encuestas Oficiales Preconfiguradas:")
+            st.markdown("#### Encuestas Preconfiguradas (Datos de demostración):")
             for ds in PRELOADED_DATASETS:
                 is_active_country = (ds["country"] == country_code)
                 border_style = "border: 1px solid #00f0ff; background: rgba(0, 240, 255, 0.05);" if is_active_country else "border: 1px solid rgba(255, 255, 255, 0.1);"

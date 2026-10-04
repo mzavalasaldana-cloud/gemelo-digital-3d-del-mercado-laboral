@@ -4,7 +4,7 @@ import asyncio
 import logging
 import json
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from contextlib import asynccontextmanager
 
 from fastapi import (
@@ -30,16 +30,12 @@ from .models import (
     DatasetModel,
     SimulationRunModel,
     CopilotMessageModel,
-    PolicyParameters,
-    StructuralMetrics,
     SimulationRunCreate,
-    SimulationRunResponse,
     EDADataResponse,
     CrossValidationRequest,
     CrossValidationResponse,
     CohortFilterRequest,
     CohortProjectionResponse,
-    SimulationControlMessage,
     CopilotChatRequest,
     CopilotChatResponse,
 )
@@ -52,7 +48,6 @@ from .ml_engine import (
     generate_synthetic_benchmark_dataset,
     generate_country_preset_dataset,
     DATA_STORE_DIR,
-    MODELS_STORE_DIR,
 )
 from .simulation_engine import (
     SimulationEngine,

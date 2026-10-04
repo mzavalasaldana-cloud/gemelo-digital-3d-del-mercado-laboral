@@ -7,14 +7,12 @@ import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
-import numpy as np
 import time
 import json
 import urllib.request
 import urllib.error
 
-from streamlit_app.config import t, COLORS
-from streamlit_app.ml_engine import (
+from backend.ml_engine import (
     generate_synthetic_microdata,
     compute_eda_summary,
     run_cross_validation_models,
@@ -272,7 +270,7 @@ def render_ai_engine_view():
                 st.session_state["deployed_at"] = time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
                 # Send Deployment Request to FastAPI Backend
-                deploy_res = deploy_model_to_backend(target_id, selected_model_info)
+                deploy_model_to_backend(target_id, selected_model_info)
                 
                 st.success(f"✓ ¡Modelo **{selected_champion_name}** desplegado exitosamente en el backend!")
                 st.toast(f"🏆 Modelo {selected_champion_name} activo en el Gemelo Digital 3D.", icon="🚀")

@@ -293,8 +293,6 @@ def _worker_baseline_eval(args: Tuple[str, str, Dict[str, Any]]) -> Tuple[str, s
     c_info = COUNTRY_DATABASE[c_key]
     s_F = calib_info["s_F"]
     T_obs = c_info["T_obs"]
-    F_obs = c_info["F_obs"]
-    M_obs = c_info["M_obs"]
     seeds = DEFAULT_SEEDS
 
     if m_id == "E1":

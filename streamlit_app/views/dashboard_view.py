@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
-from streamlit_app.config import t, COLORS
 from streamlit_app.data.mock_data import COUNTRY_PROFILES, INITIAL_POLICY_STATE
 from streamlit_app.simulation_engine import (
     calculate_structural_metrics,

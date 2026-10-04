@@ -7,15 +7,13 @@ import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 
-from streamlit_app.config import t, COLORS
-from streamlit_app.data.mock_data import COUNTRY_PROFILES, MOCK_FIRMS
+from streamlit_app.data.mock_data import COUNTRY_PROFILES, DEMO_FIRMS
 from streamlit_app.simulation_engine import (
     generate_worker_population,
     update_worker_positions_for_month,
     calculate_structural_metrics
 )
 from streamlit_app.utils.ui_components import (
-    render_metric_card, 
     render_section_header, 
     play_holo_sound_js,
     apply_chart_theme
@@ -105,7 +103,7 @@ def render_digital_twin_3d_view():
             key="sector_filter_select"
         )
     with c_speed:
-        speed_factor = st.selectbox(
+        st.selectbox(
             "Velocidad",
             options=["1x (Normal)", "2x (Acelerado)", "5x (Rápido)"],
             key="speed_select"
@@ -180,7 +178,7 @@ def render_digital_twin_3d_view():
                 ))
 
         # Add Firm Hubs
-        for firm in MOCK_FIRMS:
+        for firm in DEMO_FIRMS:
             is_formal = firm["type"] == "formal"
             f_color = "#00f0ff" if is_formal else "#f59e0b"
             f_symbol = "diamond" if is_formal else "square"
@@ -304,10 +302,10 @@ def render_digital_twin_3d_view():
         """, unsafe_allow_html=True)
 
         # Firm Inspector
-        render_section_header("Inspector de Hubs Empresariales", icon="🏢", badge="Firmas")
-        firm_names = [f["name"] for f in MOCK_FIRMS]
+        render_section_header("Inspector de Hubs Empresariales", icon="🏢", badge="Datos de demostración")
+        firm_names = [f["name"] for f in DEMO_FIRMS]
         sel_firm_name = st.selectbox("Seleccionar Empresa", options=firm_names, index=0)
-        sel_firm = next((f for f in MOCK_FIRMS if f["name"] == sel_firm_name), MOCK_FIRMS[0])
+        sel_firm = next((f for f in DEMO_FIRMS if f["name"] == sel_firm_name), DEMO_FIRMS[0])
 
         st.markdown(f"""
         <div class="holo-card" style="border-left: 4px solid #00f0ff; font-size: 0.85rem;">

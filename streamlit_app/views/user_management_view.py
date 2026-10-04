@@ -4,15 +4,13 @@ Gestión de Usuarios & RBAC: User Directory, Register New User, Role Switching, 
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 
-from streamlit_app.config import t, COLORS
-from streamlit_app.data.mock_data import MOCK_USERS
-from streamlit_app.utils.ui_components import render_metric_card, render_section_header, play_holo_sound_js
+from streamlit_app.data.mock_data import DEMO_USERS
+from streamlit_app.utils.ui_components import render_section_header, play_holo_sound_js
 
 def render_user_management_view():
     """Renders the Role-Based Access Control and User Administration Module."""
-    users = st.session_state.get("users", MOCK_USERS)
+    users = st.session_state.get("users", DEMO_USERS)
     current_role = st.session_state.get("role", "ADMIN")
 
     # Header
@@ -28,7 +26,8 @@ def render_user_management_view():
                     Administración de Cuentas Institucionales &bull; Matriz de Permisos &bull; Registro de Auditoría
                 </p>
             </div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span class="glow-badge badge-amber">Datos de demostración</span>
                 <span class="glow-badge badge-purple">Tu Rol Activo: {current_role}</span>
                 <span class="glow-badge badge-cyan">{len(users)} Cuentas Registradas</span>
             </div>

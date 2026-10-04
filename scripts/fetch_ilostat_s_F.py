@@ -24,13 +24,12 @@ Flujo:
 """
 
 import os
-import sys
 import json
 import csv
 import ssl
 import urllib.request
 from datetime import datetime, timezone
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Tuple, Optional
 
 # Directorios de destino
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

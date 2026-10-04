@@ -3,49 +3,8 @@ Configuration, Theme tokens, and Session State management for Streamlit Frontend
 """
 
 import streamlit as st
-from typing import Dict, Any
-from streamlit_app.data.mock_data import INITIAL_POLICY_STATE, COUNTRY_PROFILES, MOCK_SIM_RUNS, MOCK_USERS
+from streamlit_app.data.mock_data import INITIAL_POLICY_STATE, DEMO_USERS, get_simulation_runs
 
-# Color Palette Design Tokens
-LIGHT_COLORS = {
-    "bg_main": "#f8fafc",
-    "bg_surface": "#ffffff",
-    "bg_card": "#ffffff",
-    "border_glow": "rgba(2, 132, 199, 0.2)",
-    "primary": "#0284c7",
-    "primary_gradient": "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)",
-    "secondary": "#10b981",
-    "warning": "#d97706",
-    "danger": "#ef4444",
-    "purple": "#8b5cf6",
-    "text_primary": "#0f172a",
-    "text_secondary": "#475569",
-    "text_muted": "#64748b",
-}
-
-DARK_COLORS = {
-    "bg_main": "#05070c",
-    "bg_surface": "#0b1220",
-    "bg_card": "rgba(15, 23, 42, 0.75)",
-    "border_glow": "rgba(0, 240, 255, 0.25)",
-    "primary": "#00f0ff",
-    "primary_gradient": "linear-gradient(135deg, #00f0ff 0%, #3b82f6 100%)",
-    "secondary": "#10b981",
-    "warning": "#f59e0b",
-    "danger": "#ef4444",
-    "purple": "#a855f7",
-    "text_primary": "#f8fafc",
-    "text_secondary": "#94a3b8",
-    "text_muted": "#64748b",
-}
-
-COLORS = LIGHT_COLORS
-
-def get_theme_colors(theme: str = None) -> Dict[str, str]:
-    """Returns the color dictionary for the active or specified theme."""
-    if theme is None:
-        theme = st.session_state.get("theme", "light") if hasattr(st, "session_state") else "light"
-    return LIGHT_COLORS if theme == "light" else DARK_COLORS
 
 
 # i18n Text Translations
@@ -141,10 +100,10 @@ def init_session_state():
         st.session_state.language = "es"
 
     if "sim_runs" not in st.session_state:
-        st.session_state.sim_runs = list(MOCK_SIM_RUNS)
+        st.session_state.sim_runs = list(get_simulation_runs())
 
     if "users" not in st.session_state:
-        st.session_state.users = list(MOCK_USERS)
+        st.session_state.users = list(DEMO_USERS)
 
     if "is_playing" not in st.session_state:
         st.session_state.is_playing = False

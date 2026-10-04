@@ -4,7 +4,6 @@ Gemelo Digital 3D del Mercado Laboral y Transición a la Formalidad.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Ensure root workspace directory is in python path
@@ -14,7 +13,7 @@ if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
 import streamlit as st
-from streamlit_app.config import init_session_state, t, COLORS
+from streamlit_app.config import init_session_state
 from streamlit_app.data.mock_data import COUNTRY_PROFILES
 from streamlit_app.utils.ui_components import inject_custom_css, play_holo_sound_js
 

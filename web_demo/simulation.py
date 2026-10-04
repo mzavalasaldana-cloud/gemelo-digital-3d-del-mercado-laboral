@@ -13,10 +13,8 @@ import os
 import json
 import csv
 from typing import Dict, Any, List, Optional, Tuple
-import numpy as np
 
 from itdt.model import ITDTModel
-from itdt.parameters import FixedParameters, COUNTRY_DATABASE, resolve_country_params
 
 # Directorio de outputs
 OUTPUTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "outputs")
@@ -160,7 +158,6 @@ def _get_or_run_itdt_model(country_code: str, scenario: str, seed: int = 20260) 
 
     # Precomputar distribución de ingresos y Gini para cada mes de la serie
     # Los ingresos se derivan directamente de los agentes de ITDTModel
-    p = model.params
     monthly_series = result["monthly_series"]
 
     # Almacenar en caché y retornar

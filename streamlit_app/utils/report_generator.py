@@ -4,9 +4,8 @@ Generates PDF (ReportLab), Excel (openpyxl), HTML, CSV and JSON.
 """
 
 import io
-import json
 import pandas as pd
-from typing import Dict, Any, List
+from typing import Dict, Any
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle

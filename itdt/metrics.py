@@ -42,7 +42,6 @@ def compute_monthly_metrics(
     """
     Computa el registro mensual completo del modelo para el paso t.
     """
-    N_W = len(worker_is_formal)
     N_F = len(is_formal_firm)
 
     # 1. Tasas de informalidad
@@ -57,7 +56,6 @@ def compute_monthly_metrics(
 
     inf_female = (1.0 - np.mean(worker_is_formal[fem_mask])) * 100.0 if np.any(fem_mask) else 0.0
     inf_male = (1.0 - np.mean(worker_is_formal[male_mask])) * 100.0 if np.any(male_mask) else 0.0
-    gender_gap = inf_female - inf_male
 
     # 2. Cierres de empresas (tasa anualizada en %)
     annual_exit_rate = (num_exits / N_F) * 12.0 * 100.0

@@ -57,3 +57,61 @@ Este documento registra el inventario exhaustivo, las evidencias técnicas y las
 4. **`backend/`**: Rutas de autenticación, PostgreSQL, Copiloto con Langflow, WebSocket y entrenamiento/evaluación de ML permanecen funcionales.
 5. **`streamlit_app/`**: Interfaz de visualización de políticas, curvas de Lorenz y auditoría OIT conectada a ITDTModel.
 6. **`src/`**: Aplicación React 19 con gemelo digital 3D (Three.js), HUD de control y visualización de partículas.
+
+---
+
+## 4. Fase 2: Limpieza de Código Muerto y Unificación de Módulos (Parte 2)
+
+### 4.1 Herramientas de Análisis Estático
+- **Dependencias de desarrollo instaladas:** `ruff>=0.9.0` y `vulture>=2.14` (registradas en `requirements-dev.txt`).
+- **Directorios analizados:** `backend/`, `streamlit_app/`, `web_demo/`, `itdt/` y `scripts/`.
+
+### 4.2 Registro de Eliminaciones de Código Muerto
+
+| Archivo | Elemento eliminado | Tipo de regla | Evidencia / Justificación técnica |
+|---|---|---|---|
+| `backend/ml_engine.py` | `import shap`, `HAS_SHAP` | Ruff F401 / Vulture | Import no utilizado; el motor de explicabilidad calcula contribuciones y curvas sin la librería shap pesada. |
+| `backend/ml_engine.py` | `inf_target = 0.886` | Ruff F841 | Variable asignada en el generador sintético de India pero no leída posteriormente. |
+| `backend/database.py` | `def get_sessionmaker():` | Vulture | Función accesora redundante; grep confirmó 0 llamadas en todo el repositorio (`AsyncSessionLocal` es el punto de acceso activo). |
+| `streamlit_app/views/ai_engine_view.py` | `deploy_res` | Ruff F841 | Asignación del resultado de `deploy_model_to_backend` que nunca se consumía; se llama directamente a la función. |
+| `streamlit_app/views/copilot_chat_view.py` | `calculate_structural_metrics` (import y variable `metrics`) | Ruff F401 / F841 | Import y llamada a cálculo estructural innecesaria en la vista de chat del copiloto. |
+| `web_demo/simulation.py` | `p = model.params` | Ruff F841 | Asignación local no leída en la función de simulación. |
+| `streamlit_app/config.py` | `LIGHT_COLORS`, `DARK_COLORS`, `COLORS`, `get_theme_colors` | Vulture | Paletas y función accesora sin uso alguno en el proyecto (la UI Streamlit se estiliza mediante clases CSS y tokens en `styles/`). |
+| `itdt/calibrate.py` | `m_sim_inner = 0.0`, `m_sim_inner = m_sim` | Ruff F841 | Asignaciones locales no leídas en el bucle de bisección de calibración. |
+| `itdt/cli.py` | `from typing import Dict, Any`, `export_calibration_artifacts_from_summary` | Ruff F401 | Imports no utilizados en el CLI de orquestación. |
+| `itdt/experiments.py` | `import tracemalloc`, `sc_metrics = {}`, asignaciones `bars_f`, `bars_m`, `bars_t` | Ruff F401 / F841 | Import y variables no consumidas en la ejecución y graficación de experimentos. |
+| `itdt/loco.py` | `F_obs = c_info["F_obs"]`, `M_obs = c_info["M_obs"]` | Ruff F841 | Asignaciones locales no utilizadas en el trabajador de evaluación de líneas base LOCO. |
+| `itdt/metrics.py` | `N_W = len(worker_is_formal)`, `gender_gap = inf_female - inf_male` | Ruff F841 | Variables intermedias no utilizadas (el diccionario final retorna `r_gap`). |
+| `itdt/parameters.py` | `dataclasses.field`, `typing.Union` | Ruff F401 | Imports no utilizados en la definición de parámetros. |
+| Diversas vistas de `streamlit_app/` y `scripts/` | Módulos `os`, `re`, `json`, `math`, `List`, `Dict`, `Tuple` sin uso | Ruff F401 | Limpieza automática de imports redundantes sin efecto secundario. |
+
+### 4.3 Unificación de Módulos Duplicados
+
+1. **Motor de Machine Learning (`ml_engine.py`):**
+   - **Antes:** Existían dos implementaciones divergentes: `backend/ml_engine.py` (con pipelines de FastAPI, modelos entrenados en `models_store/`, generación de presets nacionales) y `streamlit_app/ml_engine.py` (con funciones de microdatos sintéticos, EDA y validación cruzada).
+   - **Acción:** Se unificaron en `backend/ml_engine.py`. Las 4 funciones de Streamlit (`generate_synthetic_microdata`, `compute_eda_summary`, `run_cross_validation_models`, `compute_cohort_projections`) se incorporaron formalmente a `backend/ml_engine.py`.
+   - **Eliminación:** Se eliminó por completo `streamlit_app/ml_engine.py`. Las vistas de Streamlit (`ai_engine_view.py`, `datasets_reports_view.py`) importan directamente desde `backend.ml_engine`.
+
+2. **Motores de Simulación (`simulation_engine.py`):**
+   - **Verificación:** Se auditó `backend/simulation_engine.py` y `streamlit_app/simulation_engine.py`. Ambos módulos actúan como clientes directos de `web_demo/simulation.py`, que a su vez orquesta el modelo canónico `ITDTModel`. No hay lógica matemática duplicada ni discrepancias paramétricas.
+
+### 4.4 Reemplazo de Mocks y Datos de Demostración
+
+1. **`COUNTRY_PROFILES`:**
+   - Se reemplazó la definición de constantes fijas en `streamlit_app/data/mock_data.py`. Ahora se alimenta dinámicamente de `itdt.parameters.COUNTRY_DATABASE` y `data/ilostat_s_F.csv`. Se eliminaron constantes arbitrarias de salarios e índices Gini no fundamentados.
+2. **Historial de Simulaciones:**
+   - La función `get_simulation_runs()` ahora consulta la base de datos PostgreSQL mediante el endpoint `/api/v1/simulations/history`, con fallback automático si el servicio no está disponible en tiempo de ejecución.
+3. **Renombrado a `DEMO_` y Etiquetas de Demostración:**
+   - Los conjuntos de datos sin fuente empírica oficial fueron renombrados:
+     - `MOCK_USERS` → `DEMO_USERS`
+     - `MOCK_FIRMS` → `DEMO_FIRMS`
+     - `PRELOADED_DATASETS` → `DEMO_DATASETS`
+   - Se incorporó la insignia y leyenda visible `"Datos de demostración"` en la interfaz de usuario en `user_management_view.py`, `datasets_reports_view.py` y `digital_twin_3d_view.py`.
+
+### 4.5 Verificaciones de Integridad
+
+- **Pruebas unitarias:** `python -m pytest` ejecutado: **24/24 pruebas pasadas exitosamente**.
+- **Integridad econométrica:** Comparación byte a byte de los 12 archivos CSV de `outputs/` frente a la copia de seguridad de línea base: **100 % idénticos**.
+- **Arranque de Backend:** `python -m uvicorn backend.main:app` arranca limpiamente e inicializa el esquema de PostgreSQL, respondiendo exitosamente (código 200) a solicitudes HTTP.
+- **Arranque de Streamlit:** `streamlit run app.py` arranca limpiamente en modo headless, respondiendo exitosamente (código 200) a solicitudes HTTP.
+

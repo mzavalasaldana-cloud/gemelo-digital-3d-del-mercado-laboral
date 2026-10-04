@@ -17,7 +17,6 @@ import os
 import json
 import time
 import math
-import tracemalloc
 from typing import Dict, Any, List, Tuple, Optional
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
@@ -143,7 +142,6 @@ def compute_inferential_tables(
     # TABLA 5: Niveles por escenario
     # -------------------------------------------------------------
     table5_rows = []
-    sc_metrics = {}
 
     for sc in scenarios:
         # Medias por país
@@ -1086,9 +1084,9 @@ def generate_figure_7(
     color_tot = "#2c3e50"
 
     # Barras agrupadas
-    bars_f = ax.bar(x - width, f_means, width, yerr=f_errs, capsize=4, color=color_fem, alpha=0.85, label="Mujeres (F)", edgecolor="#922b21")
-    bars_m = ax.bar(x, m_means, width, yerr=m_errs, capsize=4, color=color_male, alpha=0.85, label="Hombres (M)", edgecolor="#1f618d")
-    bars_t = ax.bar(x + width, t_means, width, yerr=t_errs, capsize=4, color=color_tot, alpha=0.85, label="Total (T)", edgecolor="#17202a")
+    ax.bar(x - width, f_means, width, yerr=f_errs, capsize=4, color=color_fem, alpha=0.85, label="Mujeres (F)", edgecolor="#922b21")
+    ax.bar(x, m_means, width, yerr=m_errs, capsize=4, color=color_male, alpha=0.85, label="Hombres (M)", edgecolor="#1f618d")
+    ax.bar(x + width, t_means, width, yerr=t_errs, capsize=4, color=color_tot, alpha=0.85, label="Total (T)", edgecolor="#17202a")
 
     # Etiquetas de brecha F - M
     for i in range(len(scenarios)):

@@ -8,10 +8,8 @@ import streamlit as st
 import httpx
 import logging
 
-from streamlit_app.config import t, COLORS
 from streamlit_app.data.mock_data import COUNTRY_PROFILES
-from streamlit_app.simulation_engine import calculate_structural_metrics
-from streamlit_app.utils.ui_components import render_metric_card, render_section_header, play_holo_sound_js
+from streamlit_app.utils.ui_components import play_holo_sound_js
 
 # Fallback import directo en caso de ejecución monolítica de Streamlit
 try:
@@ -136,9 +134,6 @@ def render_copilot_chat_view():
         scenario = "A"
     st.session_state.scenario = scenario
 
-    month = st.session_state.get("month", 0)
-    policy_params = st.session_state.get("policy_params", {})
-    metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
     profile = COUNTRY_PROFILES.get(country_code, COUNTRY_PROFILES["KENYA"])
     session_id = f"streamlit-session-{country_code}"
 

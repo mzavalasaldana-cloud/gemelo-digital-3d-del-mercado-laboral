@@ -89,7 +89,6 @@ def nested_bisection_calibration(
         gamma_mid = (gamma_low + gamma_high) / 2.0
         phi_low, phi_high = 0.0, 12.0
         f_sim_inner = 0.0
-        m_sim_inner = 0.0
 
         for in_idx in range(inner_steps):
             phi_mid = (phi_low + phi_high) / 2.0
@@ -102,7 +101,6 @@ def nested_bisection_calibration(
             )
             eval_count += 1
             f_sim_inner = f_sim
-            m_sim_inner = m_sim
 
             # Función de pérdida cuadrática SMM (W = I): (F_sim - F_obs)^2 + (M_sim - M_obs)^2
             loss = (f_sim - F_obs) ** 2 + (m_sim - M_obs) ** 2

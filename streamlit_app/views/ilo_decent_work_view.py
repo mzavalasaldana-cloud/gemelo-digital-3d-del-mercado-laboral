@@ -4,9 +4,7 @@ Trabajo Decente OIT & ODS 8: 10 ILO Decent Work Indicators, Gap Radar and SDG Ta
 
 import streamlit as st
 import plotly.graph_objects as go
-import pandas as pd
 
-from streamlit_app.config import t, COLORS
 from streamlit_app.data.mock_data import ILO_DECENT_WORK_INDICATORS, COUNTRY_PROFILES
 from streamlit_app.simulation_engine import calculate_structural_metrics
 from streamlit_app.utils.ui_components import (

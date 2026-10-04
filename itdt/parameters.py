@@ -2,8 +2,8 @@
 itdt.parameters: Parámetros fijos, datos de países (Tabla A1 y Tabla 2) y configuraciones de escenarios.
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, Union
+from dataclasses import dataclass
+from typing import Dict, Any, Optional
 import os
 import csv
 
