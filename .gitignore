@@ -23,12 +23,16 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 
 # Databases & local data stores
 *.db
 *.sqlite3
 labortwin_dev.db
+labortwin_db.backup.sql
+labortwin_dev.backup.db
+labortwin_dev.db.old
 
 # OS / Editor
 .DS_Store
@@ -36,3 +40,7 @@ Thumbs.db
 *.log
 Claude outputs/
 scratch/
+
+.vscode/
+pyrefly.toml
+pyrightconfig.json

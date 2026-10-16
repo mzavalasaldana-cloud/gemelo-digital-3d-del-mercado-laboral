@@ -42,7 +42,7 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
 ├── backend/                  # API REST FastAPI, WebSocket de simulación, motor ML y modelos SQLAlchemy
 │   ├── main.py               # Servidor principal FastAPI y endpoints
 │   ├── ml_engine.py          # Pipelines de Machine Learning (XGBoost, LightGBM, Random Forest, SHAP)
-│   ├── database.py           # Conexión asíncrona a PostgreSQL / SQLite
+│   ├── database.py           # Conexión asíncrona a PostgreSQL (labortwin_db)
 │   └── models.py             # Modelos de base de datos (SimulationRunModel, DatasetModel)
 ├── streamlit_app/            # Cuadros de mando ejecutivos en Streamlit
 │   ├── app.py                # Punto de entrada de la aplicación Streamlit

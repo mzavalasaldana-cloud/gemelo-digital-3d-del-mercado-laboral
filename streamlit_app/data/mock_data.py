@@ -99,7 +99,7 @@ INITIAL_POLICY_STATE: Dict[str, float] = {
 def get_simulation_runs() -> List[Dict[str, Any]]:
     """
     Carga el historial de corridas de simulación desde la base de datos a través
-    del endpoint /api/v1/simulations/history o consulta directa a PostgreSQL / SQLite.
+    del endpoint /api/v1/simulations/history o consulta directa a PostgreSQL.
     """
     # 1. Consulta al backend FastAPI
     try:
@@ -114,11 +114,11 @@ def get_simulation_runs() -> List[Dict[str, Any]]:
     except Exception:
         pass
 
-    # 2. Fallback: consulta directa a la base de datos
+    # 2. Fallback: consulta directa a la base de datos PostgreSQL
     try:
         from backend.database import DATABASE_URL
         from sqlalchemy import create_engine, text
-        sync_url = DATABASE_URL.replace("+asyncpg", "").replace("+aiosqlite", "")
+        sync_url = DATABASE_URL.replace("+asyncpg", "")
         sync_engine = create_engine(sync_url)
         with sync_engine.connect() as conn:
             res = conn.execute(text("SELECT id, country, scenario, policy_params, final_metrics, duration_sec, created_at FROM simulation_runs ORDER BY created_at DESC LIMIT 25"))

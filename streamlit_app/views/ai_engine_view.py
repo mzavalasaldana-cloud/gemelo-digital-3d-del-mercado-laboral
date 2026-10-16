@@ -256,13 +256,15 @@ def render_ai_engine_view():
                 options=model_keys,
                 index=default_idx
             )
-            selected_model_info = models_data[selected_champion_name]
+            selected_model_info = models_data.get(selected_champion_name, {}) if selected_champion_name else {}
 
         with col_action:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             if st.button("🚀 Desplegar Modelo al Front Principal", use_container_width=True, type="primary"):
                 play_holo_sound_js("crystallize")
-                target_id = selected_model_info.get("id", "algo-" + selected_champion_name.split()[0].lower())
+                model_name_str = str(selected_champion_name or "xgboost")
+                fallback_algo = "algo-" + model_name_str.split()[0].lower() if model_name_str else "algo-xgboost"
+                target_id = selected_model_info.get("id", fallback_algo) if selected_model_info else fallback_algo
                 
                 # Update Session State
                 st.session_state["deployed_model_id"] = target_id

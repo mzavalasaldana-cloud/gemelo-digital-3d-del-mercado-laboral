@@ -203,7 +203,7 @@ def calculate_structural_metrics(
         sc_clean = "A"
 
     # Mes relativo a la política: 0 a 120 (en la simulación con burn-in: 96 + month)
-    clamped_month = max(0, min(120, int(month)))
+    clamped_month = max(0, min(120, month))
 
     # Consulta de caché rápido si no hay policy_params modificados
     if not policy_params:
@@ -226,7 +226,7 @@ def calculate_structural_metrics(
 
     # Conversión proporcional para visualización de 2,500 partículas
     total_pop_vis = 2500
-    formal_count = int(round(total_pop_vis * (1.0 - inf_total / 100.0)))
+    formal_count = round(total_pop_vis * (1.0 - inf_total / 100.0))
     informal_count = total_pop_vis - formal_count
     unemployed_count = 0  # En el modelo canónico, quienes no obtienen vacante formal trabajan en el sector informal
 
@@ -250,7 +250,7 @@ def calculate_structural_metrics(
     base_informal_usd = baseline.get("informalWageBaselineUSD", 10.0)
     avg_formal_wage = round(base_formal_usd * (1.0 - tau_w) * (omega_F / 1.0), 2)
     avg_informal_wage = round(base_informal_usd * omega_I, 2)
-    decent_work_idx = int(round(max(20, min(95, 20.0 + (100.0 - inf_total) * 0.70 - abs(gender_gap) * 0.40))))
+    decent_work_idx = round(max(20.0, min(95.0, 20.0 + (100.0 - inf_total) * 0.70 - abs(gender_gap) * 0.40)))
 
     # Recaudación fiscal del modelo canónico (impuesto a sociedades + contribuciones de seguridad social)
     fiscal_revenue = float(rec.get("fiscal_revenue", 0.0))
@@ -444,7 +444,7 @@ class SimulationEngine:
         for i in range(num_informal):
             hc = float(random.randint(20, 75))
             firm_idx = i % len(MOCK_FIRMS_COORDS)
-            base_month = int(round(18 + (100.0 - hc) * 1.1 + (random.random() - 0.5) * 16))
+            base_month = round(18 + (100.0 - hc) * 1.1 + (random.random() - 0.5) * 16)
             w = WorkerAgentSim(
                 id_num=num_formal + i,
                 sector='informal',
@@ -480,15 +480,16 @@ class SimulationEngine:
             month=self.month
         )
 
-    def step(self) -> Dict[str, Any]:
+    def step(self, advance_month: bool = True) -> Dict[str, Any]:
         """
-        Avanza la simulación 1 mes y calcula las coordenadas de las 2,500 partículas
-        generando el stream comprimido [[id, x, y, z, progress], ...] para WebSocket.
+        Calcula las coordenadas de las 2,500 partículas generando el stream comprimido.
+        Avanza 1 mes solo si advance_month es True.
         """
-        if self.month < 120:
-            self.month += 1
-        else:
-            self.month = 0
+        if advance_month:
+            if self.month < 120:
+                self.month += 1
+            else:
+                self.month = 0
 
         current_month = self.month
         metrics = self.calculate_metrics()

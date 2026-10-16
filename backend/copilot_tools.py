@@ -1,7 +1,7 @@
 """
 Control de Herramientas de Solo Lectura para el Copiloto IA (LaborTwin V1).
 Accede exclusivamente a datos numéricos verificados de simulación sin permitir
-acceso directo a SQLite ni manipulación de base de datos por parte del LLM.
+acceso directo a bases de datos ni manipulación de PostgreSQL por parte del LLM.
 """
 
 from typing import Dict, Any, Optional
@@ -27,7 +27,7 @@ def get_simulation_metrics(
         sc_clean = "A"
 
     sim = SimulationEngine(country=country_clean, scenario=sc_clean)
-    sim.month = max(0, min(120, int(month)))
+    sim.month = max(0, min(120, month))
     if policy_params:
         sim.set_policy_params(policy_params)
 

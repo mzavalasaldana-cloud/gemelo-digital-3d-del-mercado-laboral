@@ -80,7 +80,7 @@ def render_digital_twin_3d_view():
         sel_scen = st.selectbox(
             "Escenario Canónico",
             options=scen_options,
-            format_func=lambda s: scen_labels.get(s, s),
+            format_func=lambda s: str(scen_labels.get(str(s), s)),
             index=scen_options.index(scenario) if scenario in scen_options else 0,
             key="3d_scenario_selector"
         )

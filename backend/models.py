@@ -30,6 +30,7 @@ class DatasetModel(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
+        created_at_val = getattr(self, "created_at", None)
         return {
             "id": self.id,
             "filename": self.filename,
@@ -37,7 +38,7 @@ class DatasetModel(Base):
             "records_count": self.records_count,
             "features_list": self.features_list or [],
             "is_active": self.is_active,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": created_at_val.isoformat() if created_at_val is not None else None,
         }
 
 
@@ -53,6 +54,7 @@ class SimulationRunModel(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
+        created_at_val = getattr(self, "created_at", None)
         return {
             "id": self.id,
             "country": self.country,
@@ -60,7 +62,7 @@ class SimulationRunModel(Base):
             "policy_params": self.policy_params,
             "final_metrics": self.final_metrics,
             "duration_sec": self.duration_sec,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": created_at_val.isoformat() if created_at_val is not None else None,
         }
 
 
@@ -81,6 +83,7 @@ class CopilotMessageModel(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
+        created_at_val = getattr(self, "created_at", None)
         return {
             "id": self.id,
             "session_id": self.session_id,
@@ -93,7 +96,7 @@ class CopilotMessageModel(Base):
             "flow_id": self.flow_id,
             "verified_metrics": self.verified_metrics or {},
             "policy_params": self.policy_params or {},
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": created_at_val.isoformat() if created_at_val is not None else None,
         }
 
 

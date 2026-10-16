@@ -317,7 +317,7 @@ def main():
         writer.writeheader()
         writer.writerows(csv_rows)
 
-    print(f"\n[OK] data/ilostat_s_F.csv regenerado exitosamente.")
+    print("\n[OK] data/ilostat_s_F.csv regenerado exitosamente.")
     print("-" * 70)
     with open(OUTPUT_CSV, "r", encoding="utf-8") as f_check:
         print(f_check.read())

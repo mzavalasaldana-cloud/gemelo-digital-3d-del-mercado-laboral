@@ -88,7 +88,7 @@ def build_simulation_context_prompt(
                 history_lines.append(f"Copiloto: {short_a}")
         if history_lines:
             context_str += (
-                f"\n--- HISTORIAL DE CONVERSACIÓN RECIENTE (POSTGRESQL) ---\n"
+                "\n--- HISTORIAL DE CONVERSACIÓN RECIENTE (POSTGRESQL) ---\n"
                 + "\n".join(history_lines)
                 + "\n--- FIN HISTORIAL ---\n"
             )

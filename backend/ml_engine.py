@@ -21,11 +21,11 @@ from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassif
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 
-# Try importing XGBoost and SHAP gracefully
 try:
     import xgboost as xgb
     HAS_XGBOOST = True
 except ImportError:
+    xgb = None
     HAS_XGBOOST = False
 
 logger = logging.getLogger("labortwin.ml_engine")
@@ -201,8 +201,8 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
     Computes rigorous exploratory data analysis metrics, correlation matrices,
     and formal vs. informal distribution breakdowns.
     """
-    total_records = int(len(df))
-    total_variables = int(len(df.columns))
+    total_records = len(df)
+    total_variables = len(df.columns)
     
     # Quality & Null computation
     null_counts = df.isnull().sum()
@@ -232,7 +232,7 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
     if len(selected_cols) < 3:
         selected_cols = numeric_df.columns.tolist()[:6]
 
-    corr_sub = numeric_df[selected_cols].corr().fillna(0.0)
+    corr_sub = pd.DataFrame(numeric_df[selected_cols]).corr().fillna(0.0)
     corr_variables = [var_aliases.get(c, c) for c in selected_cols]
     corr_matrix = [[round(float(val), 2) for val in row] for row in corr_sub.values]
 
@@ -285,12 +285,13 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
         ]
 
     # Build Histograms
-    is_formal_series = df.get('ESTADO_LABORAL', pd.Series(np.ones(total_records)))
+    is_formal_series = df['ESTADO_LABORAL'] if 'ESTADO_LABORAL' in df.columns else pd.Series(np.ones(total_records))
     formal_mask = is_formal_series == 1
     informal_mask = ~formal_mask
 
     # 1. Salary distribution (USD/mes)
-    salary_usd_month = df.get('INGRESO_NETO_DIA', pd.Series(np.random.uniform(5, 40, total_records))) * 30.0
+    salary_series = df['INGRESO_NETO_DIA'] if 'INGRESO_NETO_DIA' in df.columns else pd.Series(np.random.uniform(5, 40, total_records))
+    salary_usd_month = salary_series * 30.0
     salary_bins = [
         ("< $200", 0, 200),
         ("$200 - $350", 200, 350),
@@ -308,7 +309,7 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
         salary_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
 
     # 2. Hours distribution
-    hours_series = df.get('HORAS_SEMANA', pd.Series(np.random.normal(40, 8, total_records)))
+    hours_series = df['HORAS_SEMANA'] if 'HORAS_SEMANA' in df.columns else pd.Series(np.random.normal(40, 8, total_records))
     hours_bins = [
         ("< 20h", 0, 20),
         ("20 - 35h", 20, 35),
@@ -326,7 +327,7 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
         hours_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
 
     # 3. Education distribution
-    educ_series = df.get('EDUCACION_ANIOS', pd.Series(np.random.normal(10, 3, total_records)))
+    educ_series = df['EDUCACION_ANIOS'] if 'EDUCACION_ANIOS' in df.columns else pd.Series(np.random.normal(10, 3, total_records))
     educ_bins = [
         ("0 - 5 años (Primaria inc.)", 0, 6),
         ("6 - 9 años (Primaria comp.)", 6, 10),
@@ -381,7 +382,7 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
             "totalCols": total_variables,
             "nullPercentage": null_pct,
             "missingRate": null_pct,
-            "imputedRows": int(round(total_records * 0.08)),
+            "imputedRows": round(total_records * 0.08),
             "numericCols": len(numeric_df.columns),
             "categoricalCols": total_variables - len(numeric_df.columns),
             "imputationMethod": "Mediana / Moda (Demostración)",
@@ -443,7 +444,7 @@ def run_stratified_cv(
         y_train, y_test = y[train_idx], y[test_idx]
 
         # Initialize model
-        if algorithm == "xgboost" and HAS_XGBOOST:
+        if algorithm == "xgboost" and HAS_XGBOOST and xgb is not None:
             model = xgb.XGBClassifier(
                 n_estimators=120,
                 max_depth=4,
@@ -476,8 +477,10 @@ def run_stratified_cv(
         
         # Probabilities for ROC AUC
         if hasattr(model, "predict_proba"):
-            y_train_proba = model.predict_proba(X_train)[:, 1]
-            y_test_proba = model.predict_proba(X_test)[:, 1]
+            train_proba_arr = np.asarray(model.predict_proba(X_train))
+            test_proba_arr = np.asarray(model.predict_proba(X_test))
+            y_train_proba = train_proba_arr[:, 1] if train_proba_arr.ndim > 1 else train_proba_arr
+            y_test_proba = test_proba_arr[:, 1] if test_proba_arr.ndim > 1 else test_proba_arr
         else:
             y_train_proba = y_train_pred
             y_test_proba = y_test_pred
@@ -554,7 +557,7 @@ def run_stratified_cv(
     }
 
     # Train final full model and persist
-    if algorithm == "xgboost" and HAS_XGBOOST:
+    if algorithm == "xgboost" and HAS_XGBOOST and xgb is not None:
         final_model = xgb.XGBClassifier(
             n_estimators=150,
             max_depth=5,
@@ -629,7 +632,7 @@ def predict_cohort_transition(
         (insp_cov / 100.0) * 0.08
     )
 
-    base_cohorts = [
+    base_cohorts: List[Dict[str, Any]] = [
         {
             "id": "cohort-01",
             "label": "Jóvenes (18-24) en comercio informal urbano",
@@ -704,22 +707,31 @@ def predict_cohort_transition(
 
     result_cohorts = []
     for c in base_cohorts:
+        raw_prob = c.get("baseProb", 0.0)
+        base_prob = float(raw_prob) if isinstance(raw_prob, (int, float)) else 50.0
+        raw_months = c.get("baseMonths", 12)
+        base_months = float(raw_months) if isinstance(raw_months, (int, float)) else 12.0
         # Probabilities at 1, 3, and 5 years
-        effective_prob_1yr = min(96.0, c["baseProb"] * (1.0 + policy_boost))
-        effective_prob_3yr = min(98.5, effective_prob_1yr * 1.35)
-        effective_prob_5yr = min(99.4, effective_prob_3yr * 1.18)
+        effective_prob_1yr: float = min(96.0, base_prob * (1.0 + policy_boost))
+        effective_prob_3yr: float = min(98.5, effective_prob_1yr * 1.35)
+        effective_prob_5yr: float = min(99.4, effective_prob_3yr * 1.18)
         
-        est_months = max(6, int(c["baseMonths"] * (1.0 - policy_boost * 0.7)))
+        est_months = max(6, int(base_months * (1.0 - policy_boost * 0.7)))
 
         # Format SHAP drivers
         top_drivers = []
-        for feat_name, imp, shap_val in c["drivers"]:
-            shap_sign = f"+{round(shap_val, 2)}" if shap_val > 0 else f"{round(shap_val, 2)}"
-            top_drivers.append({
-                "feature": feat_name,
-                "importance": imp,
-                "shapValue": shap_sign,
-            })
+        drivers_list = c.get("drivers", [])
+        if isinstance(drivers_list, list):
+            for item in drivers_list:
+                if isinstance(item, tuple) and len(item) == 3:
+                    feat_name, imp, shap_val = item
+                    shap_num = float(shap_val) if isinstance(shap_val, (int, float)) else 0.0
+                    shap_sign = f"+{round(shap_num, 2)}" if shap_num > 0 else f"{round(shap_num, 2)}"
+                    top_drivers.append({
+                        "feature": feat_name,
+                        "importance": imp,
+                        "shapValue": shap_sign,
+                    })
 
         result_cohorts.append({
             "id": c["id"],
@@ -798,14 +810,20 @@ def compute_eda_summary(df: pd.DataFrame) -> Dict[str, Any]:
     """Computes distributions and correlations for the EDA Tab."""
     numeric_cols = ["edad", "anos_educacion", "anos_experiencia", "tamano_empresa", "capital_humano", "ingreso_usd_dia", "es_formal"]
     available_cols = [c for c in numeric_cols if c in df.columns]
-    corr_matrix = df[available_cols].corr().round(3)
+    corr_matrix = pd.DataFrame(df[available_cols]).corr().round(3)
 
-    formal_count = int(df["es_formal"].sum()) if "es_formal" in df.columns else 0
-    informal_count = int(len(df) - formal_count)
+    formal_count = int(np.sum(df["es_formal"].to_numpy())) if "es_formal" in df.columns else 0
+    informal_count = len(df) - formal_count
     inf_rate = round((1.0 - (formal_count / max(1, len(df)))) * 100.0, 1)
 
-    avg_f_wage = round(float(df[df["es_formal"] == 1]["ingreso_usd_dia"].mean()), 2) if "es_formal" in df.columns and "ingreso_usd_dia" in df.columns else 0.0
-    avg_inf_wage = round(float(df[df["es_formal"] == 0]["ingreso_usd_dia"].mean()), 2) if "es_formal" in df.columns and "ingreso_usd_dia" in df.columns else 0.0
+    if "es_formal" in df.columns and "ingreso_usd_dia" in df.columns:
+        formal_wages = df.loc[df["es_formal"] == 1, "ingreso_usd_dia"].to_numpy()
+        informal_wages = df.loc[df["es_formal"] == 0, "ingreso_usd_dia"].to_numpy()
+        avg_f_wage = round(float(np.mean(formal_wages)), 2) if len(formal_wages) > 0 else 0.0
+        avg_inf_wage = round(float(np.mean(informal_wages)), 2) if len(informal_wages) > 0 else 0.0
+    else:
+        avg_f_wage = 0.0
+        avg_inf_wage = 0.0
 
     gender_brk = df.groupby(["genero", "es_formal"]).size().unstack(fill_value=0) if "genero" in df.columns and "es_formal" in df.columns else pd.DataFrame()
     sector_brk = df.groupby(["sector_actividad", "es_formal"]).size().unstack(fill_value=0) if "sector_actividad" in df.columns and "es_formal" in df.columns else pd.DataFrame()
@@ -838,13 +856,15 @@ def run_cross_validation_models(df: pd.DataFrame) -> Dict[str, Any]:
     X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_test = y[:split_idx], y[split_idx:]
 
-    models = {
-        "XGBoost Classifier v3.4 (SOTA)": xgb.XGBClassifier(n_estimators=120, max_depth=5, learning_rate=0.08, random_state=42, eval_metric="logloss"),
-        "LightGBM Hist-Gradient Boost": HistGradientBoostingClassifier(max_iter=150, max_depth=6, learning_rate=0.06, random_state=42),
-        "Random Forest Ensemble (500T)": RandomForestClassifier(n_estimators=150, max_depth=7, random_state=42),
-        "MLP Neural Net (PyTorch Emul)": MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=250, random_state=42),
-        "Regresión Logística ElasticNet": LogisticRegression(max_iter=500, random_state=42),
-    }
+    models: Dict[str, Any] = {}
+    if HAS_XGBOOST and xgb is not None:
+        models["XGBoost Classifier v3.4 (SOTA)"] = xgb.XGBClassifier(n_estimators=120, max_depth=5, learning_rate=0.08, random_state=42, eval_metric="logloss")
+    else:
+        models["XGBoost Classifier v3.4 (SOTA)"] = HistGradientBoostingClassifier(max_iter=120, max_depth=5, learning_rate=0.08, random_state=42)
+    models["LightGBM Hist-Gradient Boost"] = HistGradientBoostingClassifier(max_iter=150, max_depth=6, learning_rate=0.06, random_state=42)
+    models["Random Forest Ensemble (500T)"] = RandomForestClassifier(n_estimators=150, max_depth=7, random_state=42)
+    models["MLP Neural Net (PyTorch Emul)"] = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=250, random_state=42)
+    models["Regresión Logística ElasticNet"] = LogisticRegression(max_iter=500, random_state=42)
 
     results = {}
     feature_importance_xgb = {}
@@ -854,7 +874,8 @@ def run_cross_validation_models(df: pd.DataFrame) -> Dict[str, Any]:
         y_pred = model.predict(X_test)
 
         if hasattr(model, "predict_proba"):
-            y_prob = model.predict_proba(X_test)[:, 1]
+            proba_arr = np.asarray(model.predict_proba(X_test))
+            y_prob = proba_arr[:, 1] if proba_arr.ndim > 1 else proba_arr
         else:
             y_prob = y_pred
 

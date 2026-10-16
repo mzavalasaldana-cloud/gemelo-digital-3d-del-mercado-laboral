@@ -4,7 +4,6 @@ Valida la extracción de métricas reales, el manejo de errores HTTP y la comuni
 """
 
 import pytest
-import asyncio
 from unittest.mock import patch, AsyncMock
 from httpx import Response, TimeoutException, ConnectError
 
@@ -12,9 +11,7 @@ from backend.copilot_tools import get_simulation_metrics
 from backend.copilot_service import (
     build_simulation_context_prompt,
     execute_copilot_query,
-    CopilotServiceError,
 )
-from backend.models import CopilotChatRequest, CopilotChatResponse
 
 
 def test_simulation_metrics_deterministic():

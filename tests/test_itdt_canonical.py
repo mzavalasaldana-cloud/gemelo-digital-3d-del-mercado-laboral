@@ -2,9 +2,7 @@
 Pruebas exhaustivas para el paquete itdt y la API canónica del modelo de agentes.
 """
 
-import pytest
-import numpy as np
-from itdt import run, ITDTModel, COUNTRY_DATABASE, FixedParameters
+from itdt import run, COUNTRY_DATABASE
 
 def test_itdt_run_kenya_scenario_a():
     """Verifica que run() retorne series mensuales y métricas agregadas consistentes."""
@@ -93,6 +91,8 @@ def test_itdt_all_scenarios():
     assert res_b2["summary_metrics"]["mean_informality_total"] < res_a["summary_metrics"]["mean_informality_total"]
     # C debe reducir la brecha de género frente a A
     assert res_c["summary_metrics"]["mean_gender_gap"] < res_a["summary_metrics"]["mean_gender_gap"]
+    # D debe reducir la informalidad frente a A
+    assert res_d["summary_metrics"]["mean_informality_total"] < res_a["summary_metrics"]["mean_informality_total"]
 
 
 def test_itdt_custom_params():

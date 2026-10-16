@@ -63,7 +63,7 @@ def render_ilo_decent_work_view():
         sel_sc = st.selectbox(
             "Escenario Activo",
             options=sc_keys,
-            format_func=lambda s: sc_labels.get(s, s),
+            format_func=lambda s: str(sc_labels.get(str(s), s)),
             index=sc_keys.index(scenario) if scenario in sc_keys else 0,
             key="ilo_scenario_select"
         )

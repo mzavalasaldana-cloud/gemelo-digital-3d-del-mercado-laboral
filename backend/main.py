@@ -85,11 +85,13 @@ async def lifespan(app: FastAPI):
         
         benchmark_path = os.path.join(DATA_STORE_DIR, "SINTETICO_benchmark_microdatos_armonizados.csv")
 
-        if active_ds and os.path.exists(active_ds.filepath):
-            logger.info(f"Loading existing active dataset from {active_ds.filepath}")
-            ACTIVE_DATASET_CACHE["df"] = pd.read_csv(active_ds.filepath)
-            ACTIVE_DATASET_CACHE["filename"] = active_ds.filename
-            ACTIVE_DATASET_CACHE["records_count"] = active_ds.records_count
+        if active_ds is not None and getattr(active_ds, "filepath", None):
+            filepath_str = str(active_ds.filepath)
+            if os.path.exists(filepath_str):
+                logger.info(f"Loading existing active dataset from {filepath_str}")
+                ACTIVE_DATASET_CACHE["df"] = pd.read_csv(filepath_str)
+                ACTIVE_DATASET_CACHE["filename"] = active_ds.filename
+                ACTIVE_DATASET_CACHE["records_count"] = active_ds.records_count
         elif os.path.exists(benchmark_path):
             logger.info(f"Loading existing benchmark dataset from {benchmark_path}")
             df = pd.read_csv(benchmark_path)
@@ -150,6 +152,18 @@ app.add_middleware(
 )
 
 
+@app.get("/health")
+@app.get("/")
+async def health_check():
+    """Health check endpoint for Render, Docker, and reverse proxies."""
+    return {
+        "status": "healthy",
+        "service": "labortwin-backend",
+        "version": "2.4.0",
+        "active_dataset": ACTIVE_DATASET_CACHE.get("filename"),
+    }
+
+
 # =====================================================================
 # 1. DATASETS ENDPOINTS
 # =====================================================================
@@ -163,7 +177,7 @@ async def upload_dataset(
     Uploads, validates mandatory labor columns, stores the CSV,
     sets it as active in the database and updates in-memory cache.
     """
-    if not file.filename.endswith(('.csv', '.tsv')):
+    if not file.filename or not file.filename.endswith(('.csv', '.tsv')):
         raise HTTPException(status_code=400, detail="Formato no soportado. Debe ser un archivo .csv o .tsv")
 
     try:
@@ -196,7 +210,7 @@ async def upload_dataset(
         filename=file.filename,
         filepath=file_path,
         records_count=len(df),
-        features_list=df.columns.tolist(),
+        features_list=list(df.columns),
         is_active=True,
     )
     db.add(new_dataset)
@@ -292,11 +306,18 @@ async def get_active_dataset(db: AsyncSession = Depends(get_async_db)):
 
 
 @app.get("/api/v1/datasets")
+@app.get("/api/v1/datasets/list")
 async def list_datasets(db: AsyncSession = Depends(get_async_db)):
-    """Lists all uploaded datasets."""
+    """Lists all uploaded datasets with active ID."""
     result = await db.execute(select(DatasetModel).order_by(desc(DatasetModel.created_at)))
     datasets = result.scalars().all()
-    return {"datasets": [ds.to_dict() for ds in datasets]}
+    active_id = ""
+    for ds in datasets:
+        if getattr(ds, "is_active", False):
+            active_id = str(ds.id)
+            break
+    ds_list = [ds.to_dict() for ds in datasets]
+    return {"datasets": ds_list, "active_id": active_id}
 
 
 # =====================================================================
@@ -514,7 +535,7 @@ async def deploy_ml_model(payload: Dict[str, Any]):
     ACTIVE_DEPLOYED_MODEL = {
         **found,
         "deployedBy": deployed_by,
-        "deployedAt": datetime.datetime.utcnow().isoformat() + "Z",
+        "deployedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "status": "active"
     }
     logger.info(f"Deployed new champion model: {found['name']} ({found['id']}) by {deployed_by}")
@@ -648,9 +669,9 @@ async def websocket_simulation_endpoint(websocket: WebSocket):
                         sim.is_playing = False
 
 
-                    # Immediately send an updated snapshot on interactive user seek/change
+                    # Immediately send an updated snapshot on interactive user seek/change (without advancing month)
                     if action in ("seek", "set_country", "set_scenario", "set_policy", "reset"):
-                        frame_data = await asyncio.to_thread(sim.step)
+                        frame_data = await asyncio.to_thread(sim.step, False)
                         await websocket.send_text(json.dumps(frame_data))
 
                 except json.JSONDecodeError:
@@ -665,8 +686,8 @@ async def websocket_simulation_endpoint(websocket: WebSocket):
     listener_task = asyncio.create_task(incoming_messages_listener())
 
     try:
-        # Initial snapshot frame
-        initial_frame = await asyncio.to_thread(sim.step)
+        # Initial snapshot frame at month 0 (do not advance month yet)
+        initial_frame = await asyncio.to_thread(sim.step, False)
         await websocket.send_text(json.dumps(initial_frame))
 
         while is_connected:
@@ -678,8 +699,8 @@ async def websocket_simulation_endpoint(websocket: WebSocket):
                 if not is_connected:
                     break
 
-                # Execute kinematic step in threadpool to prevent any event loop stalls
-                frame_data = await asyncio.to_thread(sim.step)
+                # Execute kinematic step in threadpool to prevent any event loop stalls (advance month)
+                frame_data = await asyncio.to_thread(sim.step, True)
                 await websocket.send_text(json.dumps(frame_data))
 
                 # If simulation reaches month 120, persist summary to PostgreSQL
@@ -815,7 +836,8 @@ async def delete_copilot_chat_history(
     stmt = delete(CopilotMessageModel).where(CopilotMessageModel.session_id == session_id)
     result = await db.execute(stmt)
     await db.commit()
-    return {"status": "ok", "deleted_rows": result.rowcount}
+    deleted_rows = getattr(result, "rowcount", 0)
+    return {"status": "ok", "deleted_rows": deleted_rows}
 
 
 @app.get("/api/v1/copilot/simulation-metrics")

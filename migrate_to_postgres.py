@@ -4,13 +4,25 @@ import sqlite3
 import json
 from dotenv import load_dotenv
 
+from urllib.parse import urlparse
 load_dotenv("backend/.env")
+load_dotenv()
 
-PG_HOST = "localhost"
-PG_PORT = 5432
-PG_USER = "postgres"
-PG_PASS = "1234"
-PG_DBNAME = "labortwin_db"
+db_url = os.getenv("DATABASE_URL", "")
+if db_url and "postgres" in db_url:
+    clean_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+    parsed = urlparse(clean_url)
+    PG_HOST = parsed.hostname or "localhost"
+    PG_PORT = parsed.port or 5432
+    PG_USER = parsed.username or "postgres"
+    PG_PASS = parsed.password or "1234"
+    PG_DBNAME = (parsed.path or "/labortwin_db").lstrip("/") or "labortwin_db"
+else:
+    PG_HOST = os.getenv("PG_HOST", "localhost")
+    PG_PORT = int(os.getenv("PG_PORT", "5432"))
+    PG_USER = os.getenv("PG_USER", "postgres")
+    PG_PASS = os.getenv("PG_PASS", "1234")
+    PG_DBNAME = os.getenv("PG_DBNAME", "labortwin_db")
 
 print("--- 1. Conectando a PostgreSQL y verificando/creando base de datos ---")
 conn = psycopg2.connect(
@@ -87,8 +99,8 @@ CREATE INDEX IF NOT EXISTS ix_copilot_created_at ON copilot_chat_history (create
 """)
 print("[OK] Tablas 'datasets', 'simulation_runs' y 'copilot_chat_history' creadas e indexadas en PostgreSQL.")
 
-print("\n--- 3. Migrando datos existentes desde SQLite local (labortwin_dev.db si existe) ---")
-sqlite_path = "labortwin_dev.db"
+print("\n--- 3. Verificando respaldo histórico de SQLite (labortwin_dev.db.old / labortwin_dev.db) ---")
+sqlite_path = "labortwin_dev.db.old" if os.path.exists("labortwin_dev.db.old") else "labortwin_dev.db"
 if os.path.exists(sqlite_path):
     sconn = sqlite3.connect(sqlite_path)
     scur = sconn.cursor()

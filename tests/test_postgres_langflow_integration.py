@@ -5,10 +5,9 @@ Langflow Desktop y la persistencia de conversaciones sea sólida y consistente.
 """
 
 import pytest
-import psycopg2
-from backend.database import DATABASE_URL, AsyncSessionLocal, init_db
+from backend.database import AsyncSessionLocal, init_db
 from backend.models import CopilotMessageModel
-from backend.copilot_service import get_langflow_config, execute_copilot_query
+from backend.copilot_service import get_langflow_config
 from sqlalchemy import select, delete
 
 
@@ -58,8 +57,10 @@ async def test_postgres_message_lifecycle():
         res = await session.execute(stmt)
         records = res.scalars().all()
         assert len(records) == 1
-        assert records[0].source == "langflow"
-        assert records[0].verified_metrics["informalityRate"] == 82.7
+        msg_rec = records[0]
+        assert str(msg_rec.source) == "langflow"
+        verified = msg_rec.verified_metrics or {}
+        assert verified.get("informalityRate") == 82.7
         
         # 4. Limpiar
         await session.execute(delete(CopilotMessageModel).where(CopilotMessageModel.session_id == test_session))

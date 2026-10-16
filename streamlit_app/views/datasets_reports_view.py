@@ -133,7 +133,7 @@ def render_datasets_reports_view():
         report_scenario = st.selectbox(
             "Seleccionar Escenario para el Informe",
             options=rep_scen_keys,
-            format_func=lambda s: rep_labels.get(s, s),
+            format_func=lambda s: str(rep_labels.get(str(s), s)),
             index=rep_scen_keys.index(scenario) if scenario in rep_scen_keys else 0,
             key="report_scenario_select"
         )

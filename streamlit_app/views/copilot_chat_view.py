@@ -4,6 +4,7 @@ contextual de simulaciones econométricas y políticas públicas con Langflow y 
 con persistencia y sincronización total en PostgreSQL.
 """
 
+import asyncio
 import streamlit as st
 import httpx
 import logging
@@ -12,12 +13,8 @@ from streamlit_app.data.mock_data import COUNTRY_PROFILES
 from streamlit_app.utils.ui_components import play_holo_sound_js
 
 # Fallback import directo en caso de ejecución monolítica de Streamlit
-try:
-    from backend.copilot_service import execute_copilot_query, CopilotServiceError
-    import asyncio
-    HAS_LOCAL_BACKEND_MODULE = True
-except ImportError:
-    HAS_LOCAL_BACKEND_MODULE = False
+from backend.copilot_service import execute_copilot_query, CopilotServiceError
+HAS_LOCAL_BACKEND_MODULE = True
 
 logger = logging.getLogger("labortwin.streamlit_copilot")
 BACKEND_BASE_URL = "http://127.0.0.1:8000/api/v1/copilot"
@@ -91,7 +88,7 @@ def fetch_copilot_chat_response(
                 }
     except httpx.ConnectError:
         # Si FastAPI en 8000 no responde, intentar ejecución directa del módulo backend
-        if HAS_LOCAL_BACKEND_MODULE:
+        if HAS_LOCAL_BACKEND_MODULE and execute_copilot_query is not None:
             try:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -133,6 +130,8 @@ def render_copilot_chat_view():
     if scenario in ("BASELINE", "STATUS_QUO"):
         scenario = "A"
     st.session_state.scenario = scenario
+    month = st.session_state.get("month", 0)
+    policy_params = st.session_state.get("policy_params", {})
 
     profile = COUNTRY_PROFILES.get(country_code, COUNTRY_PROFILES["KENYA"])
     session_id = f"streamlit-session-{country_code}"

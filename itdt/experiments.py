@@ -317,7 +317,7 @@ def compute_inferential_tables(
             # Prueba Wilcoxon
             try:
                 res_w = stats.wilcoxon(diffs, alternative="two-sided")
-                p_wilcox = float(res_w.pvalue)
+                p_wilcox = float(getattr(res_w, "pvalue", 1.0))
             except Exception:
                 p_wilcox = 1.0
 
@@ -485,7 +485,7 @@ def run_recalibrated_ablation_study(
 
         for c_key in countries:
             c_info = COUNTRY_DATABASE[c_key]
-            s_F = s_F_dict.get(c_key, c_info["s_F"])
+            s_F = float(s_F_dict[c_key]) if c_key in s_F_dict and s_F_dict[c_key] is not None else float(c_info["s_F"])
             F_obs = c_info["F_obs"]
             M_obs = c_info["M_obs"]
 
@@ -745,8 +745,11 @@ def get_process_memory_mb() -> float:
         pass
     try:
         import resource
-        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        return float(usage / 1024.0)
+        getrusage = getattr(resource, "getrusage", None)
+        rusage_self = getattr(resource, "RUSAGE_SELF", 0)
+        if getrusage is not None:
+            usage = getrusage(rusage_self).ru_maxrss
+            return float(usage / 1024.0)
     except Exception:
         pass
     return 0.0

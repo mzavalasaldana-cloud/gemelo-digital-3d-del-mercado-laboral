@@ -214,9 +214,9 @@ def cmd_all():
     secs = int(total_elapsed % 60)
 
     print("======================================================================")
-    print(f" REPLICACIÓN COMPLETA FINALIZADA CON ÉXITO")
+    print(" REPLICACIÓN COMPLETA FINALIZADA CON ÉXITO")
     print(f" Tiempo total de ejecución: {total_elapsed:.2f} s ({mins} min {secs} s)")
-    print(f" Todos los artefactos fueron regenerados desde cero en: outputs/")
+    print(" Todos los artefactos fueron regenerados desde cero en: outputs/")
     print("======================================================================")
 
 

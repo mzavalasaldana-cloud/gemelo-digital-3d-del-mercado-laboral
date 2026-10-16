@@ -13,7 +13,6 @@ Contenido:
 
 import math
 import numpy as np
-import pytest
 
 from itdt.model import ITDTModel
 from itdt.parameters import FixedParameters
@@ -101,7 +100,6 @@ def test_unit_profits_formal_and_informal():
     Pi_F = (1 - tau_c) * Y - omega_F * (1 + tau_w) * L - r_cred * K - DCC
     Pi_I = Y - omega_I * L - r_I * K - P_aud * (mu_0 * Y + mu_1 * Y^xi)
     """
-    p = FixedParameters()
     tau_c = 0.20
     omega_F = 1.20
     omega_I = 1.00
@@ -123,7 +121,7 @@ def test_unit_profits_formal_and_informal():
     # 1.20 * (1 + 0.10) * 2 = 2.64
     # 0.08 * 1.0 = 0.08
     # Pi_F = 8.0 - 2.64 - 0.08 - 0.50 = 4.78
-    expected_Pi_F = 4.78
+    expected_Pi_F = (1.0 - tau_c) * Y - omega_F * (1.0 + tau_w) * L - r_cred * K - DCC
 
     # Cálculo informal a mano:
     # 10.0 - 1.0 * 2 - 0.12 * 1.0 = 7.88

@@ -4,10 +4,11 @@ Includes custom CSS injections for Light Mode (default) and Dark Mode,
 holographic/clean metric cards, badges, Web Audio effects, and Plotly theme styling.
 """
 
+from typing import Optional
 import streamlit as st
 import streamlit.components.v1 as components
 
-def inject_custom_css(theme: str = None):
+def inject_custom_css(theme: Optional[str] = None):
     """
     Injects high-end design styling into the Streamlit app.
     Defaults to Light Mode with rich slate/white aesthetics, or Dark Mode if selected.
@@ -429,10 +430,10 @@ def inject_custom_css(theme: str = None):
 def render_metric_card(
     label: str,
     value: str,
-    delta: str = None,
+    delta: Optional[str] = None,
     delta_positive: bool = True,
     icon: str = "⚡",
-    badge: str = None
+    badge: Optional[str] = None
 ):
     """Renders a KPI card styled cleanly according to the active theme."""
     delta_html = ""
@@ -458,7 +459,7 @@ def render_metric_card(
     st.markdown(html, unsafe_allow_html=True)
 
 
-def render_section_header(title: str, icon: str = "✦", badge: str = None):
+def render_section_header(title: str, icon: str = "✦", badge: Optional[str] = None):
     """Renders a styled section header with accent icon."""
     badge_html = f'<span class="glow-badge badge-purple" style="margin-left:auto;">{badge}</span>' if badge else ""
     theme = st.session_state.get("theme", "light") if hasattr(st, "session_state") else "light"
@@ -478,8 +479,8 @@ def render_explainability_card(
     what_it_is: str = "",
     how_to_read: str = "",
     policy_impact: str = "",
-    formula: str = None,
-    alerts: str = None,
+    formula: Optional[str] = None,
+    alerts: Optional[str] = None,
     expanded: bool = False
 ):
     """
@@ -534,7 +535,7 @@ def render_explainability_card(
         """, unsafe_allow_html=True)
 
 
-def apply_chart_theme(fig, is_3d: bool = False, theme: str = None):
+def apply_chart_theme(fig, is_3d: bool = False, theme: Optional[str] = None):
     """
     Applies unified color and styling tokens to any Plotly chart based on current theme.
     Ensures high legibility and cohesive presentation in Light Mode (or Dark Mode).

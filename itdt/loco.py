@@ -154,7 +154,7 @@ def run_loco_cross_validation(
 
     for exc_country in TARGET_COUNTRIES:
         exc_info = COUNTRY_DATABASE[exc_country]
-        exc_s_F = s_F_dict.get(exc_country, exc_info["s_F"])
+        exc_s_F = float(s_F_dict[exc_country]) if exc_country in s_F_dict and s_F_dict[exc_country] is not None else float(exc_info["s_F"])
         exc_F_obs = exc_info["F_obs"]
         exc_M_obs = exc_info["M_obs"]
 
