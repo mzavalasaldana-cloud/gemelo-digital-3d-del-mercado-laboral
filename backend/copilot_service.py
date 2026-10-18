@@ -46,6 +46,9 @@ def get_langflow_config():
     raw_gemini = os.getenv("GEMINI_API_KEY")
     gemini_api_key = raw_gemini.strip() if raw_gemini else ""
 
+    raw_gemini_model = os.getenv("GEMINI_MODEL")
+    gemini_model = raw_gemini_model.strip() if raw_gemini_model and raw_gemini_model.strip() else "gemini-2.5-flash"
+
     # Langflow se considera configurado únicamente si base_url y flow_id están definidos
     is_configured = bool(base_url and flow_id and api_key)
 
@@ -55,8 +58,58 @@ def get_langflow_config():
         "flow_id": flow_id,
         "timeout": timeout,
         "gemini_api_key": gemini_api_key,
+        "gemini_model": gemini_model,
         "is_configured": is_configured,
     }
+
+
+async def query_gemini_direct(
+    prompt: str,
+    api_key: str,
+    model: str = "gemini-2.5-flash",
+    timeout_sec: float = 30.0,
+) -> Optional[str]:
+    """
+    Invoca directamente la API REST de Google Gemini (v1beta) enviando la clave
+    en el header 'x-goog-api-key' para evitar exposición en URLs o logs.
+    """
+    if not api_key:
+        return None
+
+    clean_model = model.replace("models/", "").strip()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent"
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": api_key,
+    }
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 1024,
+        },
+    }
+
+    http_timeout = httpx.Timeout(timeout_sec, connect=5.0)
+    async with httpx.AsyncClient(timeout=http_timeout) as client:
+        response = await client.post(url, headers=headers, json=payload)
+        if response.status_code == 200:
+            data = response.json()
+            candidates = data.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                parts = candidates[0]["content"].get("parts", [])
+                if parts and "text" in parts[0]:
+                    return parts[0]["text"]
+        else:
+            logger.warning(
+                f"Gemini REST API ({clean_model}) respondió HTTP {response.status_code}: {response.text[:160]}"
+            )
+            return None
+
 
 
 class CopilotServiceError(Exception):
@@ -226,69 +279,87 @@ async def execute_copilot_query(
 
     enriched_input = build_simulation_context_prompt(user_query, metrics_data, history=history)
 
-    # 2. Intentar ejecución con Langflow (si está configurado)
+    # 2. Cascada de Resolución: Nivel 1 (Langflow) -> Nivel 2 (Gemini Directo) -> Nivel 3 (Motor Econométrico)
     cfg = get_langflow_config()
-    flow_identifier = cfg["flow_id"]
+    flow_identifier = cfg.get("flow_id", "")
 
-    if not cfg.get("is_configured"):
-        logger.info(
-            "Langflow no está configurado (variables LANGFLOW_BASE_URL, LANGFLOW_API_KEY o LANGFLOW_COPILOT_FLOW_ID ausentes o vacías). "
-            "Saltando llamada HTTP de inmediato y usando motor econométrico de respaldo."
-        )
-        fallback_text = generate_econometric_copilot_response(user_query, metrics_data)
-        return {
-            "response": fallback_text,
-            "session_id": session_id,
-            "source": "econometric_engine",
-            "flow_id": flow_identifier or "none",
-            "verified_metrics": metrics_data,
+    # --- NIVEL 1: Langflow Desktop / Cloud (si está configurado) ---
+    if cfg.get("is_configured"):
+        run_url = f"{cfg['base_url']}/api/v1/run/{flow_identifier}?stream=false"
+        headers = {"Content-Type": "application/json"}
+        if cfg["api_key"]:
+            headers["x-api-key"] = cfg["api_key"]
+
+        payload = {
+            "input_value": enriched_input,
+            "input_type": "chat",
+            "output_type": "chat",
+            "session_id": session_id or "default-session",
+            "tweaks": {},
         }
 
-    run_url = f"{cfg['base_url']}/api/v1/run/{flow_identifier}?stream=false"
+        lf_timeout = float(cfg.get("timeout", 60.0))
+        http_timeout = httpx.Timeout(lf_timeout, connect=5.0)
+        try:
+            async with httpx.AsyncClient(timeout=http_timeout) as client:
+                response = await client.post(run_url, headers=headers, json=payload)
+                if response.status_code == 200:
+                    res_json = response.json()
+                    outputs = res_json.get("outputs", [])
+                    if outputs and outputs[0].get("outputs"):
+                        results = outputs[0]["outputs"][0].get("results", {})
+                        msg = results.get("message", {})
+                        extracted = msg.get("text", "") if isinstance(msg, dict) else str(msg)
+                        if extracted:
+                            logger.info(f"Respuesta generada exitosamente por Langflow ({flow_identifier})")
+                            return {
+                                "response": extracted.strip(),
+                                "session_id": session_id,
+                                "source": "langflow",
+                                "flow_id": flow_identifier,
+                                "verified_metrics": metrics_data,
+                            }
+        except Exception as lf_err:
+            logger.info(f"Langflow no disponible o demorado ({lf_err}). Pasando a Nivel 2 (Gemini Directo)...")
+    else:
+        logger.info("Langflow no configurado. Pasando directamente a Nivel 2 (Gemini Directo)...")
 
-    headers = {"Content-Type": "application/json"}
-    if cfg["api_key"]:
-        headers["x-api-key"] = cfg["api_key"]
+    # --- NIVEL 2: Google Gemini Directo vía REST API (si GEMINI_API_KEY está configurada) ---
+    gemini_key = cfg.get("gemini_api_key", "")
+    gemini_model = cfg.get("gemini_model", "gemini-2.5-flash")
+    if gemini_key:
+        try:
+            logger.info(f"Consultando Google Gemini ({gemini_model}) directamente vía REST API...")
+            gemini_text = await query_gemini_direct(
+                prompt=enriched_input,
+                api_key=gemini_key,
+                model=gemini_model,
+                timeout_sec=30.0,
+            )
+            if gemini_text and gemini_text.strip():
+                logger.info("Respuesta generada exitosamente por Google Gemini (Directo).")
+                return {
+                    "response": gemini_text.strip(),
+                    "session_id": session_id,
+                    "source": "gemini",
+                    "model": gemini_model,
+                    "flow_id": flow_identifier or "direct-gemini",
+                    "verified_metrics": metrics_data,
+                }
+        except Exception as gem_err:
+            logger.warning(
+                f"Error o timeout al consultar Gemini directamente ({gem_err}). "
+                "Activando motor econométrico de respaldo..."
+            )
 
-    payload = {
-        "input_value": enriched_input,
-        "input_type": "chat",
-        "output_type": "chat",
-        "session_id": session_id or "default-session",
-        "tweaks": {},
-    }
-
-    lf_timeout = float(cfg.get("timeout", 60.0))
-    http_timeout = httpx.Timeout(lf_timeout, connect=5.0)
-    try:
-        async with httpx.AsyncClient(timeout=http_timeout) as client:
-            response = await client.post(run_url, headers=headers, json=payload)
-            if response.status_code == 200:
-                res_json = response.json()
-                outputs = res_json.get("outputs", [])
-                if outputs and outputs[0].get("outputs"):
-                    results = outputs[0]["outputs"][0].get("results", {})
-                    msg = results.get("message", {})
-                    extracted = msg.get("text", "") if isinstance(msg, dict) else str(msg)
-                    if extracted:
-                        logger.info(f"Respuesta generada exitosamente por Langflow ({flow_identifier})")
-                        return {
-                            "response": extracted.strip(),
-                            "session_id": session_id,
-                            "source": "langflow",
-                            "flow_id": flow_identifier,
-                            "verified_metrics": metrics_data,
-                        }
-    except Exception as lf_err:
-        logger.info(f"Langflow no disponible o demorado ({lf_err}). Activando motor econométrico de respaldo...")
-
-    # Fallback garantizado de alta calidad econométrica
+    # --- NIVEL 3: Motor econométrico autónomo de respaldo ---
+    logger.info("Activando motor econométrico autónomo de respaldo...")
     fallback_text = generate_econometric_copilot_response(user_query, metrics_data)
 
     return {
         "response": fallback_text,
         "session_id": session_id,
         "source": "econometric_engine",
-        "flow_id": flow_identifier,
+        "flow_id": flow_identifier or "none",
         "verified_metrics": metrics_data,
     }

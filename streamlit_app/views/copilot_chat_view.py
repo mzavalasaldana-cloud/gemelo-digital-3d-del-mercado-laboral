@@ -223,6 +223,8 @@ def render_copilot_chat_view():
                 src = msg.get("source")
                 if src == "langflow":
                     st.caption("🟢 *Respuesta orquestada por Langflow Desktop (Gemini 3.1) • Sincronizada con PostgreSQL*")
+                elif src == "gemini":
+                    st.caption("✨ *Respuesta generada directamente por Google Gemini • Sincronizada con PostgreSQL*")
                 elif src == "econometric_engine":
                     st.caption("⚡ *Respuesta generada por Motor Econométrico Autónomo • Sincronizada con PostgreSQL*")
 
@@ -235,12 +237,14 @@ def render_copilot_chat_view():
             st.markdown(user_input)
 
         with st.chat_message("assistant"):
-            with st.spinner("Analizando simulación en Langflow con Gemini 3.1..."):
+            with st.spinner("Analizando simulación con el Copiloto IA..."):
                 res_dict = fetch_copilot_chat_response(user_input, country_code, scenario, month, policy_params, session_id=session_id)
                 st.markdown(res_dict.get("response", ""))
                 src = res_dict.get("source", "langflow")
                 if src == "langflow":
                     st.caption("🟢 *Respuesta orquestada por Langflow Desktop (Gemini 3.1) • Sincronizada con PostgreSQL*")
+                elif src == "gemini":
+                    st.caption("✨ *Respuesta generada directamente por Google Gemini • Sincronizada con PostgreSQL*")
                 elif src == "econometric_engine":
                     st.caption("⚡ *Respuesta generada por Motor Econométrico Autónomo • Sincronizada con PostgreSQL*")
                 

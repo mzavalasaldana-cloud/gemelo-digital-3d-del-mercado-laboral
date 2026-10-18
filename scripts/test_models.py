@@ -33,9 +33,11 @@ async def test_models():
             )
             
             try:
+                lf_api_key = os.getenv("LANGFLOW_API_KEY", "")
+                headers = {"x-api-key": lf_api_key} if lf_api_key else {}
                 resp = await client.post(
                     "/api/v1/run/labortwin-copilot-v1?stream=false",
-                    headers={"x-api-key": "sk-TwLFZ6VRuVldtsxCB8ncpTZarkRPFuAK2HdrbZzIhYg"},
+                    headers=headers,
                     json={
                         "input_value": "Hola, resume en una oracion que es el empleo formal.",
                         "tweaks": {"GoogleGenerativeAI-LaborTwin": {"api_key": api_key}}

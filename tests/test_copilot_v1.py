@@ -89,48 +89,59 @@ async def test_execute_copilot_query_success():
 @pytest.mark.asyncio
 async def test_execute_copilot_query_auth_error():
     """Verifica que un error 401/403 de Langflow active de forma transparente el motor de respaldo."""
+    import os
     mock_resp = Response(401, text='{"detail": "Invalid API key"}')
 
-    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
-        mock_post.return_value = mock_resp
+    with patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            mock_post.return_value = mock_resp
 
-        res = await execute_copilot_query(
-            user_query="¿Qué política reduce más rápido la informalidad?",
-            session_id="sess-01"
-        )
-        assert res["source"] == "econometric_engine"
-        assert len(res["response"]) > 0
+            res = await execute_copilot_query(
+                user_query="¿Qué política reduce más rápido la informalidad?",
+                session_id="sess-01"
+            )
+            assert res["source"] == "econometric_engine"
+            assert len(res["response"]) > 0
 
 
 @pytest.mark.asyncio
 async def test_execute_copilot_query_timeout():
     """Verifica el manejo de timeout cuando Langflow tarda demasiado activando el motor de respaldo."""
-    with patch("httpx.AsyncClient.post", side_effect=TimeoutException("Timeout")):
-        res = await execute_copilot_query(
-            user_query="¿Qué política reduce más rápido la informalidad?",
-            session_id="sess-01"
-        )
-        assert res["source"] == "econometric_engine"
-        assert len(res["response"]) > 0
+    import os
+    with patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
+        with patch("httpx.AsyncClient.post", side_effect=TimeoutException("Timeout")):
+            res = await execute_copilot_query(
+                user_query="¿Qué política reduce más rápido la informalidad?",
+                session_id="sess-01"
+            )
+            assert res["source"] == "econometric_engine"
+            assert len(res["response"]) > 0
 
 
 @pytest.mark.asyncio
 async def test_execute_copilot_query_unavailable():
     """Verifica que cuando Langflow no está disponible se active el motor econométrico sin error."""
-    with patch("httpx.AsyncClient.post", side_effect=ConnectError("Connection refused")):
-        res = await execute_copilot_query(
-            user_query="¿Qué política reduce más rápido la informalidad?",
-            session_id="sess-01"
-        )
-        assert res["source"] == "econometric_engine"
-        assert len(res["response"]) > 0
+    import os
+    with patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
+        with patch("httpx.AsyncClient.post", side_effect=ConnectError("Connection refused")):
+            res = await execute_copilot_query(
+                user_query="¿Qué política reduce más rápido la informalidad?",
+                session_id="sess-01"
+            )
+            assert res["source"] == "econometric_engine"
+            assert len(res["response"]) > 0
 
 
 @pytest.mark.asyncio
 async def test_execute_copilot_query_skipped_when_unconfigured():
-    """Verifica que si Langflow no está configurado (variables vacías), se salta de inmediato sin llamada HTTP."""
+    """Verifica que si Langflow y Gemini no están configurados, se salta de inmediato sin llamada HTTP."""
     import os
-    with patch.dict(os.environ, {"LANGFLOW_BASE_URL": "", "LANGFLOW_COPILOT_FLOW_ID": "", "LANGFLOW_API_KEY": ""}):
+    with patch.dict(os.environ, {
+        "LANGFLOW_BASE_URL": "",
+        "LANGFLOW_COPILOT_FLOW_ID": "",
+        "LANGFLOW_API_KEY": "",
+        "GEMINI_API_KEY": ""
+    }):
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             res = await execute_copilot_query(
                 user_query="¿Qué política reduce más rápido la informalidad?",
@@ -139,4 +150,113 @@ async def test_execute_copilot_query_skipped_when_unconfigured():
             mock_post.assert_not_called()
             assert res["source"] == "econometric_engine"
             assert len(res["response"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_execute_copilot_query_gemini_direct_success():
+    """Verifica el flujo exitoso cuando Langflow está desactivado y Gemini directo responde con 200."""
+    import os
+    fake_gemini_resp = {
+        "candidates": [
+            {
+                "content": {
+                    "parts": [
+                        {
+                            "text": "La formalización progresiva requiere reducir costos registrales según análisis de Gemini."
+                        }
+                    ],
+                    "role": "model"
+                },
+                "finishReason": "STOP"
+            }
+        ]
+    }
+    mock_resp = Response(200, json=fake_gemini_resp)
+
+    env_overrides = {
+        "LANGFLOW_BASE_URL": "",
+        "LANGFLOW_COPILOT_FLOW_ID": "",
+        "LANGFLOW_API_KEY": "",
+        "GEMINI_API_KEY": "AIzaSyFakeGeminiKey123456",
+        "GEMINI_MODEL": "gemini-2.5-flash",
+    }
+
+    with patch.dict(os.environ, env_overrides):
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            mock_post.return_value = mock_resp
+
+            res = await execute_copilot_query(
+                user_query="¿Cómo acelerar la formalización?",
+                session_id="sess-gemini-direct",
+                country="KENYA",
+                scenario="BASELINE",
+                month=3
+            )
+
+            assert res["source"] == "gemini"
+            assert res["model"] == "gemini-2.5-flash"
+            assert "Gemini" in res["response"]
+            assert res["verified_metrics"]["country"] == "KENYA"
+
+            # Verificar que la llamada se hizo al endpoint REST correcto y con header x-goog-api-key
+            mock_post.assert_called_once()
+            called_args, called_kwargs = mock_post.call_args
+            called_url = called_args[0]
+            called_headers = called_kwargs.get("headers", {})
+
+            assert "generativelanguage.googleapis.com" in called_url
+            assert "gemini-2.5-flash:generateContent" in called_url
+            # La API key NO debe estar en la URL
+            assert "key=" not in called_url
+            # La API key DEBE estar en el header x-goog-api-key
+            assert called_headers.get("x-goog-api-key") == "AIzaSyFakeGeminiKey123456"
+
+
+@pytest.mark.asyncio
+async def test_execute_copilot_query_gemini_quota_fallback():
+    """Verifica que si Gemini retorna 429 (Resource Exhausted/Quota), cae limpiamente al motor econométrico."""
+    import os
+    mock_resp = Response(429, json={"error": {"message": "Resource has been exhausted", "status": "RESOURCE_EXHAUSTED"}})
+
+    env_overrides = {
+        "LANGFLOW_BASE_URL": "",
+        "LANGFLOW_COPILOT_FLOW_ID": "",
+        "LANGFLOW_API_KEY": "",
+        "GEMINI_API_KEY": "AIzaSyFakeGeminiKey123456",
+    }
+
+    with patch.dict(os.environ, env_overrides):
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            mock_post.return_value = mock_resp
+
+            res = await execute_copilot_query(
+                user_query="¿Qué política reduce más rápido la informalidad?",
+                session_id="sess-gemini-quota"
+            )
+
+            assert res["source"] == "econometric_engine"
+            assert len(res["response"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_execute_copilot_query_gemini_timeout_fallback():
+    """Verifica que si Gemini tarda más de 30 segundos (timeout), cae limpiamente al motor econométrico."""
+    import os
+    env_overrides = {
+        "LANGFLOW_BASE_URL": "",
+        "LANGFLOW_COPILOT_FLOW_ID": "",
+        "LANGFLOW_API_KEY": "",
+        "GEMINI_API_KEY": "AIzaSyFakeGeminiKey123456",
+    }
+
+    with patch.dict(os.environ, env_overrides):
+        with patch("httpx.AsyncClient.post", side_effect=TimeoutException("Timeout after 30s")):
+            res = await execute_copilot_query(
+                user_query="¿Qué política reduce más rápido la informalidad?",
+                session_id="sess-gemini-timeout"
+            )
+
+            assert res["source"] == "econometric_engine"
+            assert len(res["response"]) > 0
+
 
