@@ -22,7 +22,7 @@ services:
           name: labortwin-db
           property: connectionString
       - key: CORS_ORIGINS
-        value: http://localhost:3000,http://127.0.0.1:3000,https://gemelo-laboral-streamlit.onrender.com,https://gemelo-digital-3d-del-mercado-laboral.vercel.app
+        value: http://localhost:3000,http://127.0.0.1:3000,https://gemelo-laboral-streamlit.onrender.com,https://gemelo-digital-3d-del-mercado-laboral.vercel.app,https://gemelo-digital-3d-del-mercado-labor.vercel.app
       - key: ENVIRONMENT
         value: production
       - key: GEMINI_API_KEY
