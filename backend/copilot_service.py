@@ -47,7 +47,7 @@ def get_langflow_config():
     gemini_api_key = raw_gemini.strip() if raw_gemini else ""
 
     raw_gemini_model = os.getenv("GEMINI_MODEL")
-    gemini_model = raw_gemini_model.strip() if raw_gemini_model and raw_gemini_model.strip() else "gemini-2.5-flash"
+    gemini_model = raw_gemini_model.strip() if raw_gemini_model and raw_gemini_model.strip() else "gemini-3.1-flash-lite"
 
     # Langflow se considera configurado únicamente si base_url y flow_id están definidos
     is_configured = bool(base_url and flow_id and api_key)
@@ -66,7 +66,7 @@ def get_langflow_config():
 async def query_gemini_direct(
     prompt: str,
     api_key: str,
-    model: str = "gemini-2.5-flash",
+    model: str = "gemini-3.1-flash-lite",
     timeout_sec: float = 30.0,
 ) -> Optional[str]:
     """
@@ -104,6 +104,11 @@ async def query_gemini_direct(
                 parts = candidates[0]["content"].get("parts", [])
                 if parts and "text" in parts[0]:
                     return parts[0]["text"]
+        elif response.status_code == 404:
+            logger.error(
+                f"modelo no disponible: {clean_model} (HTTP 404). Verifique la variable GEMINI_MODEL: {response.text[:160]}"
+            )
+            return None
         else:
             logger.warning(
                 f"Gemini REST API ({clean_model}) respondió HTTP {response.status_code}: {response.text[:160]}"
@@ -326,7 +331,7 @@ async def execute_copilot_query(
 
     # --- NIVEL 2: Google Gemini Directo vía REST API (si GEMINI_API_KEY está configurada) ---
     gemini_key = cfg.get("gemini_api_key", "")
-    gemini_model = cfg.get("gemini_model", "gemini-2.5-flash")
+    gemini_model = cfg.get("gemini_model", "gemini-3.1-flash-lite")
     if gemini_key:
         try:
             logger.info(f"Consultando Google Gemini ({gemini_model}) directamente vía REST API...")

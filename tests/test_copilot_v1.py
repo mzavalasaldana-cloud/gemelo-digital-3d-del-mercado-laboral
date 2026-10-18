@@ -178,7 +178,7 @@ async def test_execute_copilot_query_gemini_direct_success():
         "LANGFLOW_COPILOT_FLOW_ID": "",
         "LANGFLOW_API_KEY": "",
         "GEMINI_API_KEY": "AIzaSyFakeGeminiKey123456",
-        "GEMINI_MODEL": "gemini-2.5-flash",
+        "GEMINI_MODEL": "gemini-3.1-flash-lite",
     }
 
     with patch.dict(os.environ, env_overrides):
@@ -194,7 +194,7 @@ async def test_execute_copilot_query_gemini_direct_success():
             )
 
             assert res["source"] == "gemini"
-            assert res["model"] == "gemini-2.5-flash"
+            assert res["model"] == "gemini-3.1-flash-lite"
             assert "Gemini" in res["response"]
             assert res["verified_metrics"]["country"] == "KENYA"
 
@@ -205,11 +205,47 @@ async def test_execute_copilot_query_gemini_direct_success():
             called_headers = called_kwargs.get("headers", {})
 
             assert "generativelanguage.googleapis.com" in called_url
-            assert "gemini-2.5-flash:generateContent" in called_url
+            assert "gemini-3.1-flash-lite:generateContent" in called_url
             # La API key NO debe estar en la URL
             assert "key=" not in called_url
             # La API key DEBE estar en el header x-goog-api-key
             assert called_headers.get("x-goog-api-key") == "AIzaSyFakeGeminiKey123456"
+
+
+@pytest.mark.asyncio
+async def test_execute_copilot_query_gemini_404_model_unavailable(caplog):
+    """Verifica que si Gemini responde 404 por modelo no disponible, se registre un log ERROR y caiga al motor econométrico."""
+    import os
+    import logging
+    mock_resp = Response(
+        404,
+        text='{"error": {"code": 404, "message": "models/gemini-2.5-flash is not found for API version v1beta", "status": "NOT_FOUND"}}'
+    )
+
+    env_overrides = {
+        "LANGFLOW_BASE_URL": "",
+        "LANGFLOW_COPILOT_FLOW_ID": "",
+        "LANGFLOW_API_KEY": "",
+        "GEMINI_API_KEY": "AIzaSyFakeGeminiKey123456",
+        "GEMINI_MODEL": "gemini-2.5-flash",
+    }
+
+    with caplog.at_level(logging.ERROR):
+        with patch.dict(os.environ, env_overrides):
+            with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+                mock_post.return_value = mock_resp
+
+                res = await execute_copilot_query(
+                    user_query="¿Qué política reduce más rápido la informalidad?",
+                    session_id="sess-gemini-404"
+                )
+
+                assert res["source"] == "econometric_engine"
+                assert len(res["response"]) > 0
+                assert any(
+                    record.levelno == logging.ERROR and "modelo no disponible: gemini-2.5-flash" in record.message
+                    for record in caplog.records
+                )
 
 
 @pytest.mark.asyncio
