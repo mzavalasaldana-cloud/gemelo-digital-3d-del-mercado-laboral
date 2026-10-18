@@ -18,7 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import { playHoloClick, playCrystallizeSound } from '../../utils/audioSynth';
-import { uploadDatasetFile, selectPresetDataset, fetchDatasetPreview } from '../../services/api';
+import { uploadDatasetFile, selectPresetDataset, fetchDatasetPreview, BACKEND_URL } from '../../services/api';
 import { t } from '../../utils/i18n';
 import { ExplainabilityCard } from '../Common/ExplainabilityCard';
 
@@ -99,8 +99,8 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
     } catch (err: any) {
       setIngestFeedback(
         language === 'en'
-          ? 'Backend unavailable: cannot connect to dataset service (http://localhost:8000).'
-          : 'Backend no disponible: no se pudo conectar al servicio de datasets (http://localhost:8000).'
+          ? `Backend unavailable: cannot connect to dataset service (${BACKEND_URL}).`
+          : `Backend no disponible: no se pudo conectar al servicio de datasets (${BACKEND_URL}).`
       );
     } finally {
       setLoadingDatasetId(null);

@@ -40,7 +40,8 @@ import {
   SimulationFramePayload,
   fetchActiveDataset,
   fetchSimulationHistory,
-  saveSimulationRunApi
+  saveSimulationRunApi,
+  BACKEND_URL
 } from './services/api';
 
 // Helper: Generate Worker Particles Population (2,500 boids with formalization schedules)
@@ -558,7 +559,7 @@ export default function App() {
         <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-300 text-xs px-4 py-1.5 flex items-center justify-between z-30 shrink-0">
           <div className="flex items-center gap-2 font-mono">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span>Aviso: Backend no disponible. La API FastAPI en http://localhost:8000 no responde; los datos en tiempo real requieren la API.</span>
+            <span>Aviso: Backend no disponible. La API FastAPI en {BACKEND_URL} no responde; los datos en tiempo real requieren la API.</span>
           </div>
           <button
             onClick={() => setBackendOffline(false)}

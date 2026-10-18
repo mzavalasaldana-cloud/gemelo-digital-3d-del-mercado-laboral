@@ -18,9 +18,12 @@ import {
   ExtendedCohortData
 } from '../data/aiEngineMockData';
 
-// API Base URL config (Proxy in dev or env var in prod)
-const BACKEND_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
-const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api/v1` : '/api/v1';
+// API Base URL config (parametrizado con VITE_API_URL, por defecto http://localhost:8000)
+export const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+export const API_BASE = `${BACKEND_URL}/api/v1`;
+
+// Derivación de URL WebSocket: cambiar https por wss y http por ws
+export const WS_BASE_URL = BACKEND_URL.replace(/^https:/i, 'wss:').replace(/^http:/i, 'ws:');
 
 // Model ID in-memory / local storage persistence
 const MODEL_STORAGE_KEY = 'labortwin_active_model_id';
@@ -299,15 +302,11 @@ export class SimulationWebSocketClient {
   private onStatusCallback: ((isConnected: boolean) => void) | null = null;
   private isExplicitlyClosed = false;
 
-  constructor() {
-    const customBackend = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
-    if (customBackend) {
-      const cleanUrl = customBackend.replace(/^http/, 'ws').replace(/\/$/, '');
-      this.url = `${cleanUrl}/ws/simulation`;
+  constructor(customUrl?: string) {
+    if (customUrl) {
+      this.url = customUrl;
     } else {
-      const isHttps = window.location.protocol === 'https:';
-      const host = window.location.host || 'localhost:3000';
-      this.url = `${isHttps ? 'wss:' : 'ws:'}//${host}/ws/simulation`;
+      this.url = `${WS_BASE_URL}/ws/simulation`;
     }
   }
 
