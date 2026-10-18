@@ -37,7 +37,7 @@ def format_async_database_url(url: str) -> str:
     return url
 
 raw_db_url = os.getenv("DATABASE_URL")
-if not raw_db_url:
+if not raw_db_url or not raw_db_url.strip():
     err_msg = (
         "ERROR CRÍTICO DE CONFIGURACIÓN: La variable de entorno 'DATABASE_URL' no está definida. "
         "Debe configurarse en el archivo .env (ejemplo: DATABASE_URL=postgresql+asyncpg://usuario:contraseña@localhost:5432/labortwin_db)"

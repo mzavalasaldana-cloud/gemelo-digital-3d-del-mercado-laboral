@@ -139,8 +139,12 @@ app = FastAPI(
 )
 
 # CORS Configuration
-raw_cors = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+raw_cors = os.getenv("CORS_ORIGINS")
+if not raw_cors or not raw_cors.strip():
+    raw_cors = "http://localhost:3000,http://127.0.0.1:3000"
 allowed_origins = [orig.strip() for orig in raw_cors.split(",") if orig.strip()]
+if not allowed_origins:
+    allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
 app.add_middleware(
     CORSMiddleware,

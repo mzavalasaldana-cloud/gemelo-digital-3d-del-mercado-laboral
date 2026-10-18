@@ -37,7 +37,8 @@ def get_cached_ml_data():
 
 def deploy_model_to_backend(model_id: str, model_data: dict) -> dict:
     """Sends deploy command to FastAPI backend to update the active champion model."""
-    backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+    _raw_b = os.getenv("BACKEND_URL")
+    backend_url = _raw_b.strip().rstrip("/") if _raw_b and _raw_b.strip() else "http://127.0.0.1:8000"
     url = f"{backend_url}/api/v1/ml/deploy-model"
     payload = {
         "model_id": model_id,

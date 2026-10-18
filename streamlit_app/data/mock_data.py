@@ -105,7 +105,8 @@ def get_simulation_runs() -> List[Dict[str, Any]]:
     try:
         import os
         import urllib.request
-        backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+        raw_b_url = os.getenv("BACKEND_URL")
+        backend_url = raw_b_url.strip().rstrip("/") if raw_b_url and raw_b_url.strip() else "http://127.0.0.1:8000"
         req = urllib.request.Request(f"{backend_url}/api/v1/simulations/history", headers={"User-Agent": "StreamlitTwin"})
         with urllib.request.urlopen(req, timeout=1.2) as resp:
             if resp.status == 200:

@@ -18,7 +18,8 @@ from backend.copilot_service import execute_copilot_query, CopilotServiceError
 HAS_LOCAL_BACKEND_MODULE = True
 
 logger = logging.getLogger("labortwin.streamlit_copilot")
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+_raw_backend = os.getenv("BACKEND_URL")
+BACKEND_URL = _raw_backend.strip().rstrip("/") if _raw_backend and _raw_backend.strip() else "http://127.0.0.1:8000"
 BACKEND_BASE_URL = f"{BACKEND_URL}/api/v1/copilot"
 
 

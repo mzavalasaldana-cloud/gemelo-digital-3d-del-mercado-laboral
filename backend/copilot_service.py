@@ -27,12 +27,31 @@ def get_langflow_config():
     if backend_env.exists():
         load_dotenv(backend_env, override=True)
     load_dotenv(override=True)
+    
+    raw_base_url = os.getenv("LANGFLOW_BASE_URL")
+    base_url = raw_base_url.strip().rstrip("/") if raw_base_url and raw_base_url.strip() else "http://127.0.0.1:7860"
+    
+    raw_api_key = os.getenv("LANGFLOW_API_KEY")
+    api_key = raw_api_key.strip() if raw_api_key and raw_api_key.strip() else "sk-TwLFZ6VRuVldtsxCB8ncpTZarkRPFuAK2HdrbZzIhYg"
+    
+    raw_flow_id = os.getenv("LANGFLOW_COPILOT_FLOW_ID")
+    flow_id = raw_flow_id.strip() if raw_flow_id and raw_flow_id.strip() else "labortwin-copilot-v1"
+    
+    raw_timeout = os.getenv("LANGFLOW_TIMEOUT_SEC")
+    try:
+        timeout = float(raw_timeout.strip()) if raw_timeout and raw_timeout.strip() else 60.0
+    except (ValueError, TypeError):
+        timeout = 60.0
+        
+    raw_gemini = os.getenv("GEMINI_API_KEY")
+    gemini_api_key = raw_gemini.strip() if raw_gemini else ""
+
     return {
-        "base_url": os.getenv("LANGFLOW_BASE_URL", "http://127.0.0.1:7860").rstrip("/"),
-        "api_key": os.getenv("LANGFLOW_API_KEY", "sk-TwLFZ6VRuVldtsxCB8ncpTZarkRPFuAK2HdrbZzIhYg"),
-        "flow_id": os.getenv("LANGFLOW_COPILOT_FLOW_ID", "labortwin-copilot-v1"),
-        "timeout": float(os.getenv("LANGFLOW_TIMEOUT_SEC", "60.0")),
-        "gemini_api_key": os.getenv("GEMINI_API_KEY", ""),
+        "base_url": base_url,
+        "api_key": api_key,
+        "flow_id": flow_id,
+        "timeout": timeout,
+        "gemini_api_key": gemini_api_key,
     }
 
 

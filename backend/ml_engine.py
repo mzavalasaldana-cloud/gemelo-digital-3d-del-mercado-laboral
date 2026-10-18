@@ -30,8 +30,11 @@ except ImportError:
 
 logger = logging.getLogger("labortwin.ml_engine")
 
-MODELS_STORE_DIR = os.getenv("MODELS_STORE_DIR", "./models_store")
-DATA_STORE_DIR = os.getenv("DATA_STORE_DIR", "./data_store")
+_models_env = os.getenv("MODELS_STORE_DIR")
+MODELS_STORE_DIR = _models_env.strip() if _models_env and _models_env.strip() else "./models_store"
+
+_data_env = os.getenv("DATA_STORE_DIR")
+DATA_STORE_DIR = _data_env.strip() if _data_env and _data_env.strip() else "./data_store"
 
 os.makedirs(MODELS_STORE_DIR, exist_ok=True)
 os.makedirs(DATA_STORE_DIR, exist_ok=True)

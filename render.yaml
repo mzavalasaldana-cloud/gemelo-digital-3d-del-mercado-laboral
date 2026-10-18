@@ -23,6 +23,8 @@ services:
           property: connectionString
       - key: CORS_ORIGINS
         value: http://localhost:3000,http://127.0.0.1:3000,https://gemelo-laboral-streamlit.onrender.com,https://gemelo-digital-3d-del-mercado-laboral.vercel.app
+      - key: ENVIRONMENT
+        value: production
       - key: GEMINI_API_KEY
         sync: false
       - key: LANGFLOW_API_KEY
@@ -30,14 +32,6 @@ services:
       - key: LANGFLOW_BASE_URL
         sync: false
       - key: LANGFLOW_COPILOT_FLOW_ID
-        sync: false
-      - key: LANGFLOW_TIMEOUT_SEC
-        sync: false
-      - key: ENVIRONMENT
-        sync: false
-      - key: MODELS_STORE_DIR
-        sync: false
-      - key: DATA_STORE_DIR
         sync: false
 
   # 2. Streamlit Dashboard (Opcional en Render)
@@ -58,6 +52,8 @@ services:
           property: connectionString
       - key: BACKEND_URL
         value: https://gemelo-laboral-backend.onrender.com
+      - key: ENVIRONMENT
+        value: production
       - key: GEMINI_API_KEY
         sync: false
       - key: LANGFLOW_API_KEY
