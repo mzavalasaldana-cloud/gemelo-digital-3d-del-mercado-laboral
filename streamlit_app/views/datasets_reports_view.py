@@ -146,7 +146,7 @@ def render_datasets_reports_view():
             </div>
             <div style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.6;">
                 Informe técnico estructurado con evaluación de impacto macroeconómico, cumplimiento OIT (ODS 8),
-                informalidad simulada ({report_metrics['informalityRate']}%) y balance fiscal (${report_metrics['fiscalRevenueMillionUSD']}M USD).
+                informalidad simulada ({report_metrics.get('informalityRate', 0.0)}%) y balance fiscal (${report_metrics.get('fiscalRevenueMillionUSD', 0.0)}M USD).
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -205,18 +205,18 @@ def render_datasets_reports_view():
         <div style="background: #0b1220; border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; padding: 18px; color: #cbd5e1; font-size: 0.9rem; line-height: 1.7;">
             <h4 style="color: #00f0ff; margin-top: 0;">Diagnóstico Macroeconómico Preliminar</h4>
             <p>
-                La implementación del paquete de políticas para <b>{profile['name']}</b> bajo el escenario <b>{scenario}</b> 
-                induce una reducción estimada de la informalidad del <b>{profile['baseInformalityRate']}%</b> al <b>{metrics['informalityRate']}%</b> 
+                La implementación del paquete de políticas para <b>{profile.get('name', country_code)}</b> bajo el escenario <b>{scenario}</b> 
+                induce una reducción estimada de la informalidad del <b>{profile.get('baseInformalityRate', 0.0)}%</b> al <b>{metrics.get('informalityRate', 0.0)}%</b> 
                 en un horizonte continuo de 10 años (Mes {month}).
             </p>
             <p>
-                El <b>Balance Fiscal Neto</b> se proyecta en <b>${metrics['netFiscalBalanceMillionUSD']} Millones USD</b>, 
-                soportado por una recaudación formal de <b>${metrics['fiscalRevenueMillionUSD']}M USD</b> frente a un costo operativo del programa 
-                de <b>${metrics['policyCostMillionUSD']}M USD</b>.
+                El <b>Balance Fiscal Neto</b> se proyecta en <b>${metrics.get('netFiscalBalanceMillionUSD', round(metrics.get('fiscalRevenueMillionUSD', 0.0) - metrics.get('policyCostMillionUSD', 0.0), 2))} Millones USD</b>, 
+                soportado por una recaudación formal de <b>${metrics.get('fiscalRevenueMillionUSD', 0.0)}M USD</b> frente a un costo operativo del programa 
+                de <b>${metrics.get('policyCostMillionUSD', 0.0)}M USD</b>.
             </p>
             <h4 style="color: #10b981;">Alineamiento con Estándares OIT</h4>
             <p>
-                El Índice de Trabajo Decente alcanza <b>{metrics['decentWorkIndex']} puntos sobre 100</b>, reflejando mejoras sustanciales 
+                El Índice de Trabajo Decente alcanza <b>{metrics.get('decentWorkIndex', 50)} puntos sobre 100</b>, reflejando mejoras sustanciales 
                 en cobertura de seguridad social y reducción de la brecha salarial informal-formal.
             </p>
         </div>

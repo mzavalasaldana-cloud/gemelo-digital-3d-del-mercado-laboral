@@ -292,6 +292,7 @@ def calculate_structural_metrics(
         "informalWageUSDNote": ILLUSTRATIVE_NOTE,
         "fiscalRevenueMillionUSD": round(fiscal_revenue, 2),
         "policyCostMillionUSD": round(policy_cost, 2),
+        "netFiscalBalanceMillionUSD": round(fiscal_revenue - policy_cost, 2),
         "corporateTaxRevenue": round(corp_tax, 2),
         "laborContributionsRevenue": round(labor_tax, 2),
         "annualExitRate": round(annual_exit_rate, 2),

@@ -22,6 +22,7 @@ def test_simulation_metrics_deterministic():
     assert metrics_kenya_m0["formalWorkersCount"] > 0
     assert metrics_kenya_m0["informalWorkersCount"] > 0
     assert "fiscalRevenueMillionUSD" in metrics_kenya_m0
+    assert "netFiscalBalanceMillionUSD" in metrics_kenya_m0
     assert "decentWorkIndex" in metrics_kenya_m0
 
     # Escenario B2 a mes 12 debe tener menor informalidad que el Escenario A (Status Quo)

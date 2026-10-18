@@ -26,6 +26,8 @@ def render_ilo_decent_work_view():
     profile = COUNTRY_PROFILES.get(country_code, COUNTRY_PROFILES["KENYA"])
     metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
     gender_gap = metrics.get("genderGap", 0.0)
+    inf_rate = metrics.get("informalityRate", profile.get("baseInformalityRate", 0.0))
+    decent_work_idx = metrics.get("decentWorkIndex", 50)
 
     # Header
     st.markdown(f"""
@@ -41,7 +43,7 @@ def render_ilo_decent_work_view():
                 </p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <span class="glow-badge badge-emerald">Índice Global: {metrics['decentWorkIndex']}/100 (Indicador ilustrativo, no forma parte del artículo)</span>
+                <span class="glow-badge badge-emerald">Índice Global: {decent_work_idx}/100 (Indicador ilustrativo, no forma parte del artículo)</span>
                 <span class="glow-badge badge-cyan">{profile['flag']} {profile['name']}</span>
                 <span class="glow-badge badge-purple">Escenario {scenario}</span>
             </div>
@@ -74,13 +76,13 @@ def render_ilo_decent_work_view():
     # 4 Quick KPIs
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        render_metric_card("Cumplimiento Global OIT", f"{metrics['decentWorkIndex']}%", delta="Indicador ilustrativo, no forma parte del artículo", icon="🛡️", badge="Ilustrativo")
+        render_metric_card("Cumplimiento Global OIT", f"{decent_work_idx}%", delta="Indicador ilustrativo, no forma parte del artículo", icon="🛡️", badge="Ilustrativo")
     with k2:
-        render_metric_card("Tasa de Empleo Informal", f"{metrics['informalityRate']}%", delta="Meta OIT: 45%", delta_positive=(metrics['informalityRate'] <= 45), icon="📉")
+        render_metric_card("Tasa de Empleo Informal", f"{inf_rate}%", delta="Meta OIT: 45%", delta_positive=(inf_rate <= 45), icon="📉")
     with k3:
         render_metric_card("Brecha Salarial / Cuidado", f"{gender_gap:+.1f} p.p.", delta="F vs M", delta_positive=(abs(gender_gap) <= 3.0), icon="🚻")
     with k4:
-        formal_pct = round(100.0 - metrics['informalityRate'], 1)
+        formal_pct = round(100.0 - inf_rate, 1)
         render_metric_card("Cobertura Seg. Social", f"{formal_pct}%", delta="Empleo Formal", delta_positive=True, icon="🏥")
 
 
@@ -104,10 +106,10 @@ def render_ilo_decent_work_view():
 
         # Derived dynamic scores for radar (0 to 100 where 100 is target achieved)
         current_scores = [
-            max(20, min(100, 100 - (metrics['informalityRate'] - 45) * 1.5)),
+            max(20, min(100, 100 - (inf_rate - 45) * 1.5)),
             68,
             55,
-            int(55 + (100 - metrics['informalityRate']) * 0.4),
+            int(55 + (100 - inf_rate) * 0.4),
             62,
             48,
             58,
@@ -165,7 +167,7 @@ def render_ilo_decent_work_view():
 
         for ind in ILO_DECENT_WORK_INDICATORS:
             is_inf = (ind["code"] == "DW-INF")
-            val = f"{metrics['informalityRate']}%" if is_inf else f"{ind['target2030'] + 12.0} {ind['unit']}"
+            val = f"{inf_rate}%" if is_inf else f"{ind['target2030'] + 12.0} {ind['unit']}"
             target = f"{ind['target2030']} {ind['unit']}"
 
             st.markdown(f"""

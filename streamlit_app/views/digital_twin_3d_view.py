@@ -57,9 +57,9 @@ def render_digital_twin_3d_view():
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <span class="glow-badge badge-cyan">Mes {month}/120 ({cur_month_name} {cur_year})</span>
                 <span class="glow-badge badge-emerald">Escenario {scenario}</span>
-                <span class="glow-badge badge-amber">Informalidad: {metrics['informalityRate']}%</span>
+                <span class="glow-badge badge-amber">Informalidad: {metrics.get('informalityRate', 0.0)}%</span>
                 <span class="glow-badge badge-purple">Brecha F−M: {metrics.get('genderGap', 0):+.1f} p.p.</span>
-                <span class="glow-badge badge-emerald" title="Indicador ilustrativo, no forma parte del artículo">OIT: {metrics['decentWorkIndex']}/100 (Ilustrativo)</span>
+                <span class="glow-badge badge-emerald" title="Indicador ilustrativo, no forma parte del artículo">OIT: {metrics.get('decentWorkIndex', 50)}/100 (Ilustrativo)</span>
             </div>
         </div>
     </div>

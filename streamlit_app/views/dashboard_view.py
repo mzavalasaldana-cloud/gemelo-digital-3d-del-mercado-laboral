@@ -42,8 +42,8 @@ def render_dashboard_view():
     metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
     outputs_tables = load_outputs_data()
 
-    base_inf = profile.get("baseInformalityRate", metrics["baseInformalityRate"])
-    inf_delta = round(metrics["informalityRate"] - base_inf, 1)
+    base_inf = profile.get("baseInformalityRate", metrics.get("baseInformalityRate", 50.0))
+    inf_delta = round(metrics.get("informalityRate", base_inf) - base_inf, 1)
 
     # 1. Top Header Banner
     cur_year = 2024 + month // 12
@@ -76,7 +76,7 @@ def render_dashboard_view():
     with c1:
         render_metric_card(
             label="Informalidad Total",
-            value=f"{metrics['informalityRate']}%",
+            value=f"{metrics.get('informalityRate', 0.0)}%",
             delta=f"{inf_delta}% vs Base",
             delta_positive=(inf_delta < 0),
             icon="📉",
@@ -94,18 +94,19 @@ def render_dashboard_view():
         )
     with c3:
         base_gini = metrics.get("baseGiniIndex", profile.get("baseGini", 0.35))
+        gini_now = metrics.get("giniIndex", base_gini)
         render_metric_card(
             label="Índice de Gini",
-            value=f"{metrics['giniIndex']}",
+            value=f"{gini_now}",
             delta=f"Base: {base_gini}",
-            delta_positive=(metrics['giniIndex'] <= base_gini),
+            delta_positive=(gini_now <= base_gini),
             icon="⚖️",
             badge="Agentes ITDT"
         )
     with c4:
         render_metric_card(
             label="Trabajo Decente",
-            value=f"{metrics['decentWorkIndex']}/100",
+            value=f"{metrics.get('decentWorkIndex', 50)}/100",
             delta="Indicador ilustrativo, no forma parte del artículo",
             delta_positive=True,
             icon="🛡️",
@@ -124,7 +125,7 @@ def render_dashboard_view():
     with c6:
         render_metric_card(
             label="Recaudación Fiscal",
-            value=f"${metrics['fiscalRevenueMillionUSD']}M",
+            value=f"${metrics.get('fiscalRevenueMillionUSD', 0.0)}M",
             delta="Imp. Soc + Seg. Soc",
             delta_positive=True,
             icon="🏛️",
@@ -203,10 +204,10 @@ def render_dashboard_view():
         render_section_header("Desglose del Equilibrio de Agentes", icon="👥", badge="NumPy ABM")
         col_m1, col_m2 = st.columns(2)
         with col_m1:
-            st.metric("Empresas Formales", f"{metrics['formalFirmsCount']} / 600")
-            st.metric("Vacantes Formales", f"{metrics['formalVacancies']}")
+            st.metric("Empresas Formales", f"{metrics.get('formalFirmsCount', 0)} / 600")
+            st.metric("Vacantes Formales", f"{metrics.get('formalVacancies', 0)}")
         with col_m2:
-            st.metric("Disposición Formal (UF > UI)", f"{metrics['willingWorkersCount']} / 6,000")
+            st.metric("Disposición Formal (UF > UI)", f"{metrics.get('willingWorkersCount', 0)} / 6,000")
             st.metric("Entorno Digital D_sys", f"{metrics.get('digitalCoverage', 0.3):.3f}")
 
     with col_right:
@@ -281,7 +282,12 @@ def render_dashboard_view():
         comp_df = pd.DataFrame({
             "Indicador": ["Informalidad Total (%)", "Informalidad Mujeres (%)", "Informalidad Hombres (%)", "Trabajo Decente (0-100)"],
             "Línea Base (ILOSTAT)": [base_inf, profile.get("baseInformalityFemale", 90.0), profile.get("baseInformalityMale", 83.0), 45],
-            f"Simulación (Mes {month})": [metrics["informalityRate"], metrics["informalityFemale"], metrics["informalityMale"], metrics["decentWorkIndex"]]
+            f"Simulación (Mes {month})": [
+                metrics.get("informalityRate", base_inf),
+                metrics.get("informalityFemale", base_inf),
+                metrics.get("informalityMale", base_inf),
+                metrics.get("decentWorkIndex", 50)
+            ]
         })
 
         fig_comp = go.Figure()
@@ -350,7 +356,7 @@ def render_dashboard_view():
         c_lor1, c_lor2 = st.columns([1.2, 1.2])
         with c_lor1:
             p_pts = np.linspace(0, 1, 100)
-            gini_val = metrics["giniIndex"]
+            gini_val = metrics.get("giniIndex", profile.get("baseGini", 0.35))
             alpha = (1.0 + gini_val) / max(0.01, (1.0 - gini_val))
             lorenz_actual = p_pts ** alpha
             base_gini_val = metrics.get("baseGiniIndex", profile.get("baseGini", 0.35))
