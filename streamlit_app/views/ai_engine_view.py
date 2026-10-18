@@ -3,6 +3,7 @@ Motor IA & Explicabilidad: 5 Sub-Pestañas Completas y Detalladas
 (EDA, Validación Cruzada & Despliegue de Modelo Campeón, Hiperparámetros, Cohortes, Telemetría).
 """
 
+import os
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
@@ -36,7 +37,8 @@ def get_cached_ml_data():
 
 def deploy_model_to_backend(model_id: str, model_data: dict) -> dict:
     """Sends deploy command to FastAPI backend to update the active champion model."""
-    url = "http://127.0.0.1:8000/api/v1/ml/deploy-model"
+    backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+    url = f"{backend_url}/api/v1/ml/deploy-model"
     payload = {
         "model_id": model_id,
         "name": model_data.get("name", model_id),

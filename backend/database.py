@@ -109,7 +109,7 @@ async def init_db() -> None:
     """
     Inicializa las tablas en PostgreSQL mediante Base.metadata.create_all.
     Si la base de datos no está disponible o falla la autenticación, lanza
-    un error claro de conexión sin recurrir a fallbacks de SQLite.
+    un error claro de conexión a PostgreSQL.
     """
     target = DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else DATABASE_URL
     try:

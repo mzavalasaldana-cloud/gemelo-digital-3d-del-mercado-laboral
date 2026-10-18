@@ -4,6 +4,7 @@ contextual de simulaciones econométricas y políticas públicas con Langflow y 
 con persistencia y sincronización total en PostgreSQL.
 """
 
+import os
 import asyncio
 import streamlit as st
 import httpx
@@ -17,7 +18,8 @@ from backend.copilot_service import execute_copilot_query, CopilotServiceError
 HAS_LOCAL_BACKEND_MODULE = True
 
 logger = logging.getLogger("labortwin.streamlit_copilot")
-BACKEND_BASE_URL = "http://127.0.0.1:8000/api/v1/copilot"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+BACKEND_BASE_URL = f"{BACKEND_URL}/api/v1/copilot"
 
 
 def load_postgres_copilot_history(session_id: str) -> list:
@@ -114,7 +116,7 @@ def fetch_copilot_chat_response(
                 return {"response": f"⚠️ **Error de conexión con el Copiloto:** {str(e)}", "source": "error"}
         
         return {
-            "response": "⚠️ **Servicio Backend no disponible:** Asegúrate de que FastAPI esté corriendo en `http://127.0.0.1:8000`.",
+            "response": f"⚠️ **Servicio Backend no disponible:** Asegúrate de que FastAPI esté corriendo en `{BACKEND_URL}`.",
             "source": "error"
         }
     except httpx.TimeoutException:

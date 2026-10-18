@@ -103,8 +103,10 @@ def get_simulation_runs() -> List[Dict[str, Any]]:
     """
     # 1. Consulta al backend FastAPI
     try:
+        import os
         import urllib.request
-        req = urllib.request.Request("http://127.0.0.1:8000/api/v1/simulations/history", headers={"User-Agent": "StreamlitTwin"})
+        backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
+        req = urllib.request.Request(f"{backend_url}/api/v1/simulations/history", headers={"User-Agent": "StreamlitTwin"})
         with urllib.request.urlopen(req, timeout=1.2) as resp:
             if resp.status == 200:
                 data = json.loads(resp.read().decode("utf-8"))
