@@ -25,17 +25,17 @@ logger = logging.getLogger("labortwin.copilot")
 def get_langflow_config():
     """Obtiene la configuración activa de Langflow en tiempo de ejecución."""
     if backend_env.exists():
-        load_dotenv(backend_env, override=True)
-    load_dotenv(override=True)
+        load_dotenv(backend_env, override=False)
+    load_dotenv(override=False)
     
     raw_base_url = os.getenv("LANGFLOW_BASE_URL")
-    base_url = raw_base_url.strip().rstrip("/") if raw_base_url and raw_base_url.strip() else "http://127.0.0.1:7860"
+    base_url = raw_base_url.strip().rstrip("/") if raw_base_url and raw_base_url.strip() else ""
     
     raw_api_key = os.getenv("LANGFLOW_API_KEY")
-    api_key = raw_api_key.strip() if raw_api_key and raw_api_key.strip() else "sk-TwLFZ6VRuVldtsxCB8ncpTZarkRPFuAK2HdrbZzIhYg"
+    api_key = raw_api_key.strip() if raw_api_key and raw_api_key.strip() else ""
     
     raw_flow_id = os.getenv("LANGFLOW_COPILOT_FLOW_ID")
-    flow_id = raw_flow_id.strip() if raw_flow_id and raw_flow_id.strip() else "labortwin-copilot-v1"
+    flow_id = raw_flow_id.strip() if raw_flow_id and raw_flow_id.strip() else ""
     
     raw_timeout = os.getenv("LANGFLOW_TIMEOUT_SEC")
     try:
@@ -46,12 +46,16 @@ def get_langflow_config():
     raw_gemini = os.getenv("GEMINI_API_KEY")
     gemini_api_key = raw_gemini.strip() if raw_gemini else ""
 
+    # Langflow se considera configurado únicamente si base_url y flow_id están definidos
+    is_configured = bool(base_url and flow_id and api_key)
+
     return {
         "base_url": base_url,
         "api_key": api_key,
         "flow_id": flow_id,
         "timeout": timeout,
         "gemini_api_key": gemini_api_key,
+        "is_configured": is_configured,
     }
 
 
@@ -222,9 +226,24 @@ async def execute_copilot_query(
 
     enriched_input = build_simulation_context_prompt(user_query, metrics_data, history=history)
 
-    # 2. Intentar ejecución con Langflow
+    # 2. Intentar ejecución con Langflow (si está configurado)
     cfg = get_langflow_config()
     flow_identifier = cfg["flow_id"]
+
+    if not cfg.get("is_configured"):
+        logger.info(
+            "Langflow no está configurado (variables LANGFLOW_BASE_URL, LANGFLOW_API_KEY o LANGFLOW_COPILOT_FLOW_ID ausentes o vacías). "
+            "Saltando llamada HTTP de inmediato y usando motor econométrico de respaldo."
+        )
+        fallback_text = generate_econometric_copilot_response(user_query, metrics_data)
+        return {
+            "response": fallback_text,
+            "session_id": session_id,
+            "source": "econometric_engine",
+            "flow_id": flow_identifier or "none",
+            "verified_metrics": metrics_data,
+        }
+
     run_url = f"{cfg['base_url']}/api/v1/run/{flow_identifier}?stream=false"
 
     headers = {"Content-Type": "application/json"}
@@ -239,9 +258,10 @@ async def execute_copilot_query(
         "tweaks": {},
     }
 
-    lf_timeout = float(max(cfg.get("timeout", 40.0), 40.0))
+    lf_timeout = float(cfg.get("timeout", 60.0))
+    http_timeout = httpx.Timeout(lf_timeout, connect=5.0)
     try:
-        async with httpx.AsyncClient(timeout=lf_timeout) as client:
+        async with httpx.AsyncClient(timeout=http_timeout) as client:
             response = await client.post(run_url, headers=headers, json=payload)
             if response.status_code == 200:
                 res_json = response.json()

@@ -124,3 +124,19 @@ async def test_execute_copilot_query_unavailable():
         )
         assert res["source"] == "econometric_engine"
         assert len(res["response"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_execute_copilot_query_skipped_when_unconfigured():
+    """Verifica que si Langflow no está configurado (variables vacías), se salta de inmediato sin llamada HTTP."""
+    import os
+    with patch.dict(os.environ, {"LANGFLOW_BASE_URL": "", "LANGFLOW_COPILOT_FLOW_ID": "", "LANGFLOW_API_KEY": ""}):
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            res = await execute_copilot_query(
+                user_query="¿Qué política reduce más rápido la informalidad?",
+                session_id="sess-unconfigured"
+            )
+            mock_post.assert_not_called()
+            assert res["source"] == "econometric_engine"
+            assert len(res["response"]) > 0
+
