@@ -10,6 +10,8 @@ from backend.models import CopilotMessageModel
 from backend.copilot_service import get_langflow_config
 from sqlalchemy import select, delete
 
+pytestmark = [pytest.mark.db, pytest.mark.usefixtures("enforce_test_db_isolation")]
+
 
 @pytest.mark.asyncio
 async def test_postgres_connection_and_table_schema():
