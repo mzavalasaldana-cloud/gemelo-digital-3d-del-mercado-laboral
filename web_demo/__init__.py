@@ -6,7 +6,7 @@ canónico econométrico itdt.model.ITDTModel y las tablas empíricas de outputs/
 
 from .simulation import (
     COUNTRY_BASELINES,
-    MOCK_FIRMS_COORDS,
+    get_model_firms,
     terrain_elevation,
     WorkerAgentSim,
     SimulationEngine,
@@ -19,7 +19,7 @@ from .simulation import (
 
 __all__ = [
     "COUNTRY_BASELINES",
-    "MOCK_FIRMS_COORDS",
+    "get_model_firms",
     "terrain_elevation",
     "WorkerAgentSim",
     "SimulationEngine",

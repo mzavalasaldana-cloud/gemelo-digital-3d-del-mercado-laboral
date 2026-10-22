@@ -27,7 +27,7 @@ def render_user_management_view():
                 </p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <span class="glow-badge badge-amber">Datos de demostración</span>
+                <span class="glow-badge badge-amber">Usuarios de prueba</span>
                 <span class="glow-badge badge-purple">Tu Rol Activo: {current_role}</span>
                 <span class="glow-badge badge-cyan">{len(users)} Cuentas Registradas</span>
             </div>

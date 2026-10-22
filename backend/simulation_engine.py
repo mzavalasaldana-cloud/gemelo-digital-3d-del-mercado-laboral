@@ -5,7 +5,9 @@ Delega la lógica visual a 'web_demo.simulation' conectada con 'itdt.model.ITDTM
 
 from web_demo.simulation import (
     COUNTRY_BASELINES,
-    MOCK_FIRMS_COORDS,
+    get_model_firms,
+    get_historical_ilostat_series,
+    get_simulated_monthly_trajectory,
     terrain_elevation,
     WorkerAgentSim,
     SimulationEngine,
@@ -16,7 +18,9 @@ from web_demo.simulation import (
 
 __all__ = [
     "COUNTRY_BASELINES",
-    "MOCK_FIRMS_COORDS",
+    "get_model_firms",
+    "get_historical_ilostat_series",
+    "get_simulated_monthly_trajectory",
     "terrain_elevation",
     "WorkerAgentSim",
     "SimulationEngine",

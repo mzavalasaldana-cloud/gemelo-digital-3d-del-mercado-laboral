@@ -54,6 +54,9 @@ from .simulation_engine import (
     calculate_structural_metrics,
     load_outputs_data,
     SCENARIO_CONFIGS,
+    get_model_firms,
+    get_historical_ilostat_series,
+    get_simulated_monthly_trajectory,
 )
 
 # Configure Logging
@@ -122,12 +125,17 @@ app = FastAPI(
 )
 
 # CORS Configuration
-raw_cors = os.getenv("CORS_ORIGINS")
-if not raw_cors or not raw_cors.strip():
-    raw_cors = "http://localhost:3000,http://127.0.0.1:3000"
-allowed_origins = [orig.strip() for orig in raw_cors.split(",") if orig.strip()]
-if not allowed_origins:
-    allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+raw_cors = os.getenv("CORS_ORIGINS", "")
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+if raw_cors and raw_cors.strip():
+    for orig in raw_cors.split(","):
+        if orig.strip() and orig.strip() not in allowed_origins:
+            allowed_origins.append(orig.strip())
 
 app.add_middleware(
     CORSMiddleware,
@@ -508,6 +516,39 @@ async def get_structural_metrics_endpoint(
     por itdt.model.ITDTModel para el país, escenario y mes seleccionados.
     """
     return calculate_structural_metrics(country_code=country, scenario=scenario, month=month)
+
+
+@app.get("/api/v1/simulation/trajectories")
+@app.get("/api/v1/simulations/trajectories")
+async def get_trajectories_endpoint(
+    country: str = Query(default="KENYA"),
+    scenario: str = Query(default="A"),
+):
+    """
+    Expone la parte histórica (datos reales de ILOSTAT) y la simulación ITDT
+    (meses 1 a 120 de la política) sin inventar ni interpolar datos ausentes.
+    """
+    historical = get_historical_ilostat_series(country_code=country)
+    simulation = get_simulated_monthly_trajectory(country_code=country, scenario=scenario)
+    return {
+        "country": country,
+        "scenario": scenario,
+        "historical": historical,
+        "simulation": simulation,
+    }
+
+
+@app.get("/api/v1/simulation/firms")
+@app.get("/api/v1/simulations/firms")
+async def get_firms_endpoint(
+    country: str = Query(default="KENYA"),
+    scenario: str = Query(default="A"),
+):
+    """
+    Expone las empresas del propio ITDTModel para el país y escenario seleccionados.
+    """
+    return get_model_firms(country_code=country, scenario=scenario)
+
 
 
 # =====================================================================

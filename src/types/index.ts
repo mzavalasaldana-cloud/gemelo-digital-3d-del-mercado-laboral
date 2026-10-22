@@ -49,14 +49,14 @@ export interface StructuralFirm {
   z: number;
   sizeEmployees: number;
   height: number;
-  sectorCategory: 'Manufactura' | 'Tecnología' | 'Comercio & Retail' | 'Logística' | 'Servicios Personales' | 'Agroindustria';
-  productivityScore: number; // 0-100
-  formalizationCostUSD: number;
+  sectorCategory?: string;
+  productivityScore: number;
+  formalizationCostUSD?: number;
   taxComplianceRate: number; // %
   baseEmployees: number;
   isFormalizedScenario?: boolean;
   shockwaveActive?: boolean;
-  emergenceMonth?: number; // Month (0-120) when this firm sprouts from the ground
+  emergenceMonth?: number;
   growthSpanMonths?: number;
 }
 
@@ -83,15 +83,27 @@ export type ScenarioPreset =
 
 export interface StructuralMetrics {
   informalityRate: number; // %
-  giniIndex: number; // 0 to 1 (e.g. 0.46)
+  giniIndex: number; // 0 to 1
   formalWorkersCount: number;
   informalWorkersCount: number;
   unemployedCount: number;
-  avgFormalWageUSD: number;
-  avgInformalWageUSD: number;
-  fiscalRevenueMillionUSD: number;
-  policyCostMillionUSD: number;
-  decentWorkIndex: number; // 0 to 100
+  informalityFemale?: number;
+  informalityMale?: number;
+  genderGap?: number;
+  fiscalRevenueModelUnits?: number;
+  corporateTaxRevenueModelUnits?: number;
+  laborContributionsModelUnits?: number;
+  annualExitRate?: number;
+  fiscalRevenue?: number;
+  corporateTaxRevenue?: number;
+  laborContributionsRevenue?: number;
+  avgFormalWageUSD?: number;
+  avgInformalWageUSD?: number;
+  fiscalRevenueMillionUSD?: number;
+  policyCostMillionUSD?: number;
+  decentWorkIndex?: number;
+  isRealData?: boolean;
+  source?: string;
 }
 
 export interface MLAlgorithmMetric {

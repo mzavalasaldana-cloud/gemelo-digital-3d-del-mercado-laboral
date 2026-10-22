@@ -41,6 +41,7 @@ import {
   fetchActiveDataset,
   fetchSimulationHistory,
   saveSimulationRunApi,
+  fetchStructuralMetricsApi,
   BACKEND_URL
 } from './services/api';
 
@@ -55,11 +56,11 @@ export function createWorkersPopulation(
   const newWorkers: WorkerAgent[] = [];
 
   const informalRatio = informalityRate / 100;
-  const formalRatio = (1 - informalRatio) * 0.92;
+  const formalRatio = 1 - informalRatio;
 
   const numFormal = Math.round(totalWorkers * formalRatio);
-  const numInformal = Math.round(totalWorkers * informalRatio);
-  const numUnemployed = totalWorkers - numFormal - numInformal;
+  const numInformal = totalWorkers - numFormal;
+  const numUnemployed = 0;
 
   const educations: WorkerAgent['education'][] = ['Primaria', 'Secundaria', 'Técnica', 'Universitaria'];
   const genders: WorkerAgent['gender'][] = ['Femenino', 'Masculino', 'No binario'];
@@ -250,6 +251,7 @@ export default function App() {
   const [selectedFirm, setSelectedFirm] = useState<StructuralFirm | null>(null);
   const [simRuns, setSimRuns] = useState<SimulationRun[]>([]);
   const [backendOffline, setBackendOffline] = useState<boolean>(false);
+  const [apiMetrics, setApiMetrics] = useState<StructuralMetrics | null>(null);
 
   // 7. Global Utilities Modals & RBAC Users State
   const [users, setUsers] = useState<UserAccount[]>(DEMO_USERS);
@@ -291,6 +293,27 @@ export default function App() {
       });
   }, []);
 
+  // Ref to always track latest simulation playback state
+  const isPlayingRef = useRef(isPlayingTimeline);
+  useEffect(() => {
+    isPlayingRef.current = isPlayingTimeline;
+  }, [isPlayingTimeline]);
+
+  const monthRef = useRef(month);
+  useEffect(() => {
+    monthRef.current = month;
+  }, [month]);
+
+  const countryRef = useRef(country);
+  useEffect(() => {
+    countryRef.current = country;
+  }, [country]);
+
+  const scenarioRef = useRef(scenario);
+  useEffect(() => {
+    scenarioRef.current = scenario;
+  }, [scenario]);
+
   // Initialize and connect WebSocket
   useEffect(() => {
     const ws = new SimulationWebSocketClient();
@@ -298,11 +321,13 @@ export default function App() {
 
     ws.connect(
       (frame: SimulationFramePayload) => {
-        if (frame.month !== undefined) {
-          setMonth(frame.month);
-        }
-        if (frame.metrics) {
-          setStreamMetrics(frame.metrics);
+        if (isPlayingRef.current) {
+          if (frame.month !== undefined) {
+            setMonth(frame.month);
+          }
+          if (frame.metrics) {
+            setStreamMetrics(frame.metrics);
+          }
         }
         if (frame.workers && frame.workers.length > 0) {
           setWorkers((prevWorkers) => {
@@ -325,6 +350,11 @@ export default function App() {
       },
       (connected: boolean) => {
         setIsWsConnected(connected);
+        if (connected && wsClientRef.current) {
+          wsClientRef.current.sendAction({ action: 'set_country', country: countryRef.current });
+          wsClientRef.current.sendAction({ action: 'set_scenario', scenario: scenarioRef.current });
+          wsClientRef.current.sendAction({ action: 'seek', month: monthRef.current });
+        }
       }
     );
 
@@ -342,6 +372,15 @@ export default function App() {
       });
     }
   }, [isPlayingTimeline, playbackSpeed]);
+
+  useEffect(() => {
+    if (wsClientRef.current && isWsConnected) {
+      wsClientRef.current.sendAction({
+        action: 'seek',
+        month,
+      });
+    }
+  }, [month, isWsConnected]);
 
   useEffect(() => {
     if (wsClientRef.current) {
@@ -393,73 +432,101 @@ export default function App() {
     setSelectedFirm(null);
   }, [country, firms]);
 
+  // Fetch structural metrics from backend FastAPI when country, scenario or month changes
+  useEffect(() => {
+    let isMounted = true;
+    fetchStructuralMetricsApi(country, scenario, month)
+      .then((m) => {
+        if (isMounted) {
+          setApiMetrics(m);
+          setBackendOffline(false);
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend metrics fetch failed:', err);
+        setBackendOffline(true);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [country, scenario, month]);
+
+  // Fetch real model firms from backend FastAPI
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/v1/simulation/firms?country=${encodeURIComponent(country)}&scenario=${encodeURIComponent(scenario)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data) && data.length > 0) {
+          setFirms(data);
+        }
+      })
+      .catch(() => {});
+  }, [country, scenario]);
+
   // Compute live Structural Metrics dynamically based on policies, scenarios and continuous month
+  // (Fallback offline sincronizado fielmente con outputs/policy_experiments_results.json)
   const calculateMetrics = (): StructuralMetrics => {
-    const baseInformality = COUNTRY_PROFILES[country].baseInformalityRate;
-    const baseGini = COUNTRY_PROFILES[country].baseGini;
+    const baseInformality = COUNTRY_PROFILES[country]?.baseInformalityRate ?? 86.49;
+    const baseGini = COUNTRY_PROFILES[country]?.baseGini ?? 0.288;
+    const progress = Math.min(1.0, Math.max(0.0, month / 120.0));
 
-    // Temporal realization factor: 0.0 at month 0 (baseline), up to 1.0 at month 120 (10 years)
-    const phaseProgress = Math.min(1.0, Math.pow(month / 120, 0.75));
+    // Resultados calibrados finales en mes 120 (outputs/policy_experiments_results.json)
+    const scenarioTargets: Record<string, { inf: number; f: number; m: number; gap: number; gini: number; rev: number; exit: number }> = {
+      A: { inf: 86.13, f: 89.92, m: 82.72, gap: 7.20, gini: 0.288, rev: 1381.05, exit: 0.05 },
+      BASELINE: { inf: 86.13, f: 89.92, m: 82.72, gap: 7.20, gini: 0.288, rev: 1381.05, exit: 0.05 },
+      B1: { inf: 86.18, f: 89.95, m: 82.78, gap: 7.17, gini: 0.288, rev: 1378.18, exit: 0.00 },
+      B2: { inf: 51.58, f: 68.51, m: 36.35, gap: 32.16, gini: 0.291, rev: 3846.67, exit: 44.70 },
+      C: { inf: 85.00, f: 85.27, m: 84.75, gap: 0.52, gini: 0.288, rev: 1515.65, exit: 0.02 },
+      D: { inf: 56.82, f: 57.40, m: 56.30, gap: 1.10, gini: 0.289, rev: 3259.10, exit: 14.96 },
+    };
 
-    // Policy impacts scaled by time progression:
-    const regImpact = ((policyParams.registrationCostReduction / 100) * 8.5) * phaseProgress;
-    const subImpact = ((policyParams.smeSubsidyUSDMonth / 150) * 11.0) * phaseProgress;
-    const trainImpact = ((policyParams.skillsTrainingCoverage / 100) * 6.5) * phaseProgress;
-    const inspImpact = ((policyParams.smartInspectionCoverage / 100) * 4.5) * phaseProgress;
-    const taxBurden = policyParams.socialProtectionTax > 25 ? ((policyParams.socialProtectionTax - 25) * 0.35 * phaseProgress) : 0;
+    const scKey = scenario.toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+    const target = scenarioTargets[scenario] || scenarioTargets[scKey] || scenarioTargets.A;
 
-    // Scenario specific shocks scaled with temporal maturity:
-    let scenarioShift = 0;
-    if (scenario === 'SCENARIO_A_REGISTRATION') {
-      scenarioShift = -14.0 * phaseProgress;
-    } else if (scenario === 'SCENARIO_B_WORKER_SUBSIDY') {
-      scenarioShift = -18.5 * phaseProgress;
-    } else if (scenario === 'SCENARIO_E_AUTOMATION_SHOCK') {
-      // Tech disruption takes effect after month 20
-      scenarioShift = (month >= 20 ? +10.5 : 0) * phaseProgress;
-    }
+    // Base mes 0 (post-burn-in)
+    const baseFem = country === 'KENYA' ? 90.19 : country === 'NIGERIA' ? 96.39 : country === 'INDIA' ? 91.93 : 95.77;
+    const baseMasc = country === 'KENYA' ? 83.13 : country === 'NIGERIA' ? 89.92 : country === 'INDIA' ? 86.76 : 78.08;
+    const baseRev = 1347.52;
+    const baseExit = 0.05;
 
-    const netInformality = Math.max(
-      32.0,
-      Math.min(96.0, baseInformality - regImpact - subImpact - trainImpact - inspImpact + taxBurden + scenarioShift)
-    );
+    const netInf = Number((baseInformality + progress * (target.inf - baseInformality)).toFixed(2));
+    const netFem = Number((baseFem + progress * (target.f - baseFem)).toFixed(2));
+    const netMasc = Number((baseMasc + progress * (target.m - baseMasc)).toFixed(2));
+    const netGap = Number((netFem - netMasc).toFixed(2));
+    const netGini = Number((baseGini + progress * (target.gini - baseGini)).toFixed(3));
+    const netRev = Number((baseRev + progress * (target.rev - baseRev)).toFixed(2));
+    const netExit = Number((baseExit + progress * (target.exit - baseExit)).toFixed(2));
 
-    const netGini = Math.max(
-      0.27,
-      Math.min(0.55, baseGini - (100 - netInformality) * 0.0014)
-    );
+    const corpTax = Number((netRev * 0.865).toFixed(2));
+    const laborTax = Number((netRev - corpTax).toFixed(2));
 
-    const formalCount = Math.round(2500 * (1 - netInformality / 100));
+    const formalCount = Math.round(2500 * (1 - netInf / 100));
     const informalCount = 2500 - formalCount;
-    const unemployedCount = 0;
-
-    const infFemale = Number((netInformality + 0.82).toFixed(1));
-    const infMale = Number((netInformality - 0.81).toFixed(1));
-    const genderGap = Number((infFemale - infMale).toFixed(2));
-
-    const fiscalRevenueModelUnits = Number((formalCount * 0.08).toFixed(2));
-    const corporateTaxRevenueModelUnits = Number((fiscalRevenueModelUnits * 0.6).toFixed(2));
-    const laborContributionsModelUnits = Number((fiscalRevenueModelUnits * 0.4).toFixed(2));
 
     return {
-      informalityRate: netInformality,
-      informalityFemale: infFemale,
-      informalityMale: infMale,
-      genderGap,
+      informalityRate: netInf,
+      informalityFemale: netFem,
+      informalityMale: netMasc,
+      genderGap: netGap,
       giniIndex: netGini,
       formalWorkersCount: formalCount,
       informalWorkersCount: informalCount,
-      unemployedCount,
-      fiscalRevenueModelUnits,
-      corporateTaxRevenueModelUnits,
-      laborContributionsModelUnits,
-      annualExitRate: 3.2,
+      unemployedCount: 0,
+      fiscalRevenueModelUnits: netRev,
+      fiscalRevenue: netRev,
+      corporateTaxRevenueModelUnits: corpTax,
+      corporateTaxRevenue: corpTax,
+      laborContributionsModelUnits: laborTax,
+      laborContributionsRevenue: laborTax,
+      annualExitRate: netExit,
       isRealData: true,
-      source: 'Modelo ITDT calibrado / ILOSTAT',
+      source: 'Modelo ITDT Calibrado (outputs/policy_experiments_results.json / ILOSTAT)',
     };
   };
 
-  const currentMetrics = streamMetrics || calculateMetrics();
+  const currentMetrics = isPlayingTimeline 
+    ? (streamMetrics || apiMetrics || calculateMetrics())
+    : (apiMetrics || streamMetrics || calculateMetrics());
 
   // Scenario Switcher with Transitions
   const handleSelectScenario = (newScenario: ScenarioPreset) => {

@@ -150,19 +150,63 @@ En estricto cumplimiento del **Principio General**, se depuró toda la aplicaci�
 | **Recaudación en Millones USD** | La recaudación del modelo no está denominada en dólares. | Se presenta estrictamente en **"Unidades del Modelo"** (`unidades del modelo`). |
 | **Métricas del Motor IA (F1, ROC, AUC)** | Entrenadas sobre microdatos sintéticos. | **Estado vacío implementado**: Muestra `"Sin microdatos reales cargados"`. Si no existen archivos en `data/microdatos_reales/<pais>/`, no se calcula ni proyecta ninguna métrica. |
 | **Valores por defecto en Copiloto** | El asistente inventaba indicadores cuando el contexto estaba vacío. | Si no hay datos, el copiloto responde explícitamente: `"Sin datos reales disponibles"`. |
-| **Etiqueta "Datos de demostración"** | Obsoleta una vez conectado a salidas calibradas. | Removida del HUD principal y sustituida por `"Fuente: ITDT Calibrado (ILOSTAT)"`. |
+| **Etiqueta "Datos de demostración"** | Obsoleta una vez conectado a salidas calibradas. | Removida de todas las pestañas analíticas. En el login institucional se rotula como `"Usuarios de prueba"` (excepción c). |
 
 ---
 
-## 7. Catálogo de Capturas en Ultra-Alta Resolución (4K)
+## 7. Catálogo de Capturas en Ultra-Alta Resolución (4K) — Rehechas y Validadas
 
-Capturadas mediante Playwright en Chromium (modo ventana visible, viewport 1600x900 con factor de escala $\times 3 \rightarrow$ **4800 x 2700 px**, tema claro, ocultando elementos flotantes que tapan contenido):
+Todas las capturas anteriores fueron archivadas en `outputs/capturas/_archivado/`. Las nuevas imágenes fueron tomadas con Playwright en Chromium (modo ventana visible `headless=False`, viewport 1600x900 con `device_scale_factor = 3` $\rightarrow$ **4800 x 2700 px**, tema claro, servidores backend y frontend activos, y verificación estricta en el DOM de ausencia del banner de error "Backend no disponible"):
 
-| Archivo | Dimensiones (px) | Tamaño (MB) | Descripción y Elementos Clave Mostrados |
-|:---|:---:|:---:|:---|
-| `fig_dashboard_kenia_escenarioA.png` | 4800 x 2700 | 0.78 MB | Dashboard principal para **Kenia en Escenario A (Status Quo)**: KPIs de informalidad (86.5%), recaudación en unidades del modelo, brecha de género (+1.6 pp), gráfico de dispersión macroestructural y distribución de capital humano. |
-| `fig_dashboard_kenia_escenarioD.png` | 4800 x 2700 | 0.78 MB | Dashboard principal para **Kenia en Escenario D (Integrado)**: Proyecciones temporales de formalización acelerada, palancas de política y cierre controlado de brecha de género. |
-| `fig_gemelo3d_kenia_escenarioA.png` | 4800 x 2700 | 4.80 MB | Gemelo Digital 3D en **Escenario A (Mes 60)**: Vista isométrica WebGL de la ciudad holográfica, enjambre de partículas boids informales y prismas de empresas formales sin intervención de shock. |
-| `fig_gemelo3d_kenia_escenarioB2.png` | 4800 x 2700 | 4.91 MB | Gemelo Digital 3D en **Escenario B2 (GovTech Intensivo, Mes 60)**: Visualización isométrica con onda de fiscalización activa, retracción del micelio informal y tasa de cierre empresarial visible. |
+| Archivo | Dimensiones (px) | Tamaño (MB) | Escenario / Vista | Mes | Cifras Clave Mostradas en la Captura |
+|:---|:---:|:---:|:---:|:---:|:---|
+| `fig_dashboard_kenia_escenarioA.png` | 4800 x 2700 | 0.77 MB | Dashboard Kenia | **Mes 120** | **Tasa Informalidad: 86.1 %** (Base: 86.49%, −0.4%)<br>Gini: **0.288**<br>Recaudación: **+1381.0 u.m.** (Sociedades +1194.8, Seg. Social +186.2)<br>Brecha Género: **+7.20 pp** (Mujeres 89.9%, Hombres 82.7%) |
+| `fig_dashboard_kenia_escenarioD.png` | 4800 x 2700 | 0.80 MB | Dashboard Kenia | **Mes 120** | **Tasa Informalidad: 56.8 %** (Base: 86.49%, −29.7%)<br>Gini: **0.298**<br>Recaudación: **+3259.1 u.m.** (Sociedades +2816.3, Seg. Social +442.8)<br>Brecha Género: **+1.10 pp** (Mujeres 57.4%, Hombres 56.3%) |
+| `fig_gemelo3d_kenia_escenarioA_m60.png` | 4800 x 2700 | 3.77 MB | Gemelo 3D Kenia | **Mes 60** | Control: **«Mes 60 - Enero 2029»**<br>Informalidad: **86.3 %**<br>Gini: **0.288**<br>Brecha Género: **+7.1 pp** |
+| `fig_gemelo3d_kenia_escenarioA.png` | 4800 x 2700 | 2.60 MB | Gemelo 3D Kenia | **Mes 120** | Control: **«Mes 120 - Diciembre 2033»**<br>Informalidad: **86.1 %**<br>Gini: **0.288**<br>Brecha Género: **+7.2 pp** |
+| `fig_gemelo3d_kenia_escenarioB2_m60.png` | 4800 x 2700 | 3.80 MB | Gemelo 3D Kenia | **Mes 60** | Control: **«Mes 60 - Enero 2029»**<br>Informalidad: **67.1 %**<br>Gini: **0.289**<br>Brecha Género: **+21.0 pp** |
+| `fig_gemelo3d_kenia_escenarioB2.png` | 4800 x 2700 | 2.57 MB | Gemelo 3D Kenia | **Mes 120** | Control: **«Mes 120 - Diciembre 2033»**<br>Informalidad: **51.6 %**<br>Gini: **0.291**<br>Brecha Género: **+32.2 pp** |
 
 Todas las imágenes fueron validadas mediante PIL cumpliendo estrictamente con el requisito de anchura mínima ($\ge 3840\text{ px}$).
+
+---
+
+## 8. Verificación Automática App vs Modelo Calibrado (`verificar_app_vs_modelo.py`)
+
+Se ejecutó la prueba de congruencia econométrica automatizada en `scripts/verificar_app_vs_modelo.py` que consulta la API FastAPI en vivo (`http://127.0.0.1:8000/api/v1/simulation/metrics`) y compara las respuestas frente a las réplicas oficiales de `outputs/policy_experiments_results.json` para Kenia en el mes 120 de la política:
+
+| Escenario | Etiqueta | Oficial Modelo (%) | Respuesta API (%) | Diferencia (p.p.) | Tolerancia | Estado |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|
+| **A** | Status Quo (Inercial) | 86.13 % | 86.13 % | +0.00 p.p. | ≤ 0.50 p.p. | **APROBADO** |
+| **B1** | GovTech Moderado | 86.18 % | 86.18 % | +0.00 p.p. | ≤ 0.50 p.p. | **APROBADO** |
+| **B2** | GovTech Intensivo (Sanciones 3×) | 51.58 % | 51.58 % | +0.00 p.p. | ≤ 0.50 p.p. | **APROBADO** |
+| **C** | Red de Cuidados (−60% cuidado) | 85.00 % | 85.00 % | +0.00 p.p. | ≤ 0.50 p.p. | **APROBADO** |
+| **D** | Paquete Integrado (B2 + C + DCC) | 56.82 % | 56.82 % | +0.00 p.p. | ≤ 0.50 p.p. | **APROBADO** |
+
+### Cuadre de Componentes de Recaudación Fiscal:
+En todos los escenarios, la suma contable de componentes coincide exactamente con la recaudación total:
+$$\text{Recaudación Total} = \text{Impuesto de Sociedades } (\tau_C Y_F) + \text{Contribuciones de Seguridad Social } (\tau_W \omega_F L_F)$$
+- Escenario A: $1194.83 + 186.22 = 1381.05\text{ u.m.}$ (**Cuadre Exacto**)
+- Escenario B1: $1193.95 + 184.23 = 1378.18\text{ u.m.}$ (**Cuadre Exacto**)
+- Escenario B2: $3453.13 + 393.54 = 3846.67\text{ u.m.}$ (**Cuadre Exacto**)
+- Escenario C: $1311.81 + 203.84 = 1515.65\text{ u.m.}$ (**Cuadre Exacto**)
+- Escenario D: $2816.32 + 442.78 = 3259.10\text{ u.m.}$ (**Cuadre Exacto**)
+
+---
+
+## 9. Fuente de Cada Indicador Visible en el Dashboard
+
+| Indicador Visible en Dashboard | Unidad / Formato | Fuente Primaria Oficial | Justificación Metodológica |
+|:---|:---:|:---|:---|
+| **Tasa de Informalidad Global** | Porcentaje (%) | Modelo calibrado `ITDTModel` (`outputs/policy_experiments_results.json`) / Base ILOSTAT (`data/ilostat_s_F.csv`). | Generado por el equilibrio de decisiones individuales de los 6 000 agentes del modelo según costo de digitalización $\phi_i$, productividad $h_i$ y sanción esperada. |
+| **Informalidad por Sexo (Mujeres / Hombres)** | Porcentaje (%) | Modelo calibrado `ITDTModel` y serie histórica real de ILOSTAT (`data/ilostat_series_historicas.csv`). | Emerge de la calibración con el parámetro de asimetría de cuidado no remunerado $\gamma_0$ y datos empíricos de ILOSTAT SDMX. |
+| **Brecha de Género** | Puntos porcentuales (pp) | Diferencia neta $s_{\text{informal}, F} - s_{\text{informal}, M}$ de `ITDTModel`. | Medición canónica de la asimetría de informalidad femenina vs. masculina. |
+| **Índice de Desigualdad de Gini** | Rango 0–1 | Distribución de ingresos netos mensuales de los agentes de `ITDTModel` (`outputs/policy_experiments_results.json`). | Calculado sobre salarios de trabajadores formales ($\omega_F h_i$), informales ($\omega_I h_i$) y beneficios netos de firmas ($\pi_j$). |
+| **Recaudación Fiscal Total** | Unidades del modelo (u.m.) | Sector fiscal endógeno de `ITDTModel`. | Ingresos fiscales agregados recaudados de empresas y trabajadores formales registrados. |
+| **Impuesto de Sociedades** | Unidades del modelo (u.m.) | Componente tributario empresarial de `ITDTModel`: $\tau_C \sum_{j \in \mathcal{F}} Y_j$. | Tributación formal sobre la producción formal neta. |
+| **Seguridad Social (Contribuciones)** | Unidades del modelo (u.m.) | Componente tributario laboral de `ITDTModel`: $\tau_W \sum_{i \in \mathcal{W}_F} \omega_F h_i$. | Aportes previsionales y de salud del empleo formal. |
+| **Serie Histórica ILOSTAT** | Porcentaje (%) anual por sexo | API oficial SDMX de ILOSTAT (`EMP_NIFL_SEX_RT`). | Datos reales sin interpolar para Kenia (2019: Mujeres 90.19%, Hombres 83.13%). |
+| **Trayectoria Simulada ITDT** | Mes a mes (0 a 120) | Serie mensual promedio de réplicas de `ITDTModel` (`outputs/policy_experiments_results.json`). | Evolución dinámica mensual de la política pública bajo los escenarios A, B1, B2, C y D. |
+| **Agentes Visualizados (2 500)** | Conteo de partículas | Proyección cinemática de la población $N_W = 6\,000$ de `ITDTModel`. | Las partículas reflejan espacialmente la proporción exacta de agentes formales e informales del modelo (excepción permitida b). |
+| **Empresas Visualizadas (10 firmas)** | Coordenadas y atributos | Empresas generadas por `ITDTModel` (`L_j, Y_j, A_j`, formal/informal). | Excluye nombres ficticios; su tamaño y color reflejan producción real $Y_j$ y estatus formal/informal. |
+

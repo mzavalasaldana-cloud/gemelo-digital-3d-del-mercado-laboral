@@ -232,12 +232,12 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
               </div>
             </div>
 
-            {/* Cost of Formalization Barrier */}
+            {/* Productividad A_j de la unidad */}
             <div className="p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 block">Costo de Formalización:</span>
+                <span className="text-[10px] text-slate-400 block">Productividad A_j:</span>
                 <span className="text-sm font-bold text-amber-300">
-                  ${firm.formalizationCostUSD} USD
+                  {firm.productivityScore} / 100
                 </span>
               </div>
               <div className="text-right">

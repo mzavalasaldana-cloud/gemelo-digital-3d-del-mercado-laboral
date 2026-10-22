@@ -249,7 +249,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   CRUD ACTIVO
                 </span>
                 <span className="text-[10px] font-mono-hud px-2 py-0.5 rounded font-bold border bg-amber-500/10 text-amber-400 border-amber-500/30">
-                  Datos de demostración
+                  {isEn ? 'Test users' : 'Usuarios de prueba'}
                 </span>
               </div>
               <p className={`text-xs font-mono-hud ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>

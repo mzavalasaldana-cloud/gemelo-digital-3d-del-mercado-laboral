@@ -61,12 +61,12 @@ def render_datasets_reports_view():
     # TAB 1: Datasets Catalog & Uploader
     # -------------------------------------------------------------
     with tab_datasets:
-        render_section_header("Catálogo de Encuestas de Hogares y Fuerza de Trabajo", icon="📚", badge="Datos de demostración")
+        render_section_header("Catálogo de Encuestas de Hogares y Fuerza de Trabajo", icon="📚")
 
         col_cat1, col_cat2 = st.columns([1.4, 1.0])
 
         with col_cat1:
-            st.markdown("#### Encuestas Preconfiguradas (Datos de demostración):")
+            st.markdown("#### Encuestas Preconfiguradas:")
             for ds in PRELOADED_DATASETS:
                 is_active_country = (ds["country"] == country_code)
                 border_style = "border: 1px solid #00f0ff; background: rgba(0, 240, 255, 0.05);" if is_active_country else "border: 1px solid rgba(255, 255, 255, 0.1);"

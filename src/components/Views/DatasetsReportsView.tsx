@@ -647,9 +647,6 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="text-xl">{COUNTRY_PROFILES[ds.country].flag}</span>
-                            <span className="text-[10px] font-mono-hud px-1.5 py-0.5 rounded font-bold border bg-amber-500/10 text-amber-400 border-amber-500/30">
-                              Datos de demostración
-                            </span>
                           </div>
                           {isCurrentActive && (
                             <span className={`flex items-center gap-1 text-[10px] font-mono-hud px-2 py-0.5 rounded-full border font-bold ${
