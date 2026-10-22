@@ -563,43 +563,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {language === 'en' ? 'Fiscal & Regulatory Levers' : 'Palancas de Intervención Fiscal & Regulatoria'}
               </span>
 
-              {/* Slider 1: Reducción Costos Registro */}
-              <div>
-                <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
-                  <span>{t('registrationCost', language)}</span>
-                  <span className="text-cyan-600 dark:text-cyan-400 font-bold">{policyParams.registrationCostReduction}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={policyParams.registrationCostReduction}
-                  onChange={(e) => handleSlider('registrationCostReduction', Number(e.target.value))}
-                  className="w-full accent-cyan-400 cursor-pointer"
-                />
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t('registrationCostDesc', language)}</span>
-              </div>
-
-              {/* Slider 2: Subsidio MiPyME */}
-              <div>
-                <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
-                  <span>{t('smeSubsidy', language)}</span>
-                  <span className="text-emerald-500 font-bold">{policyParams.smeSubsidyUSDMonth} u.m./{language === 'en' ? 'mo' : 'mes'}</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="150"
-                  step="5"
-                  value={policyParams.smeSubsidyUSDMonth}
-                  onChange={(e) => handleSlider('smeSubsidyUSDMonth', Number(e.target.value))}
-                  className="w-full accent-emerald-400 cursor-pointer"
-                />
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t('smeSubsidyDesc', language)}</span>
-              </div>
-
-              {/* Slider 3: Capacitación en Habilidades */}
+              {/* Slider 1: Capacitación en Habilidades */}
               <div>
                 <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
                   <span>{t('skillsTraining', language)}</span>

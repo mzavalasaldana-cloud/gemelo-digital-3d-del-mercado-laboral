@@ -59,7 +59,7 @@ interface DigitalTwin3DViewProps {
 
 // Componente HUD memoizado para evitar re-renderizados innecesarios del panel en cada tick
 const LiveMetricsPill = React.memo<{ metrics: StructuralMetrics }>(({ metrics }) => (
-  <div className="hud-glass px-4 py-2 rounded-2xl border border-cyan-500/30 flex items-center gap-4 text-xs font-mono-hud shadow-xl backdrop-blur-md">
+  <div className="hud-glass px-4 py-2 rounded-2xl border border-cyan-500/30 flex items-center gap-4 text-xs font-mono-hud shadow-xl backdrop-blur-md whitespace-nowrap">
     <div className="flex items-center gap-2">
       <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
       <span className="text-slate-400">Informalidad:</span>
@@ -163,7 +163,7 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
 
       {/* Spatial Entity Legend Popup */}
       {showLegend && (
-        <div className="absolute top-32 right-6 z-20 hud-glass-solid p-3.5 rounded-2xl border border-cyan-500/30 w-72 text-xs font-mono-hud shadow-2xl backdrop-blur-xl">
+        <div className="absolute top-34 right-6 z-20 hud-glass-solid p-3.5 rounded-2xl border border-cyan-500/30 w-72 text-xs font-mono-hud shadow-2xl backdrop-blur-xl">
           <div className="text-cyan-400 font-bold uppercase tracking-wider mb-2.5 text-[10px]">
             Simbología Holográfica 3D
           </div>
@@ -200,8 +200,8 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
         </div>
       )}
 
-      {/* Floating Minimal HUD: Top-Left Quick Scenario Chips & Policy Drawer */}
-      <div className="absolute top-20 left-6 z-20 pointer-events-auto space-y-2">
+      {/* Floating Minimal HUD: Top-Left Quick Scenario Chips (placed on its own row at top-34 to prevent any overlap with LiveMetricsPill) */}
+      <div className="absolute top-34 left-6 z-20 pointer-events-auto space-y-2">
         <div className="hud-glass p-1.5 rounded-2xl border border-cyan-500/30 flex items-center gap-1.5 shadow-xl backdrop-blur-md">
           <button
             onClick={() => onSelectScenario('A')}
@@ -297,41 +297,7 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
               <span className="text-[10px] text-slate-400">Impacto en tiempo real</span>
             </div>
 
-            {/* Reducción Costos Registro */}
-            <div>
-              <div className="flex justify-between text-slate-300 mb-1">
-                <span>Reducción Costos Registro</span>
-                <span className="text-cyan-400 font-bold">{policyParams.registrationCostReduction}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={policyParams.registrationCostReduction}
-                onChange={(e) => onChangePolicy({ ...policyParams, registrationCostReduction: Number(e.target.value) })}
-                className="w-full accent-cyan-400 cursor-pointer"
-              />
-            </div>
-
-            {/* Subsidio MiPyME */}
-            <div>
-              <div className="flex justify-between text-slate-300 mb-1">
-                <span>Subsidio Salarial MiPyME</span>
-                <span className="text-emerald-400 font-bold">{policyParams.smeSubsidyUSDMonth} u.m./mes</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="150"
-                step="5"
-                value={policyParams.smeSubsidyUSDMonth}
-                onChange={(e) => onChangePolicy({ ...policyParams, smeSubsidyUSDMonth: Number(e.target.value) })}
-                className="w-full accent-emerald-400 cursor-pointer"
-              />
-            </div>
-
-            {/* Capacitación */}
+            {/* Capacitación en Habilidades */}
             <div>
               <div className="flex justify-between text-slate-300 mb-1">
                 <span>Capacitación en Habilidades</span>

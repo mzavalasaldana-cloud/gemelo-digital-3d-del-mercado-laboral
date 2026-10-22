@@ -1,0 +1,34 @@
+{
+  "KENYA": {
+    "country": "Kenia",
+    "country_code": "KEN",
+    "year": 2019,
+    "full_source": "ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); KNBS KPHC / ILO Microdata",
+    "survey_exact": "KNBS KPHC / ILO Microdata",
+    "label": "Kenia (KNBS KPHC / ILO Microdata)"
+  },
+  "NIGERIA": {
+    "country": "Nigeria",
+    "country_code": "NGA",
+    "year": 2024,
+    "full_source": "ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); NBS NLFS / ILO Modelled Estimates 2024",
+    "survey_exact": "NBS NLFS / ILO Modelled Estimates 2024",
+    "label": "Nigeria (NBS NLFS / ILO Modelled Estimates 2024)"
+  },
+  "INDIA": {
+    "country": "India",
+    "country_code": "IND",
+    "year": 2024,
+    "full_source": "ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); MoSPI PLFS / ILO Microdata 2024",
+    "survey_exact": "MoSPI PLFS / ILO Microdata 2024",
+    "label": "India (MoSPI PLFS / ILO Microdata 2024)"
+  },
+  "BANGLADESH": {
+    "country": "Bangladés",
+    "country_code": "BGD",
+    "year": 2023,
+    "full_source": "ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); BBS QLFS / ILO Microdata 2023",
+    "survey_exact": "BBS QLFS / ILO Microdata 2023",
+    "label": "Bangladés (BBS QLFS / ILO Microdata 2023)"
+  }
+}
