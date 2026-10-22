@@ -50,7 +50,7 @@ const ILOSTAT_EMPIRICAL_DATA: Record<CountryCode, {
   NIGERIA: {
     year: 2024,
     survey: 'NBS Nigeria Labour Force Survey (NLFS)',
-    total: 93.18,
+    total: 93.14,
     female: 93.68,
     male: 92.68,
     gap: 1.00,
@@ -63,7 +63,7 @@ const ILOSTAT_EMPIRICAL_DATA: Record<CountryCode, {
   INDIA: {
     year: 2024,
     survey: 'MoSPI Periodic Labour Force Survey (PLFS)',
-    total: 88.36,
+    total: 88.13,
     female: 88.88,
     male: 88.22,
     gap: 0.66,
@@ -76,7 +76,7 @@ const ILOSTAT_EMPIRICAL_DATA: Record<CountryCode, {
   BANGLADESH: {
     year: 2023,
     survey: 'BBS Bangladesh Labour Force Survey (LFS)',
-    total: 84.19,
+    total: 84.14,
     female: 85.08,
     male: 83.69,
     gap: 1.39,

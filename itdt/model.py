@@ -44,12 +44,16 @@ class ITDTModel:
         # Estado del modelo
         self.month = 0
         self.is_initialized = False
+        self._Y_bar_fixed: Optional[float] = None
+        self.closed_firm_indices_in_year = set()
         self.reset()
 
     def reset(self):
         """Inicializa las poblaciones de trabajadores y empresas."""
         self.rng = np.random.default_rng(self.seed)
         self.month = 0
+        self._Y_bar_fixed = None
+        self.closed_firm_indices_in_year = set()
         p = self.params
         c = self.country_info
 
@@ -203,7 +207,12 @@ class ITDTModel:
             ces_inner = p.alpha * (self.L ** rho_ces) + (1.0 - p.alpha) * (self.K ** rho_ces)
             self.Y = 1.6 * self.A_tilde * (np.maximum(1e-6, ces_inner) ** (1.0 / rho_ces))
 
-        self.Y_bar = float(np.median(self.Y))
+        if p.ybar_mode == "fixed" and self.month >= self.burn_in_months and self._Y_bar_fixed is not None:
+            self.Y_bar = self._Y_bar_fixed
+        else:
+            self.Y_bar = float(np.median(self.Y))
+            if p.ybar_mode == "fixed" and self.month >= self.burn_in_months and self._Y_bar_fixed is None:
+                self._Y_bar_fixed = self.Y_bar
 
     def _evaluate_firm_profits(
         self,
@@ -257,6 +266,10 @@ class ITDTModel:
         p = self.params
         t = self.month
         in_policy = t >= self.burn_in_months
+
+        # Si ybar_mode es "fixed", fijar Y_bar al final del calentamiento (mes burn_in_months)
+        if p.ybar_mode == "fixed" and in_policy and self._Y_bar_fixed is None:
+            self._Y_bar_fixed = self.Y_bar
 
         # Inyección de choque de demanda en t = 96 + 60 = 156 (o demand_shock_month)
         if p.demand_shock_month is not None:
@@ -363,25 +376,85 @@ class ITDTModel:
         self.is_formal_firm[switch_to_informal] = False
 
         # -------------------------------------------------------------
-        # PASO 3: SALIDA Y REEMPLAZO POR ENTRANTES INFORMALES (Prob 0.10 si Pi < 0)
+        # PASO 3: SALIDA Y REEMPLAZO POR ENTRANTES (Prob 0.10 si Pi < 0)
         # -------------------------------------------------------------
         current_profit = np.where(self.is_formal_firm, Pi_F, Pi_I)
         exit_mask = (current_profit < 0.0) & (self.rng.uniform(0.0, 1.0, N_F) < p.exit_prob)
         num_exits = int(np.sum(exit_mask))
+        exited_indices = np.where(exit_mask)[0]
+
+        # Seguimiento para métrica: % de empresas que cierran al menos una vez en el año (meses 109-120)
+        eval_start_month = (self.burn_in_months + self.policy_months) - 12
+        if t >= eval_start_month and num_exits > 0:
+            self.closed_firm_indices_in_year.update(exited_indices.tolist())
 
         if num_exits > 0:
-            # Reemplazo por entrantes informales
-            A_new = self.rng.lognormal(0.0, 0.80, num_exits)
-            z_new = self.rng.normal(0.0, 1.0, num_exits)
-            ln_K_new = 1.0 + 0.80 * np.log(A_new) + 0.30 * z_new
-            K_new = np.exp(ln_K_new)
-            owners_new = self.rng.choice(p.N_W, size=num_exits, replace=True)
+            if p.entry_rule == "forced_informal":
+                # Reemplazo por entrantes informales (regla previa del artículo)
+                A_new = self.rng.lognormal(0.0, 0.80, num_exits)
+                z_new = self.rng.normal(0.0, 1.0, num_exits)
+                ln_K_new = 1.0 + 0.80 * np.log(A_new) + 0.30 * z_new
+                K_new = np.exp(ln_K_new)
+                owners_new = self.rng.choice(p.N_W, size=num_exits, replace=True)
 
-            self.A[exit_mask] = A_new
-            self.K[exit_mask] = K_new
-            self.owners[exit_mask] = owners_new
-            self.K_dig_firm[exit_mask] = self.K_dig_w[owners_new]
-            self.is_formal_firm[exit_mask] = False  # Entrante es estrictamente informal
+                self.A[exit_mask] = A_new
+                self.K[exit_mask] = K_new
+                self.owners[exit_mask] = owners_new
+                self.K_dig_firm[exit_mask] = self.K_dig_w[owners_new]
+                self.is_formal_firm[exit_mask] = False  # Entrante es forzada informal
+            else:
+                # Reemplazo por libre entrada (Hopenhayn 1992, Melitz 2003)
+                for idx in exited_indices:
+                    for attempt in range(10):
+                        A_cand = float(self.rng.lognormal(0.0, 0.80))
+                        z_cand = float(self.rng.normal(0.0, 1.0))
+                        ln_K_cand = 1.0 + 0.80 * np.log(A_cand) + 0.30 * z_cand
+                        K_cand = float(np.exp(ln_K_cand))
+                        owner_cand = int(self.rng.choice(p.N_W))
+                        k_dig_cand = float(self.K_dig_w[owner_cand])
+
+                        owner_is_fem = bool(self.fem_mask[owner_cand])
+                        owner_care = float(self.H_care[owner_cand])
+                        if p.care_enabled and self.gamma_0 > 0 and owner_is_fem:
+                            fem_factor = max(1e-6, 1.0 - 0.5 * self.gamma_0 * (owner_care / 48.0))
+                            A_tilde_cand = A_cand * fem_factor
+                        else:
+                            A_tilde_cand = A_cand
+
+                        L_raw_cand = 0.5 * (A_tilde_cand ** (1.0 / (1.0 - p.alpha)))
+                        L_cand = int(np.clip(round(L_raw_cand), 1, 40))
+
+                        if abs(p.ces_sigma - 1.0) < 1e-4:
+                            Y_cand = 1.6 * A_tilde_cand * (L_cand ** p.alpha) * (K_cand ** (1.0 - p.alpha))
+                        else:
+                            rho_ces = (p.ces_sigma - 1.0) / p.ces_sigma
+                            ces_inner = p.alpha * (L_cand ** rho_ces) + (1.0 - p.alpha) * (K_cand ** rho_ces)
+                            Y_cand = 1.6 * A_tilde_cand * (max(1e-6, ces_inner) ** (1.0 / rho_ces))
+
+                        Y_bar = self.Y_bar
+                        ratio = Y_bar / max(1e-9, Y_cand)
+                        if p.regressive_dcc:
+                            dcc = Y_bar * (self.phi_0 + cur_phi_1 * (ratio ** p.eta) * (1.0 - k_dig_cand))
+                        else:
+                            dcc = Y_bar * self.phi_0
+
+                        if dcc_subsidy and L_cand <= 10:
+                            dcc *= 0.20
+
+                        audit_arg = -cur_kappa * (self.d_sys * (Y_cand / Y_bar) - p.theta_th)
+                        p_aud = 1.0 / (1.0 + np.exp(np.clip(audit_arg, -50.0, 50.0)))
+
+                        pi_F = (1.0 - p.tau_c) * Y_cand - p.omega_F * (1.0 + p.tau_w) * L_cand - p.r_cred * K_cand - dcc
+                        penalty = p_aud * (cur_mu_0 * Y_cand + cur_mu_1 * (Y_cand ** p.xi))
+                        pi_I = Y_cand - p.omega_I * L_cand - p.r_I * K_cand - penalty
+
+                        if max(pi_F, pi_I) >= 0.0 or attempt == 9:
+                            self.A[idx] = A_cand
+                            self.K[idx] = K_cand
+                            self.owners[idx] = owner_cand
+                            self.K_dig_firm[idx] = k_dig_cand
+                            self.is_formal_firm[idx] = (pi_F > pi_I)  # Entrante empieza en el estado de mayor beneficio
+                            break
 
             # Recomputar producción de la población
             self._update_firm_production()
@@ -456,6 +529,7 @@ class ITDTModel:
                 willing_workers=willing_workers,
                 precomputed_bins=self.precomputed_bins,
                 care_penalty=care_penalty,
+                exited_indices=exited_indices.tolist() if num_exits > 0 else [],
             )
             self.monthly_history.append(record)
             return record

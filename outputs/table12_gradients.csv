@@ -1,4 +1,4 @@
 "Gradiente no calibrado (Escenario A, media de 4 países)",Informalidad simulada (%),Dirección esperada,¿Se reproduce?
-Educación básica / media / superior,95.8 / 87.0 / 72.1,Decreciente,Sí
-Rural / urbano,91.5 / 84.6,Rural > urbano,Sí
-Quintil de productividad 1 a 5,99.7 / 99.7 / 99.5 / 90.7 / 54.1,Decreciente,"Sí, pero concentrado"
+Educación básica / media / superior,95.5 / 86.5 / 71.3,Decreciente,Sí
+Rural / urbano,91.2 / 84.0,Rural > urbano,Sí
+Quintil de productividad 1 a 5,99.7 / 99.7 / 99.2 / 90.4 / 52.6,Decreciente,"Sí, pero concentrado"

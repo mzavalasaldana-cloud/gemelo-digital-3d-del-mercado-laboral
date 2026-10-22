@@ -70,6 +70,10 @@ class FixedParameters:
     burn_in_months: int = 96     # Período de calentamiento (meses)
     policy_months: int = 120     # Período de política (meses)
 
+    # Regla de entrada y fijación de escala agregada (Sección B / Robustez)
+    entry_rule: str = "free"     # "free" (nueva, por defecto) | "forced_informal" (la regla actual)
+    ybar_mode: str = "dynamic"   # "dynamic" (actual, por defecto) | "fixed"
+
 
 def load_ilostat_s_F_data() -> Dict[str, float]:
     """Carga la proporción s_F directamente desde data/ilostat_s_F.csv."""
@@ -86,48 +90,74 @@ def load_ilostat_s_F_data() -> Dict[str, float]:
     return s_F_dict
 
 
+def load_ilostat_calibration_data() -> Dict[str, Dict[str, float]]:
+    """Carga F_obs, M_obs, T_obs directamente desde data/ilostat_calibracion.csv."""
+    csv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "ilostat_calibracion.csv")
+    calib_dict: Dict[str, Dict[str, float]] = {}
+    if os.path.exists(csv_path):
+        with open(csv_path, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                c_code = row["codigo"].strip().upper()
+                c_name = row["pais"].strip().upper()
+                sexo = row["sexo"].strip().lower()
+                tasa = float(row["tasa"])
+                for key in [c_code, c_name]:
+                    if key not in calib_dict:
+                        calib_dict[key] = {}
+                    if sexo == "total":
+                        calib_dict[key]["T_obs"] = tasa
+                    elif sexo in ["mujeres", "female"]:
+                        calib_dict[key]["F_obs"] = tasa
+                    elif sexo in ["hombres", "male"]:
+                        calib_dict[key]["M_obs"] = tasa
+    return calib_dict
+
+
 import json
 
 _s_F_data = load_ilostat_s_F_data()
+_calib_data = load_ilostat_calibration_data()
 
 # Base empírica por país observada en ILOSTAT
-# NOTA: phi_0 y gamma_0 NO están escritos a mano; se leen dinámicamente de outputs/calibration_estimates.json
+# NOTA: F_obs, M_obs, T_obs se leen de data/ilostat_calibracion.csv.
+# phi_0 y gamma_0 se leen dinámicamente de outputs/calibration_estimates.json.
 COUNTRY_DATABASE: Dict[str, Dict[str, Any]] = {
     "KENYA": {
         "name": "Kenia",
         "country_code": "KEN",
         "year": 2019,
-        "s_F": _s_F_data.get("KENYA", 0.476259), # Proporción oficial ILOSTAT
-        "F_obs": 90.19,                         # Tasa femenina observada ILOSTAT (%)
-        "M_obs": 83.13,                         # Tasa masculina observada ILOSTAT (%)
-        "T_obs": 86.49,                         # Tasa total observada ILOSTAT (%)
+        "s_F": _s_F_data.get("KENYA", 0.476259),
+        "F_obs": _calib_data.get("KEN", {}).get("F_obs", _calib_data.get("KENYA", {}).get("F_obs")),
+        "M_obs": _calib_data.get("KEN", {}).get("M_obs", _calib_data.get("KENYA", {}).get("M_obs")),
+        "T_obs": _calib_data.get("KEN", {}).get("T_obs", _calib_data.get("KENYA", {}).get("T_obs")),
     },
     "NIGERIA": {
         "name": "Nigeria",
         "country_code": "NGA",
         "year": 2024,
         "s_F": _s_F_data.get("NIGERIA", 0.503854),
-        "F_obs": 96.39,
-        "M_obs": 89.92,
-        "T_obs": 93.18,
+        "F_obs": _calib_data.get("NGA", {}).get("F_obs", _calib_data.get("NIGERIA", {}).get("F_obs")),
+        "M_obs": _calib_data.get("NGA", {}).get("M_obs", _calib_data.get("NIGERIA", {}).get("M_obs")),
+        "T_obs": _calib_data.get("NGA", {}).get("T_obs", _calib_data.get("NIGERIA", {}).get("T_obs")),
     },
     "INDIA": {
         "name": "India",
         "country_code": "IND",
         "year": 2024,
         "s_F": _s_F_data.get("INDIA", 0.309070),
-        "F_obs": 91.93,
-        "M_obs": 86.76,
-        "T_obs": 88.36,
+        "F_obs": _calib_data.get("IND", {}).get("F_obs", _calib_data.get("INDIA", {}).get("F_obs")),
+        "M_obs": _calib_data.get("IND", {}).get("M_obs", _calib_data.get("INDIA", {}).get("M_obs")),
+        "T_obs": _calib_data.get("IND", {}).get("T_obs", _calib_data.get("INDIA", {}).get("T_obs")),
     },
     "BANGLADESH": {
         "name": "Bangladés",
         "country_code": "BGD",
         "year": 2023,
         "s_F": _s_F_data.get("BANGLADESH", 0.345429),
-        "F_obs": 95.77,
-        "M_obs": 78.08,
-        "T_obs": 84.19,
+        "F_obs": _calib_data.get("BGD", {}).get("F_obs", _calib_data.get("BANGLADESH", {}).get("F_obs")),
+        "M_obs": _calib_data.get("BGD", {}).get("M_obs", _calib_data.get("BANGLADESH", {}).get("M_obs")),
+        "T_obs": _calib_data.get("BGD", {}).get("T_obs", _calib_data.get("BANGLADESH", {}).get("T_obs")),
     },
 }
 

@@ -1,5 +1,5 @@
-country,country_code,year,indicator,employment_female_thousands,employment_male_thousands,employment_total_thousands,s_F,source,query_date
-Kenya,KEN,2019,EMP_TEMP_SEX_AGE_NB,8919.4,9805.1,18724.5,0.476350,ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); KNBS KPHC / ILO Microdata,2026-10-04
-Nigeria,NGA,2024,EMP_TEMP_SEX_AGE_NB,46900.9,46199.8,93100.7,0.503765,ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); NBS NLFS / ILO Modelled Estimates 2024,2026-10-04
-India,IND,2024,EMP_TEMP_SEX_AGE_NB,149915.3,332877.2,482793.2,0.310517,ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); MoSPI PLFS / ILO Microdata 2024,2026-10-04
-Bangladesh,BGD,2023,EMP_TEMP_SEX_AGE_NB,24503.2,46473.3,70982.0,0.345203,ILOSTAT SDMX API (DF_EMP_TEMP_SEX_AGE_NB); BBS QLFS / ILO Microdata 2023,2026-10-04
+country,country_code,year,indicator,employment_female_thousands,employment_male_thousands,employment_total_thousands,s_F,source,tipo_dato,query_date
+Kenya,KEN,2019,EMP_TEMP_SEX_AGE_NB,8919.4,9805.1,18724.5,0.476350,HS - Continuous household survey (Repository: ILO-STATISTICS - Micro data processing),encuesta,2026-10-22
+Nigeria,NGA,2024,EMP_TEMP_SEX_AGE_NB,46900.9,46199.8,93100.7,0.503765,"LFS - Unemployment, Under-employment Watch (Repository: ILO-STATISTICS - Micro data processing)",encuesta,2026-10-22
+India,IND,2024,EMP_TEMP_SEX_AGE_NB,149915.3,332877.2,482793.2,0.310517,LFS - Periodic Labour Force Survey (Repository: ILO-STATISTICS - Micro data processing),encuesta,2026-10-22
+Bangladesh,BGD,2023,EMP_TEMP_SEX_AGE_NB,24503.2,46473.3,70982.0,0.345203,LFS - Labour Force Survey (Repository: ILO-STATISTICS - Micro data processing),encuesta,2026-10-22

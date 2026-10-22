@@ -1,0 +1,267 @@
+{
+  "header": {
+    "id": "326af216-e8a8-4a1a-98d6-f9e70c7d4776",
+    "prepared": "2026-10-22T06:06:18Z",
+    "test": false,
+    "sender": {
+      "id": "ILO",
+      "name": "ILOSTAT"
+    }
+  },
+  "dataSets": [
+    {
+      "action": "Information",
+      "annotations": [],
+      "series": {
+        "0:0:0:0": {
+          "attributes": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "annotations": [],
+          "observations": {
+            "0": [
+              88.127,
+              null,
+              null,
+              0,
+              null,
+              null
+            ]
+          }
+        },
+        "0:0:0:1": {
+          "attributes": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "annotations": [],
+          "observations": {
+            "0": [
+              86.581,
+              null,
+              null,
+              0,
+              null,
+              null
+            ]
+          }
+        },
+        "0:0:0:2": {
+          "attributes": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "annotations": [],
+          "observations": {
+            "0": [
+              91.561,
+              null,
+              null,
+              0,
+              null,
+              null
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "structure": {
+    "name": "Informal employment rate by sex",
+    "description": "<strong>With the aim of promoting international comparability, statistics presented on ILOSTAT are based on standard international definitions wherever feasible and may differ from official national figures. </strong>This series is based on the 13th ICLS definitions. For time series comparability, it includes countries that have implemented the 19th ICLS standards, for which data are also available in the Work Statistics -- 19th ICLS (WORK) database. This harmonized series for informal employment is derived using the same set of criteria across countries to improve comparability. The criteria used are based on employment status, institutional sector, destination of production, bookkeeping, registration, social security contribution, places of work and size. For more information, refer to the <a href = \"https://ilostat.ilo.org/methods/concepts-and-definitions/description-labour-force-statistics/\">Labour Force Statistics (LFS and STLFS) database description</a>.",
+    "dimensions": {
+      "dataset": [],
+      "series": [
+        {
+          "id": "REF_AREA",
+          "name": "Reference area",
+          "keyPosition": 0,
+          "role": "REF_AREA",
+          "values": [
+            {
+              "id": "IND",
+              "name": "India"
+            }
+          ]
+        },
+        {
+          "id": "FREQ",
+          "name": "Frequency",
+          "keyPosition": 1,
+          "role": "FREQ",
+          "values": [
+            {
+              "id": "A",
+              "name": "Annual"
+            }
+          ]
+        },
+        {
+          "id": "MEASURE",
+          "name": "Measure",
+          "keyPosition": 2,
+          "role": "MEASURE",
+          "values": [
+            {
+              "id": "EMP_NIFL_RT",
+              "name": "Informal employment rate (previous ILO definition - ICLS13)"
+            }
+          ]
+        },
+        {
+          "id": "SEX",
+          "name": "Sex",
+          "keyPosition": 3,
+          "role": "SEX",
+          "values": [
+            {
+              "id": "SEX_T",
+              "name": "Total"
+            },
+            {
+              "id": "SEX_M",
+              "name": "Male"
+            },
+            {
+              "id": "SEX_F",
+              "name": "Female"
+            }
+          ]
+        }
+      ],
+      "observation": [
+        {
+          "id": "TIME_PERIOD",
+          "name": "Time period",
+          "keyPosition": 4,
+          "role": "TIME_PERIOD",
+          "values": [
+            {
+              "start": "2024-01-01T00:00:00",
+              "end": "2024-12-31T23:59:59",
+              "id": "2024",
+              "name": "2024"
+            }
+          ]
+        }
+      ]
+    },
+    "attributes": {
+      "dataSet": [],
+      "series": [
+        {
+          "id": "UNIT_MEASURE_TYPE",
+          "name": "Unit of measure type",
+          "role": "UNIT_MEASURE_TYPE",
+          "values": [
+            {
+              "id": "RT",
+              "name": "Rate"
+            }
+          ]
+        },
+        {
+          "id": "UNIT_MEASURE",
+          "name": "Unit of measure",
+          "role": "UNIT_MEASURE",
+          "values": [
+            {
+              "id": "PT",
+              "name": "Percentage"
+            }
+          ]
+        },
+        {
+          "id": "UNIT_MULT",
+          "name": "Unit multiplier",
+          "role": "UNIT_MULT",
+          "values": [
+            {
+              "id": "0",
+              "name": "Units"
+            }
+          ]
+        }
+      ],
+      "observation": [
+        {
+          "id": "SOURCE",
+          "name": "Source",
+          "role": "SOURCE",
+          "values": [
+            {
+              "id": "LFS - Periodic Labour Force Survey",
+              "name": "LFS - Periodic Labour Force Survey"
+            }
+          ]
+        },
+        {
+          "id": "NOTE_SOURCE",
+          "name": "Source Notes",
+          "role": "NOTE_SOURCE",
+          "values": [
+            {
+              "id": "Repository: ILO-STATISTICS - Micro data processing",
+              "name": "Repository: ILO-STATISTICS - Micro data processing"
+            }
+          ]
+        },
+        {
+          "id": "NOTE_INDICATOR",
+          "name": "Indicator Notes",
+          "role": "NOTE_INDICATOR",
+          "values": []
+        },
+        {
+          "id": "OBS_STATUS",
+          "name": "Observation status",
+          "role": "OBS_STATUS",
+          "values": []
+        },
+        {
+          "id": "NOTE_CLASSIF",
+          "name": "Classification Notes",
+          "role": "NOTE_CLASSIF",
+          "values": []
+        },
+        {
+          "id": "DECIMALS",
+          "name": "Decimals",
+          "role": "DECIMALS",
+          "values": [
+            {
+              "id": "1",
+              "name": "1"
+            }
+          ]
+        },
+        {
+          "id": "UPPER_BOUND",
+          "name": "Upper bound of Observation Value",
+          "role": "UPPER_BOUND",
+          "values": []
+        },
+        {
+          "id": "LOWER_BOUND",
+          "name": "Lower bound of Observation Value",
+          "role": "LOWER_BOUND",
+          "values": []
+        }
+      ]
+    },
+    "annotations": []
+  }
+}

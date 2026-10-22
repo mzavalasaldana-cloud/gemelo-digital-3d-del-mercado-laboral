@@ -18,12 +18,12 @@ def test_simulation_metrics_deterministic():
     """Verifica que las métricas de simulación provengan del motor y sean deterministas."""
     metrics_kenya_m0 = get_simulation_metrics(country="KENYA", scenario="BASELINE", month=0)
     assert metrics_kenya_m0["country"] == "KENYA"
-    assert metrics_kenya_m0["informalityRate"] == 85.92
+    assert metrics_kenya_m0["informalityRate"] == 86.49
     assert metrics_kenya_m0["formalWorkersCount"] > 0
     assert metrics_kenya_m0["informalWorkersCount"] > 0
-    assert "fiscalRevenueMillionUSD" in metrics_kenya_m0
-    assert "netFiscalBalanceMillionUSD" in metrics_kenya_m0
-    assert "decentWorkIndex" in metrics_kenya_m0
+    assert "fiscalRevenueModelUnits" in metrics_kenya_m0
+    assert "genderGap" in metrics_kenya_m0
+    assert "giniIndex" in metrics_kenya_m0
 
     # Escenario B2 a mes 12 debe tener menor informalidad que el Escenario A (Status Quo)
     metrics_kenya_m12_sub = get_simulation_metrics(
@@ -81,7 +81,7 @@ async def test_execute_copilot_query_success():
         assert res["session_id"] == "sess-01"
         assert res["source"] == "langflow"
         assert "85.92%" in res["response"]
-        assert res["verified_metrics"]["informalityRate"] == 85.92
+        assert res["verified_metrics"]["informalityRate"] == 86.49
         # Verificar que la API Key no está en la respuesta
         assert "sk-" not in str(res)
 

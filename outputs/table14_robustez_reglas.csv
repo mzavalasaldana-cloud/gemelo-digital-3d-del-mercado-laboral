@@ -1,0 +1,5 @@
+especificacion,regla_entrada,ybar_mode,phi0_media,gamma0_media,error_calib,salidas_anuales_B2,salidas_anuales_D,pct_firmas_cerradas_B2,pct_firmas_cerradas_D,delta_inf_B2,delta_inf_D,delta_gap_B2,delta_gap_D,mae_loco
+1. forced_informal / Ybar dinamica (Articulo),forced_informal,dynamic,5.75,0.565,0.08,52.19,20.52,0.0,0.0,-33.54,-32.46,29.19,-6.94,4.29
+2. forced_informal / Ybar fija mes 96,forced_informal,fixed,5.75,0.565,0.08,7.65,5.7,0.0,0.0,-20.72,-26.49,17.11,-7.18,4.28
+3. free / Ybar dinamica (Principal),free,dynamic,5.44,0.567,0.05,24.5,10.44,0.0,0.0,-35.43,-36.62,30.2,-6.98,3.68
+4. free / Ybar fija mes 96,free,fixed,5.44,0.567,0.05,4.21,3.41,0.0,0.0,-23.35,-28.48,19.55,-7.32,3.68

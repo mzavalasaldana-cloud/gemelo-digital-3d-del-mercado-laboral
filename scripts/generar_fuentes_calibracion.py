@@ -2,8 +2,8 @@
 """
 scripts/generar_fuentes_calibracion.py
 
-Extrae directamente de data/ilostat_s_F.csv y data/ilostat_series_historicas.csv
-la fuente oficial exacta de calibración para cada uno de los 4 países.
+Extrae directamente de data/ilostat_calibracion.csv la fuente oficial exacta
+de calibración para cada uno de los 4 países.
 Genera src/data/ilostat_calibracion_fuentes.json sin texto escrito a mano.
 """
 
@@ -27,30 +27,31 @@ PAIS_NOMBRES = {
 }
 
 def generar():
-    s_F_path = os.path.join(DATA_DIR, "ilostat_s_F.csv")
-    if not os.path.exists(s_F_path):
-        raise FileNotFoundError(f"No existe {s_F_path}")
+    calib_path = os.path.join(DATA_DIR, "ilostat_calibracion.csv")
+    if not os.path.exists(calib_path):
+        raise FileNotFoundError(f"No existe {calib_path}")
 
     fuentes = {}
-    with open(s_F_path, mode="r", encoding="utf-8") as f:
+    with open(calib_path, mode="r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            cc = row["country_code"].strip().upper()
+            if row["sexo"].strip().lower() != "total":
+                continue
+            cc = row["codigo"].strip().upper()
             c_key = "KENYA" if cc == "KEN" else ("NIGERIA" if cc == "NGA" else ("INDIA" if cc == "IND" else "BANGLADESH"))
-            src_raw = row["source"].strip()
+            src_raw = row["fuente"].strip()
             
-            # El campo de fuente exacto de la encuesta ILOSTAT tras el identificador de la API
-            parts = src_raw.split(";")
-            survey_exact = parts[1].strip() if len(parts) > 1 else src_raw
-            nombre_pais = PAIS_NOMBRES.get(cc, row["country"])
+            # Formato encuesta
+            nombre_pais = PAIS_NOMBRES.get(cc, row["pais"])
             
+            # Etiqueta limpia y concisa: País (Fuente corta año)
             fuentes[c_key] = {
                 "country": nombre_pais,
                 "country_code": cc,
-                "year": int(row["year"]),
+                "year": int(row["anio"]),
                 "full_source": src_raw,
-                "survey_exact": survey_exact,
-                "label": f"{nombre_pais} ({survey_exact})",
+                "tipo_dato": row.get("tipo_dato", "encuesta"),
+                "label": f"{nombre_pais} ({src_raw.split('(')[0].strip()} {row['anio']})",
             }
 
     with open(OUTPUT_JSON, "w", encoding="utf-8") as out:
@@ -58,7 +59,7 @@ def generar():
     
     print(f"[+] Fuentes de calibración generadas exitosamente en: {OUTPUT_JSON}")
     for k, v in fuentes.items():
-        print(f" -> {k}: {v['label']}")
+        print(f"  * {k}: {v['label']} | {v['full_source']}")
 
 if __name__ == "__main__":
     generar()

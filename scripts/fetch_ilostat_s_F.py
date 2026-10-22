@@ -128,20 +128,22 @@ def fetch_country_dbnomics_fallback(country_code: str, year: int) -> Tuple[Optio
         return None, None
 
 
-def parse_sdmx_response(payload: dict, target_year: int) -> Dict[str, float]:
-    """Extrae SEX_F, SEX_M, SEX_T para el año objetivo a partir del JSON de SDMX ILOSTAT."""
+def parse_sdmx_response(payload: dict, target_year: int) -> Tuple[Dict[str, float], str, str]:
+    """Extrae SEX_F, SEX_M, SEX_T y metadatos de fuente para el año objetivo a partir del JSON de SDMX ILOSTAT."""
     structure = payload.get("structure", {})
     series_dims = structure.get("dimensions", {}).get("series", [])
     obs_dims = structure.get("dimensions", {}).get("observation", [])
+    attributes_obs = structure.get("attributes", {}).get("observation", [])
     
     time_values = []
     if obs_dims:
         time_values = [v.get("id") for v in obs_dims[0].get("values", [])]
 
     results: Dict[str, float] = {}
+    attr_dict: Dict[str, str] = {}
     datasets = payload.get("dataSets", [])
     if not datasets:
-        return results
+        return results, "", "encuesta"
 
     series_data = datasets[0].get("series", {})
     for series_key, series_val in series_data.items():
@@ -164,7 +166,37 @@ def parse_sdmx_response(payload: dict, target_year: int) -> Dict[str, float]:
                     if sex in ["SEX_F", "SEX_M", "SEX_T"]:
                         results[sex] = val
 
-    return results
+                    # Extraer atributos
+                    o_attrs = obs_record[1:] if len(obs_record) > 1 else []
+                    for a_idx, a_val_idx in enumerate(o_attrs):
+                        if a_idx < len(attributes_obs):
+                            a_id = attributes_obs[a_idx].get("id")
+                            avals = attributes_obs[a_idx].get("values", [])
+                            if a_val_idx is not None and a_val_idx < len(avals):
+                                attr_dict[a_id] = avals[a_val_idx].get("name", avals[a_val_idx].get("id"))
+                            elif len(avals) == 1:
+                                attr_dict[a_id] = avals[0].get("name", avals[0].get("id"))
+
+    # Completar atributos univaluados de estructura si faltan
+    for a_struct in attributes_obs:
+        a_id = a_struct.get("id")
+        if a_id in ["SOURCE", "NOTE_SOURCE"] and not attr_dict.get(a_id):
+            avals = a_struct.get("values", [])
+            if len(avals) == 1:
+                attr_dict[a_id] = avals[0].get("name", avals[0].get("id"))
+
+    source_str = attr_dict.get("SOURCE", "")
+    note_source = attr_dict.get("NOTE_SOURCE", "")
+    full_source = f"{source_str} ({note_source})" if note_source and source_str else (source_str or note_source or "ILOSTAT Micro data processing")
+
+    tipo_dato = "encuesta"
+    source_lower = full_source.lower()
+    if "modelled" in source_lower or "model" in source_lower or "estimación modelada" in source_lower:
+        tipo_dato = "estimación modelada"
+    elif "survey" in source_lower or "lfs" in source_lower or "household" in source_lower or "encuesta" in source_lower:
+        tipo_dato = "encuesta"
+
+    return results, full_source, tipo_dato
 
 
 def parse_dbnomics_response(payload: dict, target_year: int) -> Dict[str, float]:
@@ -221,10 +253,12 @@ def main():
         # Intentar SDMX primario
         payload, api_url = fetch_country_sdmx(c_code, c_year)
         parsed_vals = {}
+        parsed_source = c_source
+        parsed_tipo = "encuesta"
         api_type = "SDMX"
 
         if payload:
-            parsed_vals = parse_sdmx_response(payload, c_year)
+            parsed_vals, parsed_source, parsed_tipo = parse_sdmx_response(payload, c_year)
         else:
             # Fallback DBnomics
             payload, api_url = fetch_country_dbnomics_fallback(c_code, c_year)
@@ -286,11 +320,12 @@ def main():
             "employment_male_thousands": round(m_emp, 1),
             "employment_total_thousands": round(t_emp, 1),
             "s_F": f"{s_F:.6f}",
-            "source": c_source,
+            "source": parsed_source,
+            "tipo_dato": parsed_tipo,
             "query_date": today_str,
         })
 
-        print(f"  -> {c_name} ({c_year}): F={f_emp:.1f}k, M={m_emp:.1f}k, Total={t_emp:.1f}k => s_F = {s_F:.6f}")
+        print(f"  -> {c_name} ({c_year}): F={f_emp:.1f}k, M={m_emp:.1f}k, Total={t_emp:.1f}k => s_F = {s_F:.6f} | Tipo: {parsed_tipo} | Fuente: {parsed_source}")
 
     # Guardar manifiesto combinado en data/raw/
     manifest_filepath = os.path.join(RAW_DIR, f"ilostat_{INDICATOR}_all_raw.json")
@@ -309,6 +344,7 @@ def main():
         "employment_total_thousands",
         "s_F",
         "source",
+        "tipo_dato",
         "query_date",
     ]
 

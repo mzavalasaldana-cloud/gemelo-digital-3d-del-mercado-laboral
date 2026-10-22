@@ -38,6 +38,7 @@ def compute_monthly_metrics(
     willing_workers: np.ndarray,
     precomputed_bins: Optional[Dict[str, Any]] = None,
     care_penalty: Optional[np.ndarray] = None,
+    exited_indices: Optional[List[int]] = None,
 ) -> Dict[str, Any]:
     """
     Computa el registro mensual completo del modelo para el paso t.
@@ -134,6 +135,7 @@ def compute_monthly_metrics(
         "mean_informal_wage_model": round(mean_informal_w, 4),
         "annual_exit_rate": round(annual_exit_rate, 2),
         "firm_closures_count": int(num_exits),
+        "exited_firm_indices": exited_indices if exited_indices is not None else [],
         "formal_firms_count": formal_firms_count,
         "informal_firms_count": N_F - formal_firms_count,
         "formal_vacancies": formal_vacancies,
@@ -167,6 +169,15 @@ def aggregate_evaluation_window(monthly_records: List[Dict[str, Any]], window_si
     mean_exit_rate = float(np.mean([m["annual_exit_rate"] for m in eval_slice]))
     mean_fiscal = float(np.mean([m["fiscal_revenue"] for m in eval_slice]))
 
+    # Porcentaje de empresas que cierran al menos una vez en el año de evaluación (meses 109-120)
+    unique_closed = set()
+    for m in eval_slice:
+        for idx in m.get("exited_firm_indices", []):
+            unique_closed.add(idx)
+
+    n_f = eval_slice[0].get("formal_firms_count", 0) + eval_slice[0].get("informal_firms_count", 600)
+    pct_firms_closed_at_least_once = round((len(unique_closed) / max(1, n_f)) * 100.0, 2) if n_f > 0 else 0.0
+
     edu_avg = {
         "basic_e0": round(float(np.mean([m["informality_by_education"][0] for m in eval_slice])), 2),
         "middle_e1": round(float(np.mean([m["informality_by_education"][1] for m in eval_slice])), 2),
@@ -190,6 +201,7 @@ def aggregate_evaluation_window(monthly_records: List[Dict[str, Any]], window_si
         "mean_gender_gap": round(mean_gap, 2),
         "mean_gini_index": round(mean_gini, 4),
         "mean_annual_exit_rate": round(mean_exit_rate, 2),
+        "pct_firms_closed_at_least_once": pct_firms_closed_at_least_once,
         "mean_fiscal_revenue": round(mean_fiscal, 2),
         "gradients": {
             "education": edu_avg,

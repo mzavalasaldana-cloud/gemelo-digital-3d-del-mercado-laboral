@@ -52,7 +52,7 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
     name: ilostatCalibracionFuentes.NIGERIA.label,
     flag: '🇳🇬',
     currency: 'NGN',
-    baseInformalityRate: 93.18, // ILOSTAT EMP_NIFL_SEX_RT 2024 (data/ilostat_series_historicas.csv)
+    baseInformalityRate: 93.14, // ILOSTAT EMP_NIFL_SEX_RT 2024 (data/ilostat_calibracion.csv)
     baseGini: 0.285, // Gini del modelo ITDT calibrado (Escenario A, mes 0 / post-burn-in)
     giniSource: 'Gini del modelo ITDT calibrado (Escenario A, mes 0)',
     informalitySource: ilostatCalibracionFuentes.NIGERIA.full_source,
@@ -69,7 +69,7 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
     name: ilostatCalibracionFuentes.INDIA.label,
     flag: '🇮🇳',
     currency: 'INR',
-    baseInformalityRate: 88.36, // ILOSTAT EMP_NIFL_SEX_RT 2024 (data/ilostat_series_historicas.csv)
+    baseInformalityRate: 88.13, // ILOSTAT EMP_NIFL_SEX_RT 2024 (data/ilostat_calibracion.csv)
     baseGini: 0.292, // Gini del modelo ITDT calibrado (Escenario A, mes 0 / post-burn-in)
     giniSource: 'Gini del modelo ITDT calibrado (Escenario A, mes 0)',
     informalitySource: ilostatCalibracionFuentes.INDIA.full_source,
@@ -86,7 +86,7 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
     name: ilostatCalibracionFuentes.BANGLADESH.label,
     flag: '🇧🇩',
     currency: 'BDT',
-    baseInformalityRate: 84.19, // ILOSTAT EMP_NIFL_SEX_RT 2023 (data/ilostat_series_historicas.csv)
+    baseInformalityRate: 84.14, // ILOSTAT EMP_NIFL_SEX_RT 2023 (data/ilostat_calibracion.csv)
     baseGini: 0.288, // Gini del modelo ITDT calibrado (Escenario A, mes 0 / post-burn-in)
     giniSource: 'Gini del modelo ITDT calibrado (Escenario A, mes 0)',
     informalitySource: ilostatCalibracionFuentes.BANGLADESH.full_source,

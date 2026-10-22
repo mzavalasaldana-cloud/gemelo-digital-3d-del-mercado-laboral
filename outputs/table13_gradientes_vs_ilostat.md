@@ -2,36 +2,36 @@
 
 | País      | Dimensión   | Categoría        |   Año Obs. |   Tasa Obs. ILOSTAT (%) |   Tasa Sim. ITDT (%) |   Error Abs. (pp) |
 |:----------|:------------|:-----------------|-----------:|------------------------:|---------------------:|------------------:|
-| Kenia     | Educación   | Básica (e = 0)   |       2019 |                   88.77 |                94.77 |              6    |
-| Kenia     | Educación   | Media (e = 1)    |       2019 |                   80.84 |                83.87 |              3.03 |
-| Kenia     | Educación   | Superior (e = 2) |       2019 |                   31.71 |                66.05 |             34.34 |
-| Kenia     | Zona        | Rural            |       2019 |                   93.08 |                89.48 |              3.6  |
-| Kenia     | Zona        | Urbana           |       2019 |                   73.82 |                81.09 |              7.27 |
-| Nigeria   | Educación   | Básica (e = 0)   |       2022 |                   98.05 |                98.75 |              0.7  |
-| Nigeria   | Educación   | Media (e = 1)    |       2022 |                   93.74 |                94.58 |              0.84 |
-| Nigeria   | Educación   | Superior (e = 2) |       2022 |                   73.38 |                84.52 |             11.14 |
-| Nigeria   | Zona        | Rural            |       2022 |                   97.94 |                96.47 |              1.47 |
-| Nigeria   | Zona        | Urbana           |       2022 |                   90.35 |                92.68 |              2.33 |
-| India     | Educación   | Básica (e = 0)   |       2012 |                   90.61 |                96.93 |              6.32 |
-| India     | Educación   | Media (e = 1)    |       2012 |                   73.4  |                88.59 |             15.19 |
-| India     | Educación   | Superior (e = 2) |       2012 |                   49.03 |                71.55 |             22.52 |
-| India     | Zona        | Rural            |       2012 |                   92.74 |                92.47 |              0.27 |
-| India     | Zona        | Urbana           |       2012 |                   72.51 |                85.82 |             13.31 |
-| Bangladés | Educación   | Básica (e = 0)   |       2022 |                   85.87 |                92.6  |              6.73 |
-| Bangladés | Educación   | Media (e = 1)    |       2022 |                   71.85 |                80.98 |              9.14 |
-| Bangladés | Educación   | Superior (e = 2) |       2022 |                   53.45 |                66.4  |             12.95 |
-| Bangladés | Zona        | Rural            |       2017 |                   96.6  |                87.63 |              8.97 |
-| Bangladés | Zona        | Urbana           |       2017 |                   89.79 |                78.65 |             11.14 |
+| Kenia     | Educación   | Básica (e = 0)   |       2019 |                   88.77 |                95.3  |              6.53 |
+| Kenia     | Educación   | Media (e = 1)    |       2019 |                   80.84 |                85.03 |              4.19 |
+| Kenia     | Educación   | Superior (e = 2) |       2019 |                   31.71 |                67.39 |             35.68 |
+| Kenia     | Zona        | Rural            |       2019 |                   93.08 |                90.24 |              2.84 |
+| Kenia     | Zona        | Urbana           |       2019 |                   73.82 |                82.21 |              8.39 |
+| Nigeria   | Educación   | Básica (e = 0)   |       2022 |                   98.05 |                98.53 |              0.48 |
+| Nigeria   | Educación   | Media (e = 1)    |       2022 |                   93.74 |                93.94 |              0.2  |
+| Nigeria   | Educación   | Superior (e = 2) |       2022 |                   73.38 |                83.34 |              9.96 |
+| Nigeria   | Zona        | Rural            |       2022 |                   97.94 |                96.07 |              1.87 |
+| Nigeria   | Zona        | Urbana           |       2022 |                   90.35 |                91.95 |              1.6  |
+| India     | Educación   | Básica (e = 0)   |       2012 |                   90.61 |                96.36 |              5.75 |
+| India     | Educación   | Media (e = 1)    |       2012 |                   73.4  |                87.11 |             13.71 |
+| India     | Educación   | Superior (e = 2) |       2012 |                   49.03 |                69.05 |             20.02 |
+| India     | Zona        | Rural            |       2012 |                   92.74 |                91.45 |              1.29 |
+| India     | Zona        | Urbana           |       2012 |                   72.51 |                84.28 |             11.77 |
+| Bangladés | Educación   | Básica (e = 0)   |       2022 |                   85.87 |                91.86 |              5.99 |
+| Bangladés | Educación   | Media (e = 1)    |       2022 |                   71.85 |                80.01 |              8.16 |
+| Bangladés | Educación   | Superior (e = 2) |       2022 |                   53.45 |                65.52 |             12.07 |
+| Bangladés | Zona        | Rural            |       2017 |                   96.6  |                86.91 |              9.69 |
+| Bangladés | Zona        | Urbana           |       2017 |                   89.79 |                77.6  |             12.19 |
 
 ### Error Medio Absoluto (MAE) por país
 
 | País | MAE Gradientes (pp) |
 |:---|:---:|
-| Kenia | 10.85 |
-| Nigeria | 3.30 |
-| India | 11.52 |
-| Bangladés | 9.78 |
-| **Promedio 4 países** | **8.86** |
+| Kenia | 11.53 |
+| Nigeria | 2.82 |
+| India | 10.51 |
+| Bangladés | 9.62 |
+| **Promedio 4 países** | **8.62** |
 
 ---
 ### Notas metodológicas y emparejamiento de categorías

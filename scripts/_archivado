@@ -1,0 +1,64 @@
+import urllib.request, ssl, json
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+headers = {'User-Agent': 'LaborTwin-Research/1.0', 'Accept': 'application/json'}
+
+targets = [
+    ("KEN", 2019),
+    ("NGA", 2024),
+    ("IND", 2024),
+    ("BGD", 2023),
+]
+
+for code, yr in targets:
+    url = f"https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_AGE_NB/{code}.A..SEX_T+SEX_F+SEX_M.AGE_YTHADULT_YGE15?startPeriod={yr}&endPeriod={yr}"
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, context=ctx, timeout=25) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+        print(f"\n==================== {code} {yr} ====================")
+        structure = data.get('structure', {})
+        series_dims = structure.get('dimensions', {}).get('series', [])
+        obs_dims = structure.get('dimensions', {}).get('observation', [])
+        tvals = [v['id'] for v in obs_dims[0]['values']] if obs_dims else []
+        
+        series_attrs = structure.get('attributes', {}).get('series', [])
+        obs_attrs = structure.get('attributes', {}).get('observation', [])
+        
+        print("Series Dims:", [d['id'] for d in series_dims])
+        print("Obs Attrs:")
+        for a in obs_attrs:
+            print(f"  {a['id']}: {[v.get('name') for v in a.get('values', [])]}")
+            
+        datasets = data.get('dataSets', [])
+        if datasets:
+            series_dict = datasets[0].get('series', {})
+            for skey, sval in series_dict.items():
+                indices = [int(x) for x in skey.split(':')]
+                # find sex dim
+                sex_idx = None
+                for idx, dim in enumerate(series_dims):
+                    if dim['id'] == 'SEX':
+                        sex_idx = idx
+                        break
+                sex_val = series_dims[sex_idx]['values'][indices[sex_idx]]['id'] if sex_idx is not None else skey
+                
+                # observations
+                for tidx, orec in sval.get('observations', {}).items():
+                    act_yr = tvals[int(tidx)] if tvals else yr
+                    val = orec[0]
+                    # check attrs
+                    o_attr_vals = {}
+                    for aidx, aval_idx in enumerate(orec[1:]):
+                        if aidx < len(obs_attrs) and aval_idx is not None:
+                            aid = obs_attrs[aidx]['id']
+                            avals = obs_attrs[aidx].get('values', [])
+                            val_str = avals[aval_idx].get('name') if aval_idx < len(avals) else aval_idx
+                            o_attr_vals[aid] = val_str
+                    print(f"  {sex_val} ({act_yr}): {val} | Attrs: {o_attr_vals}")
+    except urllib.error.HTTPError as e:
+        print(f"HTTPError {code} {yr}: {e.code} {e.reason}")
+    except Exception as e:
+        print(f"Error {code} {yr}: {e}")

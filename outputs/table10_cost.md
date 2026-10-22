@@ -2,9 +2,9 @@
 
 | NW (trabajadores)          | NF (empresas)   | Tiempo por réplica (s), media (DE)   |   Memoria máxima del proceso (MB) |
 |:---------------------------|:----------------|:-------------------------------------|----------------------------------:|
-| 3 000                      | 300             | 0.159 (0.002)                        |                             195.3 |
-| 6 000 (configuración base) | 600             | 0.232 (0.011)                        |                             194.3 |
-| 12 000                     | 1 200           | 0.365 (0.007)                        |                             195.7 |
-| 24 000                     | 2 400           | 0.646 (0.004)                        |                             197.7 |
+| 3 000                      | 300             | 0.509 (0.149)                        |                             216   |
+| 6 000 (configuración base) | 600             | 0.464 (0.033)                        |                             216.9 |
+| 12 000                     | 1 200           | 0.679 (0.020)                        |                             218.2 |
+| 24 000                     | 2 400           | 1.417 (0.418)                        |                             219.5 |
 
 *Nota.* 3 repeticiones por tamaño. El tiempo crece de forma aproximadamente lineal con NW. Memoria real del proceso medida con psutil/resource (RSS).

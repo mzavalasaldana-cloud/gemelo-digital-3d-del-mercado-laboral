@@ -37,32 +37,40 @@ Este documento registra de manera transparente y explícita las decisiones de di
 
 ---
 
-## 3. Momento del Cálculo de la Producción Mediana ($\bar{Y}$)
+## 3. Momento del Cálculo de la Producción Mediana ($\bar{Y}$) y Modos de Escala (`ybar_mode`)
 
 - **Lo que el artículo indica:**  
   El artículo estipula que $\bar{Y} = \text{mediana}(Y)$, pero no aclara si se calcula una única vez al inicio de la simulación o si se actualiza dinámicamente cada mes ante la entrada y salida de empresas.
 
-- **Criterio adoptado:**  
-  $\bar{Y}_t$ se calcula **dinámicamente en cada mes $t$** sobre el conjunto completo de las $N_F = 600$ empresas activas, inmediatamente después de la resolución de quiebras y entrada de reemplazos (Paso 3) y antes de calcular las utilidades y demandas laborales del mes.
+- **Criterio adoptado (`ybar_mode`):**  
+  El modelo implementa dos modos explícitos:
+  1. `ybar_mode = "dynamic"` (modo activo por defecto): $\bar{Y}_t$ se calcula dinámicamente en cada mes $t$ sobre el conjunto completo de las $N_F = 600$ empresas activas, inmediatamente después de la resolución de quiebras y entrada de reemplazos (Paso 3) y antes de calcular las utilidades y demandas laborales del mes.
+  2. `ybar_mode = "fixed"`: $\bar{Y}$ se evalúa dinámicamente durante el calentamiento ($t < 96$) y se congela al valor alcanzado al finalizar el mes 96 de burn-in ($\bar{Y}_{post-burnin}$), manteniéndose estrictamente fija durante los 120 meses de política.
 
 - **Justificación:**  
-  Al mantenerse constante el tamaño de la población de empresas ($N_F = 600$) y ser la productividad $A_j$ estacionaria, la mediana mensual es extraordinariamente estable, al tiempo que preserva la consistencia macroeconómica endógena frente a choques de fiscalización o reestructuración empresarial.
+  Al mantenerse constante el tamaño de la población de empresas ($N_F = 600$) y ser la productividad $A_j$ estacionaria, la mediana mensual es extraordinariamente estable. Sin embargo, la variante `fixed` permite comprobar que la reducción de informalidad bajo fiscalización GovTech no se debe a un desplazamiento espurio del umbral $\bar{Y}$.
 
 ---
 
-## 4. Atributos de las Empresas Entrantes
+## 4. Reglas de Entrada y Atributos de las Empresas Entrantes (`entry_rule`)
 
 - **Lo que el artículo indica:**  
-  La Sección 3.4 señala que *"Las empresas cuyo beneficio en su estado actual es negativo salen con probabilidad mensual 0.10 y son reemplazadas por entrantes informales, lo que mantiene constante la población de empresas"*, sin detallar la distribución de atributos de las nuevas unidades.
+  La Sección 3.4 señala que *"Las empresas cuyo beneficio en su estado actual es negativo salen con probabilidad mensual 0.10 y son reemplazadas por entrantes informales, lo que mantiene constante la población de empresas"*. El artículo original forzaba a que toda unidad entrante naciera informal (`is_formal = False`), aun cuando sus condiciones de productividad y capital hicieran más rentable el registro formal inmediato.
 
-- **Criterio adoptado:**  
-  Cada nueva empresa entrante que sustituye a una unidad liquidada extrae sus atributos de las mismas distribuciones estructurales iniciales:
-  1. Productividad intrínseca: $A_{entrante} \sim \text{LogNormal}(0, 0.8^2)$.
-  2. Ruido de capital: $z_{entrante} \sim \mathcal{N}(0, 1)$, $\ln K_{entrante} = 1 + 0.8 \ln A_{entrante} + 0.3 z_{entrante}$.
-  3. Dueño: Un trabajador extraído con probabilidad uniforme de la población activa $N_W$.
-  4. Si la dueña es mujer: $\tilde{A}_{entrante} = A_{entrante} \cdot \max\left(10^{-6}, \; 1 - 0.5 \gamma_0 \frac{H_{care,dueña}}{48}\right)$.
-  5. Demanda laboral y producción: $L_{entrante} = \min\left(40, \max\left(1, \text{round}\left(0.5 \tilde{A}_{entrante}^{1/(1-\alpha)}\right)\right)\right)$, $Y_{entrante} = 1.6 \tilde{A}_{entrante} L^\alpha K^{1-\alpha}$.
-  6. Estado inicial: **Estrictamente informal** (`is_formal = False`), tal como prescribe el artículo.
+- **Criterio adoptado (`entry_rule`):**  
+  El modelo implementa dos reglas seleccionables en `FixedParameters`:
+  1. `entry_rule = "free"` (nueva regla canónica por defecto):
+     - Cuando una empresa sale por insolvencia ($\Pi < 0$ con probabilidad 0.10), la entrante extrae sus atributos iniciales ($A_{entrante} \sim \text{LogNormal}(0, 0.8^2)$, $z_{entrante} \sim \mathcal{N}(0, 1)$, $\ln K = 1 + 0.8 \ln A + 0.3 z$, dueño $\sim \text{Choice}(N_W)$).
+     - Se calculan $\Pi_F$ y $\Pi_I$ con las condiciones de fiscalización ($D_{sys}$), sanciones y subsidios vigentes en ese mes específico.
+     - **Condición de libre entrada:** Si $\max(\Pi_F, \Pi_I) < 0$, la unidad aspirante no ingresa a pérdidas y vuelve a extraer atributos, realizando hasta un máximo de 10 intentos. Si tras 10 extracciones consecutivas persiste $\max(\Pi_F, \Pi_I) < 0$, se registra con la última extracción.
+     - La entrante inicia en el estado de mayor beneficio: formal si $\Pi_F > \Pi_I$, e informal en caso contrario.
+     - *Justificación teórica:* Satisface la condición clásica de equilibrio con libre entrada de Hopenhayn (1992) y Melitz (2003), donde los agentes deciden su escala y régimen formal/informal en función de su productividad esperada y el entorno regulatorio vigente, eliminando el sesgo artificial de condenar a las nuevas empresas a la informalidad.
+  2. `entry_rule = "forced_informal"`:
+     - Réplica exacta de la especificación original del artículo: toda entrante se asigna forzosamente como informal (`is_formal = False`) con una única extracción, independientemente de sus beneficios.
+     - Se preserva para auditoría y garantiza reproducibilidad exacta frente a las trayectorias iniciales.
+
+- **Métrica Adicional de Cierres Empresariales:**
+  Se registra adicionalmente el `"porcentaje de empresas que cierran al menos una vez en el año"` (`pct_firms_closed_at_least_once`), evaluado sobre la ventana final de meses 109 a 120 de la política. Esta métrica distingue la rotación bruta de empresas de la fracción de unidades del tejido empresarial afectadas por liquidación.
 
 ---
 

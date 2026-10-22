@@ -55,7 +55,7 @@ SCENARIO_CONFIGS: Dict[str, Dict[str, str]] = {
     },
 }
 
-# Líneas base empíricas tomadas de ILOSTAT (Tabla 2 del artículo)
+# Líneas base empíricas tomadas de ILOSTAT (data/ilostat_calibracion.csv descargado el 2026-10-22)
 # Salarios en USD son indicadores ilustrativos de interfaz (no forman parte del artículo)
 COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
     "KENYA": {
@@ -64,31 +64,31 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformality": 86.49,
         "baseInformalityRate": 86.49,
         "baseInformalityFemale": 90.19,
-        "baseInformalityMale": 83.13,
+        "baseInformalityMale": 83.12,
     },
     "NIGERIA": {
         "name": "Nigeria",
         "countryCode": "NGA",
-        "baseInformality": 93.18,
-        "baseInformalityRate": 93.18,
-        "baseInformalityFemale": 96.39,
-        "baseInformalityMale": 89.92,
+        "baseInformality": 93.14,
+        "baseInformalityRate": 93.14,
+        "baseInformalityFemale": 96.38,
+        "baseInformalityMale": 89.86,
     },
     "INDIA": {
         "name": "India",
         "countryCode": "IND",
-        "baseInformality": 88.36,
-        "baseInformalityRate": 88.36,
-        "baseInformalityFemale": 91.93,
-        "baseInformalityMale": 86.76,
+        "baseInformality": 88.13,
+        "baseInformalityRate": 88.13,
+        "baseInformalityFemale": 91.56,
+        "baseInformalityMale": 86.58,
     },
     "BANGLADESH": {
         "name": "Bangladés",
         "countryCode": "BGD",
-        "baseInformality": 84.19,
-        "baseInformalityRate": 84.19,
-        "baseInformalityFemale": 95.77,
-        "baseInformalityMale": 78.08,
+        "baseInformality": 84.14,
+        "baseInformalityRate": 84.14,
+        "baseInformalityFemale": 95.72,
+        "baseInformalityMale": 78.03,
     },
 }
 
