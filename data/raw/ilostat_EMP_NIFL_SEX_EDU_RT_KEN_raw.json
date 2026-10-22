@@ -1,0 +1,3536 @@
+{
+  "indicator": "EMP_NIFL_SEX_EDU_RT",
+  "country_code": "KEN",
+  "country_name": "Kenya",
+  "target_year": 2019,
+  "source_type": "DBnomics",
+  "api_url": "https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_EDU_RT?dimensions=%7B%22ref_area%22%3A%5B%22KEN%22%5D%7D&observations=1&limit=200",
+  "fetched_at": "2026-10-22",
+  "payload": {
+    "_meta": {
+      "args": {
+        "align_periods": false,
+        "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+        "dimensions": {
+          "ref_area": [
+            "KEN"
+          ]
+        },
+        "facets": false,
+        "format": "json",
+        "limit": 200,
+        "metadata": true,
+        "observations": true,
+        "offset": 0,
+        "provider_code": "ILO",
+        "q": "",
+        "series_code": null
+      },
+      "version": "22.1.17"
+    },
+    "dataset": {
+      "attributes_labels": {
+        "OBSV_STATUS": "Observation status"
+      },
+      "attributes_values_labels": {
+        "OBSV_STATUS": {
+          "A": "Adjusted",
+          "B": "Break in series",
+          "C": "Confidential",
+          "E": "Estimate",
+          "I": "Imputation",
+          "M": "Model-based extrapolation",
+          "P": "Provisional",
+          "R": "Real value",
+          "S": "Not significant",
+          "U": "Unreliable"
+        }
+      },
+      "code": "EMP_NIFL_SEX_EDU_RT",
+      "dimensions_codes_order": [
+        "ref_area",
+        "source",
+        "classif1",
+        "sex",
+        "frequency"
+      ],
+      "dimensions_labels": {
+        "classif1": "Classification 1",
+        "frequency": "Frequency",
+        "ref_area": "Reference area",
+        "sex": "Sex",
+        "source": "Source"
+      },
+      "dimensions_values_labels": {
+        "classif1": {
+          "EDU_AGGREGATE_ADV": "Education (Aggregate levels): Advanced",
+          "EDU_AGGREGATE_BAS": "Education (Aggregate levels): Basic",
+          "EDU_AGGREGATE_INT": "Education (Aggregate levels): Intermediate",
+          "EDU_AGGREGATE_LTB": "Education (Aggregate levels): Less than basic",
+          "EDU_AGGREGATE_TOTAL": "Education (Aggregate levels): Total",
+          "EDU_AGGREGATE_X": "Education (Aggregate levels): Level not stated",
+          "EDU_ISCED11_0": "Education (ISCED-11): 0. Early childhood education",
+          "EDU_ISCED11_1": "Education (ISCED-11): 1. Primary education",
+          "EDU_ISCED11_2": "Education (ISCED-11): 2. Lower secondary education",
+          "EDU_ISCED11_3": "Education (ISCED-11): 3. Upper secondary education",
+          "EDU_ISCED11_4": "Education (ISCED-11): 4. Post-secondary non-tertiary education",
+          "EDU_ISCED11_5": "Education (ISCED-11): 5. Short-cycle tertiary education",
+          "EDU_ISCED11_6": "Education (ISCED-11): 6. Bachelor's or equivalent level",
+          "EDU_ISCED11_7": "Education (ISCED-11): 7. Master's or equivalent level",
+          "EDU_ISCED11_8": "Education (ISCED-11): 8. Doctoral or equivalent level",
+          "EDU_ISCED11_9": "Education (ISCED-11): 9. Not elsewhere classified",
+          "EDU_ISCED11_TOTAL": "Education (ISCED-11): Total",
+          "EDU_ISCED11_X": "Education (ISCED-11): X. No schooling",
+          "EDU_ISCED97_0": "Education (ISCED-97): 0. Pre-primary education",
+          "EDU_ISCED97_1": "Education (ISCED-97): 1. Primary education or first stage of basic education",
+          "EDU_ISCED97_2": "Education (ISCED-97): 2. Lower secondary or second stage of basic education",
+          "EDU_ISCED97_3": "Education (ISCED-97): 3. Upper secondary education",
+          "EDU_ISCED97_4": "Education (ISCED-97): 4. Post-secondary non-tertiary education",
+          "EDU_ISCED97_5": "Education (ISCED-97): 5. First stage of tertiary education (not leading directly to an advanced research qualification)",
+          "EDU_ISCED97_6": "Education (ISCED-97): 6. Second stage of tertiary education (leading to an advanced research qualification)",
+          "EDU_ISCED97_TOTAL": "Education (ISCED-97): Total",
+          "EDU_ISCED97_UNK": "Education (ISCED-97): Level not stated",
+          "EDU_ISCED97_X": "Education (ISCED-97): X. No schooling"
+        },
+        "frequency": {
+          "A": "Annual",
+          "M": "Monthly",
+          "Q": "Quarterly"
+        },
+        "ref_area": {
+          "AFG": "Afghanistan",
+          "AGO": "Angola",
+          "ARG": "Argentina",
+          "ARM": "Armenia",
+          "AUS": "Australia",
+          "AUT": "Austria",
+          "BDI": "Burundi",
+          "BEL": "Belgium",
+          "BEN": "Benin",
+          "BFA": "Burkina Faso",
+          "BGD": "Bangladesh",
+          "BGR": "Bulgaria",
+          "BIH": "Bosnia and Herzegovina",
+          "BOL": "Bolivia",
+          "BRA": "Brazil",
+          "BRB": "Barbados",
+          "BRN": "Brunei Darussalam",
+          "BWA": "Botswana",
+          "CHE": "Switzerland",
+          "CHL": "Chile",
+          "CIV": "Côte d'Ivoire",
+          "CMR": "Cameroon",
+          "COD": "Congo, Democratic Republic of the",
+          "COG": "Congo",
+          "COK": "Cook Islands",
+          "COL": "Colombia",
+          "COM": "Comoros",
+          "CPV": "Cabo Verde",
+          "CRI": "Costa Rica",
+          "CYP": "Cyprus",
+          "CZE": "Czechia",
+          "DEU": "Germany",
+          "DJI": "Djibouti",
+          "DNK": "Denmark",
+          "DOM": "Dominican Republic",
+          "ECU": "Ecuador",
+          "EGY": "Egypt",
+          "ESP": "Spain",
+          "EST": "Estonia",
+          "FIN": "Finland",
+          "FJI": "Fiji",
+          "FRA": "France",
+          "GBR": "United Kingdom",
+          "GEO": "Georgia",
+          "GHA": "Ghana",
+          "GMB": "Gambia",
+          "GNB": "Guinea-Bissau",
+          "GRC": "Greece",
+          "GRD": "Grenada",
+          "GTM": "Guatemala",
+          "GUY": "Guyana",
+          "HND": "Honduras",
+          "HRV": "Croatia",
+          "HTI": "Haiti",
+          "HUN": "Hungary",
+          "IDN": "Indonesia",
+          "IND": "India",
+          "IRL": "Ireland",
+          "IRQ": "Iraq",
+          "ISL": "Iceland",
+          "ITA": "Italy",
+          "JAM": "Jamaica",
+          "JOR": "Jordan",
+          "KEN": "Kenya",
+          "KHM": "Cambodia",
+          "KIR": "Kiribati",
+          "KOR": "Korea, Republic of",
+          "LAO": "Lao People's Democratic Republic",
+          "LBN": "Lebanon",
+          "LBR": "Liberia",
+          "LCA": "Saint Lucia",
+          "LKA": "Sri Lanka",
+          "LSO": "Lesotho",
+          "LTU": "Lithuania",
+          "LUX": "Luxembourg",
+          "LVA": "Latvia",
+          "MDA": "Moldova, Republic of",
+          "MDG": "Madagascar",
+          "MDV": "Maldives",
+          "MEX": "Mexico",
+          "MHL": "Marshall Islands",
+          "MKD": "North Macedonia",
+          "MLI": "Mali",
+          "MLT": "Malta",
+          "MMR": "Myanmar",
+          "MNG": "Mongolia",
+          "MOZ": "Mozambique",
+          "MRT": "Mauritania",
+          "MUS": "Mauritius",
+          "MWI": "Malawi",
+          "NAM": "Namibia",
+          "NER": "Niger",
+          "NGA": "Nigeria",
+          "NIC": "Nicaragua",
+          "NLD": "Netherlands",
+          "NOR": "Norway",
+          "NPL": "Nepal",
+          "NRU": "Nauru",
+          "PAK": "Pakistan",
+          "PAN": "Panama",
+          "PER": "Peru",
+          "POL": "Poland",
+          "PRT": "Portugal",
+          "PRY": "Paraguay",
+          "PSE": "Occupied Palestinian Territory",
+          "RWA": "Rwanda",
+          "SDN": "Sudan",
+          "SEN": "Senegal",
+          "SLE": "Sierra Leone",
+          "SLV": "El Salvador",
+          "SOM": "Somalia",
+          "SRB": "Serbia",
+          "SUR": "Suriname",
+          "SVK": "Slovakia",
+          "SVN": "Slovenia",
+          "SWE": "Sweden",
+          "SWZ": "Eswatini",
+          "SYC": "Seychelles",
+          "TCD": "Chad",
+          "TGO": "Togo",
+          "THA": "Thailand",
+          "TLS": "Timor-Leste",
+          "TON": "Tonga",
+          "TUN": "Tunisia",
+          "TUR": "Türkiye",
+          "TUV": "Tuvalu",
+          "TZA": "Tanzania, United Republic of",
+          "UGA": "Uganda",
+          "URY": "Uruguay",
+          "VEN": "Venezuela, Bolivarian Republic of",
+          "VNM": "Viet Nam",
+          "VUT": "Vanuatu",
+          "WLF": "Wallis and Futuna Islands",
+          "WSM": "Samoa",
+          "YEM": "Yemen",
+          "ZAF": "South Africa",
+          "ZMB": "Zambia",
+          "ZWE": "Zimbabwe"
+        },
+        "sex": {
+          "SEX_F": "Sex: Female",
+          "SEX_M": "Sex: Male",
+          "SEX_O": "Sex: Other",
+          "SEX_T": "Sex: Total"
+        },
+        "source": {
+          "AA_1326": "PC - Population Census",
+          "AA_1406": "PC - Population Census",
+          "AA_1513": "PC - Population Census",
+          "AA_1732": "PC - Population Census",
+          "BA_1135": "LFS - Employment, Unemployment Survey",
+          "BA_1163": "LFS - Labour Force Survey",
+          "BA_1193": "LFS - Labour Force Survey",
+          "BA_1214": "LFS - Labour Force Survey",
+          "BA_12883": "LFS - Continuous Employment Survey",
+          "BA_13047": "LFS - National Labour Force Survey",
+          "BA_1321": "LFS - Labour Force Survey",
+          "BA_13360": "LFS - Labour Force Survey",
+          "BA_13368": "LFS - National Employment Survey",
+          "BA_13413": "LFS - Continuous National Labour Force Survey",
+          "BA_1352": "LFS - Labour Force Survey",
+          "BA_1359": "LFS - Labour Force Survey",
+          "BA_13950": "LFS - Labour Force Survey",
+          "BA_13951": "LFS - Employment Survey",
+          "BA_14071": "LFS - National Survey on Employment and the Informal Sector",
+          "BA_14074": "LFS - Labour Force Survey",
+          "BA_14098": "LFS - Regional Integrated Survey on Employment and the Informal Sector",
+          "BA_14121": "LFS - Periodic Labour Force Survey",
+          "BA_14123": "LFS - Regional Integrated Survey on Employment and the Informal Sector",
+          "BA_14125": "LFS - National Survey on Employment and the Informal Sector",
+          "BA_1448": "LFS - Labour Force Survey",
+          "BA_1468": "LFS - Labour Force Survey",
+          "BA_150": "LFS - Permanent Household Survey, Urban",
+          "BA_1510": "LFS - Labour Force Survey",
+          "BA_15656": "LFS - Labour Force Survey",
+          "BA_15665": "LFS - Labour Force Survey",
+          "BA_15666": "LFS - Labour Force Survey",
+          "BA_15678": "LFS - Regional Integrated Survey on Employment and the Informal Sector",
+          "BA_15715": "LFS - Labour Force Survey",
+          "BA_1590": "LFS - Labour Force Survey",
+          "BA_15955": "LFS - Labor Market Panel Survey",
+          "BA_16": "LFS - Labour Force Survey",
+          "BA_1603": "LFS - Labor Market Panel Survey",
+          "BA_16073": "LFS - Labour Force Survey",
+          "BA_16208": "LFS - Permanent Employment Survey, National",
+          "BA_1672": "LFS - Labour Force Survey",
+          "BA_1712": "LFS - Labour Force Survey",
+          "BA_1743": "LFS - Labour Force Survey",
+          "BA_1788": "LFS - Labour Force Survey",
+          "BA_1794": "LFS - Labour Force Survey",
+          "BA_1823": "LFS - Labour Force Survey",
+          "BA_19": "LFS - National Survey on Employment, Unemployment and Underemployment",
+          "BA_219": "LFS - Continous Household Employment Survey",
+          "BA_2212": "LFS - Labour Force Survey",
+          "BA_2524": "LFS - Labour Force Survey",
+          "BA_2624": "LFS - Employment Survey",
+          "BA_3": "LFS - National Labour Force Survey",
+          "BA_3050": "LFS - Labour Force Survey",
+          "BA_3051": "LFS - Survey on Employment and household's living conditions",
+          "BA_348": "LFS - Continous Household Survey",
+          "BA_3506": "LFS - National Reference Survey on Employment and Informal Sector",
+          "BA_358": "LFS - Integrated Household Survey",
+          "BA_382": "LFS - Household Sample Survey",
+          "BA_460": "LFS - National Employment Survey",
+          "BA_463": "LFS - National Occupation and Employment Survey",
+          "BA_467": "LFS - Labour Force Survey",
+          "BA_493": "LFS - Labour Force Survey",
+          "BA_501": "LFS - Labour Force Survey",
+          "BA_510": "LFS - National Labour Force Survey",
+          "BA_511": "LFS - Labour Market Survey",
+          "BA_538": "LFS - Labour Force Survey",
+          "BA_571": "LFS - Labour Force Survey",
+          "BA_582": "LFS - Labour Force Sample Survey",
+          "BA_592": "LFS - Labour Force Survey",
+          "BA_595": "LFS - Quarterly Labour Force Survey",
+          "BA_622": "LFS - Household Labour Force Survey",
+          "BA_65": "LFS - Labour Force Survey",
+          "BA_660": "LFS - Monthly Employment and Income Survey",
+          "BA_6651": "LFS - Labour Force Survey",
+          "BA_673": "LFS - Labour Force Survey",
+          "BA_682": "LFS - Employment and Unemployment Survey",
+          "BA_692": "LFS - Continous Household Survey",
+          "BA_7009": "LFS - Labour Force Survey",
+          "BA_7014": "LFS - Labour Force Survey",
+          "BA_702": "LFS - Labour Force Survey",
+          "BA_7345": "LFS - National Survey on the Employment Situation",
+          "BA_7395": "LFS - Continuous Multi-Objective Survey Employment and Labor Market Statistics",
+          "BA_74": "LFS - Continuous Employment Survey",
+          "BA_7423": "LFS - National Survey on Employment and the Informal Sector",
+          "BA_743": "LFS - National Population and Employment Survey",
+          "BA_82": "LFS - Continuous Multi-Purpose Household Survey",
+          "BA_8230": "LFS - Labour Force Survey",
+          "BA_8313": "LFS - Unemployment, Under-employment Watch",
+          "BA_867": "LFS - Household Labour Force Survey",
+          "BB_13355": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_13356": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_13366": "HIES - Core Welfare Indicators Questionnaire",
+          "BB_13367": "HIES - National Survey on Household Living Conditions",
+          "BB_14099": "HIES - Households Living Conditions Survey",
+          "BB_14101": "HIES - Household Income and Expenditure Survey",
+          "BB_14110": "HIES - Labour and Income Panel Survey",
+          "BB_15632": "HIES - Household Income and Expenditure Survey",
+          "BB_15690": "HIES - Survey on Living Conditions",
+          "BB_15691": "HIES - Survey on Living Conditions",
+          "BB_15712": "HIES - Modular and Integrated Household Survey on Living Conditions",
+          "BB_15723": "HIES - Household Income and Expenditure Survey",
+          "BB_15747": "HIES - Household, Income and Labour Dynamics Survey",
+          "BB_15952": "HIES - Harmonized Survey on Household Living Conditions",
+          "BB_15959": "HIES - Harmonized Survey on Household Living Conditions",
+          "BB_16077": "HIES - Living Standards Survey",
+          "BB_16119": "HIES - Household Income and Expenditure Survey",
+          "BB_16123": "HIES - Household Income and Expenditure Survey",
+          "BB_16128": "HIES - Living Standards Survey",
+          "BB_16200": "HIES - Living Standards Measurement Survey",
+          "BB_16207": "HIES - Supplemental Income Survey",
+          "BB_173": "HIES - Households Living Conditions Survey",
+          "BB_201": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_268": "HIES - National Household Survey",
+          "BB_275": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_276": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_301": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3054": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3056": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3058": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3060": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3061": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3062": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3063": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3065": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3067": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3069": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3070": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3071": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3073": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3074": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_3078": "HIES - Living Standards Survey",
+          "BB_319": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_342": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_426": "HIES - Monitoring Survey of the Modular and Integrated Survey of Household Living Conditions",
+          "BB_44": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_445": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_459": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_560": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_5862": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_5863": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_5867": "HIES - Living Conditions National Survey",
+          "BB_6210": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_6341": "HIES - EU Statistics on Income and Living Conditions",
+          "BB_704": "HIES - Household Income and Expenditure Survey",
+          "BB_7040": "HIES - Living Standards Survey",
+          "BB_7091": "HIES - Indicator Cluster Survey",
+          "BB_73": "HIES - Household Survey",
+          "BB_8363": "HIES - Household Budget Survey",
+          "BX_14100": "HS - Informal Employment Survey",
+          "BX_142": "HS - National Household Survey",
+          "BX_15710": "HS - Multi-Topic Household Survey",
+          "BX_15722": "HS - Survey of Improvement of Living Conditions",
+          "BX_15732": "HS - Djiboutian Household Survey",
+          "BX_15953": "HS - Integrated Household Survey",
+          "BX_1608": "HS - Survey To Monitor Poverty",
+          "BX_2226": "HS - Continuous Household Survey",
+          "BX_2228": "HS - National Sample Survey",
+          "BX_3055": "HS - Continuous Household Survey",
+          "BX_3465": "HS - Continuous household survey",
+          "BX_356": "HS - National Household Sample Survey",
+          "BX_375": "HS - National Household Survey",
+          "BX_461": "HS - Multi-purpose Household Survey",
+          "BX_504": "HS - Continous Multi-Purpose Household Survey",
+          "BX_534": "HS - Continous Household Survey",
+          "BX_6355": "HS - Continuous National Household Sample Survey",
+          "BX_7419": "HS - Household Survey"
+        }
+      },
+      "dir_hash": "533490f49b1ce2367632ef508f649b4f35c568ed",
+      "indexed_at": "2024-02-12T04:24:30.950Z",
+      "name": "Informal employment rate by sex and education (%)",
+      "nb_series": 9575,
+      "provider_code": "ILO",
+      "provider_name": "International Labour Organization"
+    },
+    "errors": null,
+    "provider": {
+      "code": "ILO",
+      "indexed_at": "2024-02-20T03:34:29.870Z",
+      "name": "International Labour Organization",
+      "region": "World",
+      "slug": "ilo",
+      "terms_of_use": "http://www.ilo.org/global/copyright/request-for-permission/lang--en/index.htm",
+      "website": "https://www.ilo.org"
+    },
+    "series": {
+      "docs": [
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_ADV",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_ADV.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Advanced – Sex: Female – Annual",
+          "value": [
+            26.376
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_ADV",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_ADV.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Advanced – Sex: Female – Quarterly",
+          "value": [
+            29.216,
+            17.976
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_ADV",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_ADV.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Advanced – Sex: Male – Annual",
+          "value": [
+            34.974
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_ADV",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_ADV.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Advanced – Sex: Male – Quarterly",
+          "value": [
+            37.669,
+            40.005
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_ADV",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_ADV.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Advanced – Sex: Total – Annual",
+          "value": [
+            31.712
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_ADV",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_ADV.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Advanced – Sex: Total – Quarterly",
+          "value": [
+            34.598,
+            31.192
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_BAS",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_BAS.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Basic – Sex: Female – Annual",
+          "value": [
+            90.701
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_BAS",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_BAS.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Basic – Sex: Female – Quarterly",
+          "value": [
+            84.692,
+            92.341
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_BAS",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_BAS.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Basic – Sex: Male – Annual",
+          "value": [
+            86.841
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_BAS",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_BAS.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Basic – Sex: Male – Quarterly",
+          "value": [
+            84.949,
+            89.05
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_BAS",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_BAS.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Basic – Sex: Total – Annual",
+          "value": [
+            88.773
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_BAS",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_BAS.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Basic – Sex: Total – Quarterly",
+          "value": [
+            84.82,
+            90.682
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_INT",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_INT.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Intermediate – Sex: Female – Annual",
+          "value": [
+            88.621
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_INT",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_INT.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Intermediate – Sex: Female – Quarterly",
+          "value": [
+            84.273,
+            88.985
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_INT",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_INT.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Intermediate – Sex: Male – Annual",
+          "value": [
+            76.248
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_INT",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_INT.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Intermediate – Sex: Male – Quarterly",
+          "value": [
+            72.712,
+            74.074
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_INT",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_INT.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Intermediate – Sex: Total – Annual",
+          "value": [
+            80.836
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_INT",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_INT.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Intermediate – Sex: Total – Quarterly",
+          "value": [
+            77.366,
+            79.869
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_LTB",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_LTB.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Less than basic – Sex: Female – Annual",
+          "value": [
+            99.202
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_LTB",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_LTB.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Less than basic – Sex: Female – Quarterly",
+          "value": [
+            99.499,
+            98.841
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_LTB",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_LTB.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Less than basic – Sex: Male – Annual",
+          "value": [
+            97.518
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_LTB",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_LTB.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Less than basic – Sex: Male – Quarterly",
+          "value": [
+            97.077,
+            97.077
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_LTB",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_LTB.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Less than basic – Sex: Total – Annual",
+          "value": [
+            98.454
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_LTB",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_LTB.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Less than basic – Sex: Total – Quarterly",
+          "value": [
+            98.436,
+            98.034
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_TOTAL",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_TOTAL.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Total – Sex: Female – Annual",
+          "value": [
+            90.187
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_TOTAL",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_TOTAL.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Total – Sex: Female – Quarterly",
+          "value": [
+            85.467,
+            90.904
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_TOTAL",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_TOTAL.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Total – Sex: Male – Annual",
+          "value": [
+            83.125
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_TOTAL",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_TOTAL.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Total – Sex: Male – Quarterly",
+          "value": [
+            80.0,
+            84.77
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_TOTAL",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_TOTAL.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Total – Sex: Total – Annual",
+          "value": [
+            86.489
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_TOTAL",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_TOTAL.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Total – Sex: Total – Quarterly",
+          "value": [
+            82.636,
+            87.71
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_X",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_X.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Level not stated – Sex: Female – Annual",
+          "value": [
+            94.496
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_X",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                "U"
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_X.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Level not stated – Sex: Female – Quarterly",
+          "value": [
+            88.555,
+            100.0
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_X",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_X.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Level not stated – Sex: Male – Annual",
+          "value": [
+            71.111
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_X",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_X.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Level not stated – Sex: Male – Quarterly",
+          "value": [
+            37.577,
+            95.178
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_X",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_X.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Level not stated – Sex: Total – Annual",
+          "value": [
+            79.418
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_AGGREGATE_X",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_AGGREGATE_X.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (Aggregate levels): Level not stated – Sex: Total – Quarterly",
+          "value": [
+            59.834,
+            96.481
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_0",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_0.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 0. Early childhood education – Sex: Female – Annual",
+          "value": [
+            98.771
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_0",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_0.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 0. Early childhood education – Sex: Female – Quarterly",
+          "value": [
+            98.904,
+            98.443
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_0",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_0.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 0. Early childhood education – Sex: Male – Annual",
+          "value": [
+            96.785
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_0",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_0.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 0. Early childhood education – Sex: Male – Quarterly",
+          "value": [
+            95.92,
+            96.413
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_0",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_0.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 0. Early childhood education – Sex: Total – Annual",
+          "value": [
+            97.813
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_0",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_0.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 0. Early childhood education – Sex: Total – Quarterly",
+          "value": [
+            97.442,
+            97.47
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_1",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_1.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 1. Primary education – Sex: Female – Annual",
+          "value": [
+            96.89
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_1",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_1.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 1. Primary education – Sex: Female – Quarterly",
+          "value": [
+            93.384,
+            98.182
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_1",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_1.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 1. Primary education – Sex: Male – Annual",
+          "value": [
+            97.35
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_1",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_1.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 1. Primary education – Sex: Male – Quarterly",
+          "value": [
+            96.262,
+            99.061
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_1",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_1.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 1. Primary education – Sex: Total – Annual",
+          "value": [
+            97.111
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_1",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_1.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 1. Primary education – Sex: Total – Quarterly",
+          "value": [
+            94.617,
+            98.598
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_2",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_2.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 2. Lower secondary education – Sex: Female – Annual",
+          "value": [
+            90.162
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_2",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_2.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 2. Lower secondary education – Sex: Female – Quarterly",
+          "value": [
+            84.075,
+            91.836
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_2",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_2.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 2. Lower secondary education – Sex: Male – Annual",
+          "value": [
+            85.998
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_2",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_2.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 2. Lower secondary education – Sex: Male – Quarterly",
+          "value": [
+            84.35,
+            88.293
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_2",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_2.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 2. Lower secondary education – Sex: Total – Annual",
+          "value": [
+            88.076
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_2",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_2.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 2. Lower secondary education – Sex: Total – Quarterly",
+          "value": [
+            84.213,
+            90.042
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_3",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_3.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 3. Upper secondary education – Sex: Female – Annual",
+          "value": [
+            88.351
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_3",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_3.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 3. Upper secondary education – Sex: Female – Quarterly",
+          "value": [
+            84.037,
+            88.501
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_3",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_3.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 3. Upper secondary education – Sex: Male – Annual",
+          "value": [
+            75.873
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_3",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_3.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 3. Upper secondary education – Sex: Male – Quarterly",
+          "value": [
+            72.018,
+            73.538
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_3",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_3.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 3. Upper secondary education – Sex: Total – Annual",
+          "value": [
+            80.518
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_3",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_3.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 3. Upper secondary education – Sex: Total – Quarterly",
+          "value": [
+            76.916,
+            79.288
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_4",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_4.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 4. Post-secondary non-tertiary education – Sex: Female – Annual",
+          "value": [
+            98.537
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_4",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "U",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_4.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 4. Post-secondary non-tertiary education – Sex: Female – Quarterly",
+          "value": [
+            100.0,
+            98.134
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_4",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_4.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 4. Post-secondary non-tertiary education – Sex: Male – Annual",
+          "value": [
+            87.386
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_4",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_4.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 4. Post-secondary non-tertiary education – Sex: Male – Quarterly",
+          "value": [
+            92.118,
+            89.99
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_4",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_4.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 4. Post-secondary non-tertiary education – Sex: Total – Annual",
+          "value": [
+            90.999
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_4",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_4.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 4. Post-secondary non-tertiary education – Sex: Total – Quarterly",
+          "value": [
+            93.878,
+            94.021
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_6",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_6.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 6. Bachelor's or equivalent level – Sex: Female – Annual",
+          "value": [
+            27.494
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_6",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_6.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 6. Bachelor's or equivalent level – Sex: Female – Quarterly",
+          "value": [
+            27.278,
+            17.739
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_6",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_6.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 6. Bachelor's or equivalent level – Sex: Male – Annual",
+          "value": [
+            37.258
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_6",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_6.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 6. Bachelor's or equivalent level – Sex: Male – Quarterly",
+          "value": [
+            42.428,
+            38.094
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_6",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_6.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 6. Bachelor's or equivalent level – Sex: Total – Annual",
+          "value": [
+            33.649
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_6",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_6.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 6. Bachelor's or equivalent level – Sex: Total – Quarterly",
+          "value": [
+            36.892,
+            29.963
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_7",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_7.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 7. Master's or equivalent level – Sex: Female – Annual",
+          "value": [
+            24.254
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_7",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_7.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 7. Master's or equivalent level – Sex: Female – Quarterly",
+          "value": [
+            "NA",
+            "NA"
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_7",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_7.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 7. Master's or equivalent level – Sex: Male – Annual",
+          "value": [
+            23.321
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_7",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_7.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 7. Master's or equivalent level – Sex: Male – Quarterly",
+          "value": [
+            14.843,
+            60.681
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_7",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_7.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 7. Master's or equivalent level – Sex: Total – Annual",
+          "value": [
+            23.73
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_7",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_7.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 7. Master's or equivalent level – Sex: Total – Quarterly",
+          "value": [
+            24.902,
+            46.058
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_8",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_8.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 8. Doctoral or equivalent level – Sex: Male – Annual",
+          "value": [
+            "NA"
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_8",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_8.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 8. Doctoral or equivalent level – Sex: Male – Quarterly",
+          "value": [
+            "NA"
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_8",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_8.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 8. Doctoral or equivalent level – Sex: Total – Annual",
+          "value": [
+            "NA"
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_8",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              "U"
+            ]
+          ],
+          "period": [
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_8.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 8. Doctoral or equivalent level – Sex: Total – Quarterly",
+          "value": [
+            "NA"
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_9",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_9.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 9. Not elsewhere classified – Sex: Female – Annual",
+          "value": [
+            94.496
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_9",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                "U"
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_9.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 9. Not elsewhere classified – Sex: Female – Quarterly",
+          "value": [
+            88.555,
+            100.0
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_9",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_9.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 9. Not elsewhere classified – Sex: Male – Annual",
+          "value": [
+            71.111
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_9",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_9.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 9. Not elsewhere classified – Sex: Male – Quarterly",
+          "value": [
+            37.577,
+            95.178
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_9",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_9.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 9. Not elsewhere classified – Sex: Total – Annual",
+          "value": [
+            79.418
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_9",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_9.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): 9. Not elsewhere classified – Sex: Total – Quarterly",
+          "value": [
+            59.834,
+            96.481
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_TOTAL",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_TOTAL.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): Total – Sex: Female – Annual",
+          "value": [
+            90.187
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_TOTAL",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_TOTAL.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): Total – Sex: Female – Quarterly",
+          "value": [
+            85.467,
+            90.904
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_TOTAL",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_TOTAL.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): Total – Sex: Male – Annual",
+          "value": [
+            83.125
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_TOTAL",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_TOTAL.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): Total – Sex: Male – Quarterly",
+          "value": [
+            80.0,
+            84.77
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_TOTAL",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_TOTAL.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): Total – Sex: Total – Annual",
+          "value": [
+            86.489
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_TOTAL",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_TOTAL.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): Total – Sex: Total – Quarterly",
+          "value": [
+            82.636,
+            87.71
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_X",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_X.SEX_F.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): X. No schooling – Sex: Female – Annual",
+          "value": [
+            99.503
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_X",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_F",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_X.SEX_F.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): X. No schooling – Sex: Female – Quarterly",
+          "value": [
+            99.903,
+            99.133
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_X",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_X.SEX_M.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): X. No schooling – Sex: Male – Annual",
+          "value": [
+            98.197
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_X",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_M",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_X.SEX_M.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): X. No schooling – Sex: Male – Quarterly",
+          "value": [
+            98.225,
+            97.646
+          ]
+        },
+        {
+          "@frequency": "annual",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_X",
+            "frequency": "A",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "period": [
+            "2019"
+          ],
+          "period_start_day": [
+            "2019-01-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_X.SEX_T.A",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): X. No schooling – Sex: Total – Annual",
+          "value": [
+            98.963
+          ]
+        },
+        {
+          "@frequency": "quarterly",
+          "dataset_code": "EMP_NIFL_SEX_EDU_RT",
+          "dataset_name": "Informal employment rate by sex and education (%)",
+          "dimensions": {
+            "classif1": "EDU_ISCED11_X",
+            "frequency": "Q",
+            "ref_area": "KEN",
+            "sex": "SEX_T",
+            "source": "BX_3465"
+          },
+          "indexed_at": "2024-02-12T04:24:30.950Z",
+          "observations_attributes": [
+            [
+              "OBSV_STATUS",
+              [
+                "B",
+                ""
+              ]
+            ]
+          ],
+          "period": [
+            "2019-Q1",
+            "2019-Q4"
+          ],
+          "period_start_day": [
+            "2019-01-01",
+            "2019-10-01"
+          ],
+          "provider_code": "ILO",
+          "series_code": "KEN.BX_3465.EDU_ISCED11_X.SEX_T.Q",
+          "series_name": "Kenya – HS - Continuous household survey – Education (ISCED-11): X. No schooling – Sex: Total – Quarterly",
+          "value": [
+            99.236,
+            98.478
+          ]
+        }
+      ],
+      "limit": 200,
+      "num_found": 100,
+      "offset": 0
+    }
+  }
+}

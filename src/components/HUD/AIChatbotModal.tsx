@@ -89,12 +89,13 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
 
   const getInitialWelcomeMessage = (): ChatMessage => {
     const isEn = language === 'en';
+    const gapText = metrics?.genderGap !== undefined ? `${metrics.genderGap >= 0 ? '+' : ''}${metrics.genderGap.toFixed(1)} pp` : 'N/D';
     return {
       id: 'welcome-msg',
       sender: 'assistant',
       text: isEn
-        ? `Hello! I am your AI Labor Economics Advisor. Currently analyzing **${countryData.name}** at Month ${month} (Informality rate: **${metrics.informalityRate.toFixed(1)}%**, Decent Work: **${metrics.decentWorkIndex}/100**). How can I assist your policy formulation today?`
-        : `¡Hola! Soy tu Asistente de Economía Laboral con IA. Actualmente analizando **${countryData.name}** en el Mes ${month} (Tasa de informalidad: **${metrics.informalityRate.toFixed(1)}%**, Empleo Decente: **${metrics.decentWorkIndex}/100**). ¿En qué intervención de política puedo orientarte?`,
+        ? `Hello! I am your AI Labor Economics Advisor. Currently analyzing **${countryData.name}** at Month ${month} (Informality rate: **${metrics.informalityRate.toFixed(1)}%**, Gender gap: **${gapText}**). How can I assist your policy formulation today?`
+        : `¡Hola! Soy tu Asistente de Economía Laboral con IA. Actualmente analizando **${countryData.name}** en el Mes ${month} (Tasa de informalidad: **${metrics.informalityRate.toFixed(1)}%**, Brecha de género: **${gapText}**). ¿En qué intervención de política puedo orientarte?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
   };
@@ -183,10 +184,10 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
     if (q.includes('subsid') || q.includes('mipyme') || q.includes('sme') || q.includes('empleo') || q.includes('salari')) {
       return {
         text: isEn
-          ? `Direct payroll co-financing (e.g. $80-$120 USD/mo per formalized worker) produces an immediate reduction in precarious employment. In **${cName}**, our model projects formal job creation increasing by **+22%**, though sustained fiscal sustainability requires pairing with productivity upskilling.`
-          : `El cofinanciamiento directo de planillas ($80-$120 USD/mes por trabajador formalizado) genera un descenso inmediato del empleo precario. En **${cName}**, el modelo proyecta un incremento del **+22%** en puestos formales, aunque su sostenibilidad fiscal exige complementarse con programas de capacitación técnica.`,
+          ? `Targeted formalization subsidies (Scenarios B1 and B2) mitigate entry barriers into the formal labor market. In **${cName}**, the calibrated ITDT model simulates agent responses under alternative fiscal incentive schedules.`
+          : `Los subsidios a la formalización (Escenarios B1 y B2) mitigan las barreras de costo de entrada laboral. En **${cName}**, el modelo ITDT calibrado simula las decisiones de los agentes bajo incentivos estructurados.`,
         action: {
-          label: isEn ? 'Apply Progressive Subsidy' : 'Aplicar Subsidio al Empleo',
+          label: isEn ? 'Apply Worker Subsidy' : 'Aplicar Subsidio a la Formalización',
           scenario: 'SCENARIO_B_WORKER_SUBSIDY',
         },
       };
@@ -195,8 +196,8 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
     if (q.includes('auto') || q.includes('ia') || q.includes('ai') || q.includes('tecnol') || q.includes('shock') || q.includes('choque')) {
       return {
         text: isEn
-          ? `⚠️ **Automation Shock Assessment**: Displacing routine manual and clerical tasks without social safety nets pushes displaced formal workers back into vulnerable informal gig or street retail work. Informality in **${cName}** could surge by **+8.5 to +11.2 percentage points**.`
-          : `⚠️ **Evaluación de Choque Tecnológico**: Desplazar puestos rutinarios sin un colchón de protección social devuelve a trabajadores formales vulnerables al comercio informal o subsistencia. La informalidad en **${cName}** podría repuntar entre **+8.5 y +11.2 puntos porcentuales**.`,
+          ? `⚠️ **Technological Shock Assessment**: Displacing routine tasks without social safety nets pushes formal workers into vulnerable informal work. Under Scenario C/E, the model projects informality dynamics.`
+          : `⚠️ **Evaluación de Choque Tecnológico**: Desplazar puestos rutinarios sin un colchón de protección social devuelve a trabajadores formales al sector informal. En el escenario correspondiente, el modelo proyecta estas dinámicas.`,
         action: {
           label: isEn ? 'Simulate Automation Shock' : 'Simular Choque de Automatización',
           scenario: 'SCENARIO_E_AUTOMATION_SHOCK',
@@ -207,16 +208,16 @@ export const AIChatbotModal: React.FC<AIChatbotModalProps> = ({
     if (q.includes('oit') || q.includes('ilo') || q.includes('decente') || q.includes('decent')) {
       return {
         text: isEn
-          ? `The **ILO Decent Work Index** (currently **${metrics.decentWorkIndex}/100**) combines 4 key pillars: (1) Social security contribution compliance, (2) Wage ratio relative to the national minimum living basket, (3) Safe occupational conditions, and (4) Contractual predictability. Would you like to inspect the ILO Matrix modal?`
-          : `El **Índice de Empleo Decente OIT** (actualmente **${metrics.decentWorkIndex}/100**) pondera 4 pilares: (1) Afiliación efectiva a salud y pensiones, (2) Relación salarial frente a la canasta de vida digna, (3) Condiciones y seguridad en el trabajo, y (4) Previsibilidad contractual.`,
+          ? `Official ILOSTAT empirical statistics report informal employment disaggregated by sex, educational attainment, and geographic area. In the ITDT model, these real indicators calibrate parameters and baseline informality.`
+          : `Las estadísticas oficiales de ILOSTAT reportan las tasas de informalidad desagregadas por sexo, educación y zona geográfica. En el modelo ITDT, estos datos reales calibran los parámetros de comportamiento sin recurrir a índices inventados.`,
       };
     }
 
     if (q.includes('gini') || q.includes('desigualdad') || q.includes('inequality')) {
       return {
         text: isEn
-          ? `Current **Gini coefficient** in **${cName}** is **${metrics.giniIndex.toFixed(3)}**. Because the wage gap between formal ($${metrics.avgFormalWageUSD.toFixed(1)}/day) and informal ($${metrics.avgInformalWageUSD.toFixed(1)}/day) is over 3x, transitioning workers into formal enterprises directly closes the inequality gap by up to 0.05 points.`
-          : `El coeficiente de **Gini** actual en **${cName}** se ubica en **${metrics.giniIndex.toFixed(3)}**. Dado que la brecha salarial formal ($${metrics.avgFormalWageUSD.toFixed(1)}/día) versus informal ($${metrics.avgInformalWageUSD.toFixed(1)}/día) supera una proporción de 3 a 1, la formalización estructurada es la vía más rápida para reducir la desigualdad en hasta 0.05 puntos.`,
+          ? `Current endogenous **Gini coefficient** in **${cName}** is **${metrics.giniIndex.toFixed(3)}**, computed directly from simulated individual agent incomes in ITDTModel.`
+          : `El coeficiente de **Gini** endógeno actual en **${cName}** se ubica en **${metrics.giniIndex.toFixed(3)}**, calculado directamente a partir de la distribución de ingresos individuales de los agentes en el modelo ITDT.`,
       };
     }
 
@@ -304,7 +305,7 @@ Would you like to test one of the macro preset scenarios?`
     <>
       {/* 1. FLOATING ACTION BUTTON (FAB) */}
       {!isOpen && (
-        <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2 pointer-events-auto">
+        <div id="floating-ai-advisor" className="fixed bottom-5 right-5 z-40 flex items-center gap-2 pointer-events-auto">
           <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono-hud shadow-lg backdrop-blur-md border animate-bounce ${
             isLight
               ? 'bg-white/90 text-slate-800 border-sky-300 shadow-sky-500/10'

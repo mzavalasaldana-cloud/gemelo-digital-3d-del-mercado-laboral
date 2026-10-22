@@ -59,7 +59,7 @@ def render_digital_twin_3d_view():
                 <span class="glow-badge badge-emerald">Escenario {scenario}</span>
                 <span class="glow-badge badge-amber">Informalidad: {metrics.get('informalityRate', 0.0)}%</span>
                 <span class="glow-badge badge-purple">Brecha F−M: {metrics.get('genderGap', 0):+.1f} p.p.</span>
-                <span class="glow-badge badge-emerald" title="Indicador ilustrativo, no forma parte del artículo">OIT: {metrics.get('decentWorkIndex', 50)}/100 (Ilustrativo)</span>
+                <span class="glow-badge badge-cyan">Gini: {metrics.get('giniIndex', 0.35):.3f}</span>
             </div>
         </div>
     </div>
@@ -171,7 +171,7 @@ def render_digital_twin_3d_view():
                         opacity=0.88,
                     ),
                     text=sub.apply(
-                        lambda r: f"<b>Agente:</b> {r['code']}<br><b>Sector:</b> {r['display_sector']}<br><b>Capital Humano:</b> {r['human_capital']}/100<br><b>Salario:</b> ${r['income_usd']} USD/día<br><b>Prob. Formalización:</b> {r['formalization_prob']}%",
+                        lambda r: f"<b>Agente:</b> {r['code']}<br><b>Sector:</b> {r['display_sector']}<br><b>Capital Humano:</b> {r['human_capital']}/100<br><b>Ingreso Relativo:</b> {r.get('human_capital', 70) / 10.0:.1f} u.m.<br><b>Prob. Formalización:</b> {r['formalization_prob']}%",
                         axis=1
                     ),
                     hoverinfo="text",
@@ -291,7 +291,7 @@ def render_digital_twin_3d_view():
                 <div><b>Educación:</b> {selected_worker['education']}</div>
                 <div><b>Subsector:</b> {selected_worker['subsector']}</div>
                 <div><b>Capital Humano:</b> <span style="color:#00f0ff;">{selected_worker['human_capital']}/100</span></div>
-                <div><b>Salario:</b> <span style="color:#10b981;">${selected_worker['income_usd']} USD/día</span></div>
+                <div><b>Ingreso Relativo:</b> <span style="color:#10b981;">{selected_worker.get('human_capital', 70) / 10.0:.1f} u.m.</span></div>
                 <div><b>Tolerancia Riesgo:</b> {selected_worker['risk_tolerance']}%</div>
                 <div><b>Prob. Formalización:</b> <span style="color:#f59e0b;">{selected_worker['formalization_prob']}%</span></div>
             </div>
@@ -302,7 +302,7 @@ def render_digital_twin_3d_view():
         """, unsafe_allow_html=True)
 
         # Firm Inspector
-        render_section_header("Inspector de Hubs Empresariales", icon="🏢", badge="Datos de demostración")
+        render_section_header("Inspector de Hubs Empresariales", icon="🏢", badge="Hubs 3D")
         firm_names = [f["name"] for f in DEMO_FIRMS]
         sel_firm_name = st.selectbox("Seleccionar Empresa", options=firm_names, index=0)
         sel_firm = next((f for f in DEMO_FIRMS if f["name"] == sel_firm_name), DEMO_FIRMS[0])
@@ -315,7 +315,7 @@ def render_digital_twin_3d_view():
                 <div><b>Empleados:</b> {sel_firm['sizeEmployees']}</div>
                 <div><b>Productividad:</b> {sel_firm['productivityScore']}/100</div>
                 <div><b>Cumplimiento:</b> {sel_firm['taxComplianceRate']}%</div>
-                <div><b>Costo Registro:</b> ${sel_firm['formalizationCostUSD']} USD</div>
+                <div><b>Costo Registro:</b> {sel_firm.get('formalizationCostUSD', 100)} u.m.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)

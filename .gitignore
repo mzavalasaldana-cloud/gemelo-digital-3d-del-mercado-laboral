@@ -33,6 +33,7 @@ labortwin_dev.db
 labortwin_db.backup.sql
 labortwin_dev.backup.db
 labortwin_dev.db.old
+data/microdatos_reales/
 
 # OS / Editor
 .DS_Store

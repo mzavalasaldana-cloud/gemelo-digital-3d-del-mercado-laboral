@@ -30,11 +30,11 @@ export interface CountryProfile {
 export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
   KENYA: {
     code: 'KENYA',
-    name: 'Kenia (KNBS-ILFS)',
+    name: 'Kenia (KNBS-ILFS 2019)',
     flag: '🇰🇪',
     currency: 'KES',
     population: '54.0M',
-    baseInformalityRate: 83.2,
+    baseInformalityRate: 86.49,
     baseGini: 0.408,
     terrainProfile: {
       peakFrequency: 2.2,
@@ -47,11 +47,11 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
   },
   NIGERIA: {
     code: 'NIGERIA',
-    name: 'Nigeria (NBS-NLFS)',
+    name: 'Nigeria (NBS-NLFS 2022/2024)',
     flag: '🇳🇬',
     currency: 'NGN',
     population: '223.8M',
-    baseInformalityRate: 88.5,
+    baseInformalityRate: 93.18,
     baseGini: 0.351,
     terrainProfile: {
       peakFrequency: 1.8,
@@ -64,11 +64,11 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
   },
   INDIA: {
     code: 'INDIA',
-    name: 'India (PLFS MoSPI)',
+    name: 'India (PLFS MoSPI 2012/2024)',
     flag: '🇮🇳',
     currency: 'INR',
     population: '1.428B',
-    baseInformalityRate: 81.4,
+    baseInformalityRate: 88.36,
     baseGini: 0.357,
     terrainProfile: {
       peakFrequency: 3.0,
@@ -81,11 +81,11 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
   },
   BANGLADESH: {
     code: 'BANGLADESH',
-    name: 'Bangladesh (BBS-LFS)',
+    name: 'Bangladés (BBS-LFS 2022/2023)',
     flag: '🇧🇩',
     currency: 'BDT',
     population: '171.2M',
-    baseInformalityRate: 84.9,
+    baseInformalityRate: 84.19,
     baseGini: 0.399,
     terrainProfile: {
       peakFrequency: 1.6,
@@ -282,155 +282,14 @@ export const DEMO_FIRMS: StructuralFirm[] = [
 ];
 export const MOCK_FIRMS = DEMO_FIRMS;
 
-export const DEMO_ML_ALGORITHMS: MLAlgorithmMetric[] = [
-  {
-    id: 'algo-xgboost',
-    name: 'XGBoost Gradient Boosted Trees v3.4',
-    f1Score: 0.914,
-    rocAuc: 0.948,
-    latencyMs: 1.8,
-    interpretability: 82,
-    accuracy: 92.6,
-    isDeployed: true,
-  },
-  {
-    id: 'algo-rf',
-    name: 'Random Forest Ensemble (500 Trees)',
-    f1Score: 0.887,
-    rocAuc: 0.921,
-    latencyMs: 3.4,
-    interpretability: 89,
-    accuracy: 89.8,
-    isDeployed: false,
-  },
-  {
-    id: 'algo-deepnn',
-    name: 'Deep Residual Network (Embedding PyTorch)',
-    f1Score: 0.928,
-    rocAuc: 0.961,
-    latencyMs: 7.2,
-    interpretability: 44,
-    accuracy: 93.9,
-    isDeployed: false,
-  },
-  {
-    id: 'algo-svm',
-    name: 'Support Vector Classifier (RBF Kernel)',
-    f1Score: 0.832,
-    rocAuc: 0.865,
-    latencyMs: 14.6,
-    interpretability: 68,
-    accuracy: 84.1,
-    isDeployed: false,
-  },
-  {
-    id: 'algo-survival',
-    name: 'Cox Proportional Hazards (Supervivencia)',
-    f1Score: 0.854,
-    rocAuc: 0.893,
-    latencyMs: 2.1,
-    interpretability: 95,
-    accuracy: 86.7,
-    isDeployed: false,
-  },
-];
+export const DEMO_ML_ALGORITHMS: MLAlgorithmMetric[] = [];
 export const MOCK_ML_ALGORITHMS = DEMO_ML_ALGORITHMS;
 
-export const DEMO_COHORTS: CohortPrediction[] = [
-  {
-    id: 'cohort-01',
-    label: 'Mujeres jóvenes en comercio informal urbano',
-    populationShare: 24.8,
-    prob1Year: 18.4,
-    prob3Year: 42.1,
-    prob5Year: 67.8,
-    topDriver: 'Subsidio Guardería & Costo Registro Cero',
-  },
-  {
-    id: 'cohort-02',
-    label: 'Varones adultos en manufactura/talleres Jua Kali',
-    populationShare: 19.5,
-    prob1Year: 22.0,
-    prob3Year: 51.3,
-    prob5Year: 74.2,
-    topDriver: 'Crédito $50/mes + Certificación de Oficio',
-  },
-  {
-    id: 'cohort-03',
-    label: 'Trabajadores agrícolas de subsistencia',
-    populationShare: 31.2,
-    prob1Year: 6.8,
-    prob3Year: 19.4,
-    prob5Year: 38.0,
-    topDriver: 'Extensión Cooperativa & Encadenamiento Agro',
-  },
-  {
-    id: 'cohort-04',
-    label: 'Jóvenes técnicos de servicios y plataformas gig',
-    populationShare: 15.6,
-    prob1Year: 34.5,
-    prob3Year: 63.8,
-    prob5Year: 82.5,
-    topDriver: 'Régimen Simplificado Monotributo Digital',
-  },
-];
+export const DEMO_COHORTS: CohortPrediction[] = [];
 export const MOCK_COHORTS = DEMO_COHORTS;
 
-// DATASETS SINTÉTICOS DE DEMOSTRACIÓN (No son microdatos oficiales)
-export const DEMO_DATASETS: DatasetEntry[] = [
-  {
-    id: 'ds-plfs-ind',
-    name: 'SINTETICO_calibrado_PLFS_India.csv',
-    country: 'INDIA',
-    yearSpan: '2023-2024',
-    sampleSize: '48,500 registros sintéticos',
-    recordsCount: 48500,
-    institution: 'Generador sintético calibrado (Demostración)',
-    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
-    verified: false,
-    active: true,
-    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
-  },
-  {
-    id: 'ds-knbs-ken',
-    name: 'SINTETICO_calibrado_KNBS_Kenya.csv',
-    country: 'KENYA',
-    yearSpan: '2024',
-    sampleSize: '38,000 registros sintéticos',
-    recordsCount: 38000,
-    institution: 'Generador sintético calibrado (Demostración)',
-    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
-    verified: false,
-    active: true,
-    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
-  },
-  {
-    id: 'ds-nbs-nga',
-    name: 'SINTETICO_calibrado_NBS_Nigeria.csv',
-    country: 'NIGERIA',
-    yearSpan: '2023',
-    sampleSize: '42,000 registros sintéticos',
-    recordsCount: 42000,
-    institution: 'Generador sintético calibrado (Demostración)',
-    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
-    verified: false,
-    active: true,
-    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
-  },
-  {
-    id: 'ds-bbs-bgd',
-    name: 'SINTETICO_calibrado_BBS_Bangladesh.csv',
-    country: 'BANGLADESH',
-    yearSpan: '2023-2024',
-    sampleSize: '36,000 registros sintéticos',
-    recordsCount: 36000,
-    institution: 'Generador sintético calibrado (Demostración)',
-    variables: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDAD', 'EDUCACION_ANIOS', 'APORTE_SEG_SOC', 'TAM_EMPRESA'],
-    verified: false,
-    active: true,
-    description: 'Datos sintéticos de demostración; no son microdatos oficiales. El artículo no usa microdatos: usa solo tasas agregadas de ILOSTAT.',
-  },
-];
+// MICRODATOS REALES (Vacío hasta que se carguen microdatos oficiales en data/microdatos_reales/)
+export const DEMO_DATASETS: DatasetEntry[] = [];
 export const MOCK_DATASETS = DEMO_DATASETS;
 
 // USUARIOS FICTICIOS DE DEMOSTRACIÓN (Dominios cambiados a example.org)

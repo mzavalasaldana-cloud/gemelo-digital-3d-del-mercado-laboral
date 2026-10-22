@@ -41,187 +41,149 @@ os.makedirs(DATA_STORE_DIR, exist_ok=True)
 
 
 # =====================================================================
-# 1. BENCHMARK / SYNTHETIC DATASET GENERATOR
+# 1. CARGADORES DE MICRODATOS REALES (data/microdatos_reales/)
 # =====================================================================
+
+REAL_MICRODATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "microdatos_reales")
+
+def scan_real_microdatasets() -> List[Dict[str, Any]]:
+    """
+    Escanea data/microdatos_reales/<pais>/ en busca de microdatos oficiales
+    (PLFS India, NLFS Nigeria, encuesta de empleo KNBS Kenia, LFS Bangladés).
+    """
+    found = []
+    if not os.path.exists(REAL_MICRODATA_DIR):
+        return found
+
+    country_dirs = {
+        "kenya": ("KENYA", "Kenia (KNBS)"),
+        "nigeria": ("NIGERIA", "Nigeria (NBS NLFS)"),
+        "india": ("INDIA", "India (MoSPI PLFS)"),
+        "bangladesh": ("BANGLADESH", "Bangladés (BBS LFS)"),
+    }
+
+    for c_dir, (c_code, c_name) in country_dirs.items():
+        dir_path = os.path.join(REAL_MICRODATA_DIR, c_dir)
+        if os.path.exists(dir_path):
+            for fname in os.listdir(dir_path):
+                if fname.lower().endswith((".csv", ".tsv", ".parquet")):
+                    fpath = os.path.join(dir_path, fname)
+                    found.append({
+                        "id": f"real-{c_dir}-{fname}",
+                        "country": c_code,
+                        "country_name": c_name,
+                        "filename": fname,
+                        "filepath": fpath,
+                        "is_real": True,
+                    })
+    return found
+
+
+def load_real_country_microdata(preset_or_country: str) -> Optional[Tuple[pd.DataFrame, str, str]]:
+    """
+    Carga microdatos reales desde data/microdatos_reales/<pais>/ si existen.
+    Si no existen archivos reales cargados, retorna None sin inventar datos.
+    """
+    datasets = scan_real_microdatasets()
+    if not datasets:
+        return None
+
+    c_upper = preset_or_country.upper()
+    target = None
+    for ds in datasets:
+        if ds["country"] in c_upper or ds["id"] == preset_or_country or ds["filename"] in preset_or_country:
+            target = ds
+            break
+    if not target:
+        target = datasets[0]
+
+    fpath = target["filepath"]
+    if fpath.endswith(".parquet"):
+        df = pd.read_parquet(fpath)
+    elif fpath.endswith(".tsv"):
+        df = pd.read_csv(fpath, sep="\t")
+    else:
+        df = pd.read_csv(fpath)
+
+    df.columns = [c.strip().upper() for c in df.columns]
+    return df, target["filename"], target["country_name"]
+
 
 def generate_country_preset_dataset(preset_id: str) -> Tuple[pd.DataFrame, str, str]:
     """
-    Generates country-specific microdata calibrated to the official survey methodologies:
-    - India PLFS (MoSPI)
-    - Kenya KISS (KNBS)
-    - Nigeria NLSS (NBS)
-    - Bangladesh QLFS (BBS)
+    DESACTIVADO: Prohibido generar datos sintéticos o inventados.
+    Intenta cargar microdatos reales desde data/microdatos_reales/.
+    Si no existen, levanta una excepción explicativa.
     """
-    np.random.seed(hash(preset_id) % (2**31 - 1))
-
-    if preset_id == "ds-plfs-ind" or "INDIA" in preset_id.upper():
-        num_records = 48500
-        filename = "SINTETICO_calibrado_PLFS_India.csv"
-        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: India MoSPI)"
-        
-        ages = np.random.randint(18, 64, size=num_records)
-        genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.47, 0.53])
-        educ_years = np.clip(np.random.normal(8.5, 4.2, size=num_records).astype(int), 0, 20)
-        human_capital = np.clip((educ_years / 20.0) * 80 + np.random.normal(12, 10, size=num_records), 5, 100)
-        
-        # Dual formal/informal score
-        score = 0.05 * human_capital + 0.07 * educ_years - np.random.exponential(2.2, size=num_records)
-        is_formal = (score > 2.8).astype(int)
-        
-        inc_formal = 16.0 + (human_capital / 100.0) * 32.0 + np.random.normal(4, 3, size=num_records)
-        inc_informal = 3.5 + (human_capital / 100.0) * 9.0 + np.random.normal(1.5, 1, size=num_records)
-        ingreso = np.where(is_formal == 1, np.clip(inc_formal, 10, 140), np.clip(inc_informal, 1.8, 35))
-        
-        df = pd.DataFrame({
-            'ESTADO_LABORAL': is_formal,
-            'INGRESO_NETO_DIA': np.round(ingreso, 2),
-            'CAPITAL_HUMANO': np.round(human_capital, 1),
-            'EDAD': ages,
-            'GENERO': genders,
-            'EDUCACION_ANIOS': educ_years,
-            'HORAS_SEMANA': np.round(np.where(is_formal == 1, np.random.normal(44, 5, num_records), np.random.normal(52, 14, num_records)), 1),
-            'APORTE_SEG_SOC': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.92, 0.08]), np.random.choice([1, 0], num_records, p=[0.06, 0.94])),
-            'TAM_EMPRESA': np.where(is_formal == 1, np.random.choice([15, 60, 200, 800], num_records), np.random.choice([1, 2, 5], num_records)),
-            'TASA_INSPECC': np.round(np.clip(np.random.beta(2, 6, num_records) * 100, 0, 100), 1),
-            'BANCARIZADO': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.95, 0.05]), np.random.choice([1, 0], num_records, p=[0.42, 0.58])),
-            'SECTOR_ECONOMICO': np.random.choice(['Manufactura', 'Comercio & Retail', 'Servicios Personales', 'Tecnología', 'Agroindustria'], num_records, p=[0.24, 0.32, 0.22, 0.12, 0.10]),
-            'INDUSTRY_NIC_2008': np.random.choice(['NIC-01 Agricultura', 'NIC-10 Confección', 'NIC-45 Comercio', 'NIC-62 IT/BPO', 'NIC-49 Transporte'], num_records),
-            'VOCATIONAL_TRAINING': np.random.choice(['Formal ITI', 'No Formal / Heredado', 'Sin Capacitación'], num_records, p=[0.18, 0.38, 0.44]),
-        })
-        return df, filename, institution
-
-    elif preset_id == "ds-knbs-ken" or "KENYA" in preset_id.upper():
-        num_records = 38000
-        filename = "SINTETICO_calibrado_KNBS_Kenya.csv"
-        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: Kenya KNBS)"
-        
-        ages = np.random.randint(18, 62, size=num_records)
-        genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.50, 0.50])
-        educ_years = np.clip(np.random.normal(9.8, 3.5, size=num_records).astype(int), 0, 20)
-        human_capital = np.clip((educ_years / 20.0) * 80 + np.random.normal(15, 8, size=num_records), 5, 100)
-        is_formal = (0.048 * human_capital + 0.08 * educ_years - np.random.exponential(1.9, num_records) > 3.0).astype(int)
-        
-        inc_formal = 22.0 + (human_capital / 100.0) * 36.0 + np.random.normal(5, 3, size=num_records)
-        inc_informal = 5.0 + (human_capital / 100.0) * 14.0 + np.random.normal(2, 1.5, size=num_records)
-        ingreso = np.where(is_formal == 1, np.clip(inc_formal, 12, 160), np.clip(inc_informal, 2.5, 45))
-        
-        df = pd.DataFrame({
-            'ESTADO_LABORAL': is_formal,
-            'INGRESO_NETO_DIA': np.round(ingreso, 2),
-            'CAPITAL_HUMANO': np.round(human_capital, 1),
-            'EDAD': ages,
-            'GENERO': genders,
-            'EDUCACION_ANIOS': educ_years,
-            'HORAS_SEMANA': np.round(np.where(is_formal == 1, np.random.normal(40, 4, num_records), np.random.normal(48, 12, num_records)), 1),
-            'APORTE_SEG_SOC': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.95, 0.05]), np.random.choice([1, 0], num_records, p=[0.08, 0.92])),
-            'TAM_EMPRESA': np.where(is_formal == 1, np.random.choice([10, 50, 150, 500], num_records), np.random.choice([1, 2, 4], num_records)),
-            'TASA_INSPECC': np.round(np.clip(np.random.beta(2, 5, num_records) * 100, 0, 100), 1),
-            'BANCARIZADO': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.96, 0.04]), np.random.choice([1, 0], num_records, p=[0.78, 0.22])),
-            'SECTOR_ECONOMICO': np.random.choice(['Comercio & Retail', 'Manufactura', 'Logística', 'Servicios Personales', 'Tecnología'], num_records, p=[0.35, 0.25, 0.18, 0.12, 0.10]),
-            'JUA_KALI_CLUSTER': np.random.choice(['Kamukunji Metalworks', 'Gikomba Garments', 'Kariobangi Light Ind', 'Rural Workshop'], num_records),
-            'M_PESA_TURNOVER_MONTH': np.round(np.clip(ingreso * 28.0 * np.random.uniform(1.2, 3.5, num_records), 80, 5000), 1),
-        })
-        return df, filename, institution
-
-    elif preset_id == "ds-nbs-nga" or "NIGERIA" in preset_id.upper():
-        num_records = 42000
-        filename = "SINTETICO_calibrado_NBS_Nigeria.csv"
-        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: Nigeria NBS)"
-        
-        ages = np.random.randint(18, 65, size=num_records)
-        genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.48, 0.52])
-        educ_years = np.clip(np.random.normal(8.2, 4.5, size=num_records).astype(int), 0, 20)
-        human_capital = np.clip((educ_years / 20.0) * 80 + np.random.normal(12, 10, size=num_records), 5, 100)
-        is_formal = (0.045 * human_capital + 0.06 * educ_years - np.random.exponential(2.4, num_records) > 3.2).astype(int)
-        
-        inc_formal = 18.0 + (human_capital / 100.0) * 35.0 + np.random.normal(5, 3, size=num_records)
-        inc_informal = 3.8 + (human_capital / 100.0) * 11.0 + np.random.normal(1.8, 1, size=num_records)
-        ingreso = np.where(is_formal == 1, np.clip(inc_formal, 11, 150), np.clip(inc_informal, 2, 40))
-        
-        df = pd.DataFrame({
-            'ESTADO_LABORAL': is_formal,
-            'INGRESO_NETO_DIA': np.round(ingreso, 2),
-            'CAPITAL_HUMANO': np.round(human_capital, 1),
-            'EDAD': ages,
-            'GENERO': genders,
-            'EDUCACION_ANIOS': educ_years,
-            'HORAS_SEMANA': np.round(np.where(is_formal == 1, np.random.normal(42, 5, num_records), np.random.normal(54, 15, num_records)), 1),
-            'APORTE_SEG_SOC': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.90, 0.10]), np.random.choice([1, 0], num_records, p=[0.05, 0.95])),
-            'TAM_EMPRESA': np.where(is_formal == 1, np.random.choice([12, 45, 180, 600], num_records), np.random.choice([1, 2, 4], num_records)),
-            'TASA_INSPECC': np.round(np.clip(np.random.beta(1.8, 6, num_records) * 100, 0, 100), 1),
-            'BANCARIZADO': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.93, 0.07]), np.random.choice([1, 0], num_records, p=[0.38, 0.62])),
-            'SECTOR_ECONOMICO': np.random.choice(['Comercio & Retail', 'Manufactura', 'Servicios Personales', 'Logística', 'Agroindustria'], num_records, p=[0.38, 0.22, 0.20, 0.12, 0.08]),
-            'CAC_REGISTRATION': np.where(is_formal == 1, 'Registrado CAC Formal', 'Informal No Registrado'),
-            'GENERATOR_COST_RATIO': np.round(np.random.uniform(0.08, 0.32, num_records) * 100, 1),
-        })
-        return df, filename, institution
-
-    else: # Bangladesh or default
-        num_records = 36000
-        filename = "SINTETICO_calibrado_BBS_Bangladesh.csv"
-        institution = "Datos sintéticos de demostración; no son microdatos oficiales (ref: Bangladesh BBS)"
-        
-        ages = np.random.randint(18, 60, size=num_records)
-        genders = np.random.choice(['Femenino', 'Masculino'], size=num_records, p=[0.52, 0.48])
-        educ_years = np.clip(np.random.normal(7.9, 4.0, size=num_records).astype(int), 0, 20)
-        human_capital = np.clip((educ_years / 20.0) * 80 + np.random.normal(14, 9, size=num_records), 5, 100)
-        is_formal = (0.046 * human_capital + 0.07 * educ_years - np.random.exponential(2.1, num_records) > 3.1).astype(int)
-        
-        inc_formal = 14.0 + (human_capital / 100.0) * 28.0 + np.random.normal(3, 2, size=num_records)
-        inc_informal = 3.2 + (human_capital / 100.0) * 8.5 + np.random.normal(1.2, 0.8, size=num_records)
-        ingreso = np.where(is_formal == 1, np.clip(inc_formal, 8, 120), np.clip(inc_informal, 1.8, 30))
-        
-        df = pd.DataFrame({
-            'ESTADO_LABORAL': is_formal,
-            'INGRESO_NETO_DIA': np.round(ingreso, 2),
-            'CAPITAL_HUMANO': np.round(human_capital, 1),
-            'EDAD': ages,
-            'GENERO': genders,
-            'EDUCACION_ANIOS': educ_years,
-            'HORAS_SEMANA': np.round(np.where(is_formal == 1, np.random.normal(48, 6, num_records), np.random.normal(56, 14, num_records)), 1),
-            'APORTE_SEG_SOC': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.88, 0.12]), np.random.choice([1, 0], num_records, p=[0.05, 0.95])),
-            'TAM_EMPRESA': np.where(is_formal == 1, np.random.choice([25, 150, 800, 2500], num_records), np.random.choice([1, 2, 6], num_records)),
-            'TASA_INSPECC': np.round(np.clip(np.random.beta(2, 6, num_records) * 100, 0, 100), 1),
-            'BANCARIZADO': np.where(is_formal == 1, np.random.choice([1, 0], num_records, p=[0.90, 0.10]), np.random.choice([1, 0], num_records, p=[0.35, 0.65])),
-            'SECTOR_ECONOMICO': np.random.choice(['Manufactura', 'Comercio & Retail', 'Servicios Personales', 'Agroindustria', 'Logística'], num_records, p=[0.42, 0.24, 0.16, 0.12, 0.06]),
-            'RMG_SUBCONTRACT': np.random.choice(['Export Tier 1', 'Subcontrato Informal Tier 3', 'Taller Local'], num_records, p=[0.30, 0.45, 0.25]),
-            'RURAL_MICROFINANCE': np.random.choice(['Grameen / BRAC', 'Prestamista Informal', 'Ninguno'], num_records, p=[0.45, 0.25, 0.30]),
-        })
-        return df, filename, institution
+    result = load_real_country_microdata(preset_id)
+    if result is not None:
+        return result
+    raise RuntimeError(
+        "Generación de datos sintéticos desactivada según el Principio General. "
+        "No se encontraron microdatos reales cargados en data/microdatos_reales/."
+    )
 
 
 def generate_synthetic_benchmark_dataset(num_records: int = 15420) -> pd.DataFrame:
-    df, _, _ = generate_country_preset_dataset("ds-knbs-ken")
-    return df.head(num_records)
+    """DESACTIVADO: Prohibido según el Principio General."""
+    raise RuntimeError("Generación de dataset sintético de benchmark desactivada.")
 
 
 # =====================================================================
 # 2. EDA ANALYTICS (Exploratory Data Analysis Pipeline)
 # =====================================================================
 
-def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[str, Any]:
+def compute_eda(df: Optional[pd.DataFrame], survey_source: Optional[str] = None) -> Dict[str, Any]:
     """
-    Computes rigorous exploratory data analysis metrics, correlation matrices,
-    and formal vs. informal distribution breakdowns.
+    Calcula análisis exploratorio riguroso sobre microdatos reales cargados.
+    Si no hay datos, retorna indicador explícito sin inventar cifras.
     """
+    if df is None or len(df) == 0:
+        return {
+            "has_data": False,
+            "message": "Sin microdatos reales cargados",
+            "kpis": {
+                "dataQuality": 0.0,
+                "completeness": 0.0,
+                "totalRecords": 0,
+                "totalRows": 0,
+                "totalVariables": 0,
+                "totalCols": 0,
+                "nullPercentage": 0.0,
+                "missingRate": 0.0,
+                "imputedRows": 0,
+                "numericCols": 0,
+                "categoricalCols": 0,
+                "imputationMethod": "Ninguno",
+                "surveySource": "Sin microdatos reales cargados",
+            },
+            "histograms": {
+                "salary": {"label": "Ingreso Laboral", "unit": "Moneda local", "data": []},
+                "hours": {"label": "Horas Semanales", "unit": "Horas", "data": []},
+                "education": {"label": "Años de Educación", "unit": "Años", "data": []},
+            },
+            "correlationVariables": [],
+            "correlationMatrix": [],
+            "highCorrelations": [],
+            "boxplots": [],
+        }
+
     total_records = len(df)
     total_variables = len(df.columns)
     
-    # Quality & Null computation
+    # Calidad y Nulos
     null_counts = df.isnull().sum()
     total_nulls = int(null_counts.sum())
     total_cells = max(1, total_records * total_variables)
     null_pct = round((total_nulls / total_cells) * 100.0, 2)
     data_quality = round(100.0 - null_pct, 1)
 
-    # Clean numeric columns for correlation matrix
     numeric_df = df.select_dtypes(include=[np.number]).copy()
     numeric_df.fillna(numeric_df.median(), inplace=True)
     
-    # Map friendly correlation variables
     var_aliases = {
         'ESTADO_LABORAL': 'Formalidad',
-        'INGRESO_NETO_DIA': 'Salario USD',
+        'INGRESO_NETO_DIA': 'Ingreso Diario',
         'CAPITAL_HUMANO': 'Cap. Humano',
         'EDUCACION_ANIOS': 'Años Educ.',
         'TAM_EMPRESA': 'Tam. Empresa',
@@ -232,14 +194,13 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
     }
     
     selected_cols = [c for c in ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'EDUCACION_ANIOS', 'TAM_EMPRESA', 'APORTE_SEG_SOC', 'TASA_INSPECC'] if c in numeric_df.columns]
-    if len(selected_cols) < 3:
+    if len(selected_cols) < 2:
         selected_cols = numeric_df.columns.tolist()[:6]
 
-    corr_sub = pd.DataFrame(numeric_df[selected_cols]).corr().fillna(0.0)
+    corr_sub = pd.DataFrame(numeric_df[selected_cols]).corr().fillna(0.0) if len(selected_cols) >= 2 else pd.DataFrame()
     corr_variables = [var_aliases.get(c, c) for c in selected_cols]
-    corr_matrix = [[round(float(val), 2) for val in row] for row in corr_sub.values]
+    corr_matrix = [[round(float(val), 2) for val in row] for row in corr_sub.values] if not corr_sub.empty else []
 
-    # Compute high correlations list (|r| > 0.7)
     high_correlations = []
     cols_len = len(selected_cols)
     for i in range(cols_len):
@@ -249,14 +210,7 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
             r_val = float(corr_sub.iloc[i, j])
             if abs(r_val) >= 0.65:
                 direction = "Positiva Fuerte" if r_val > 0 else "Negativa Fuerte"
-                impact_text = f"Fuerte interdependencia observada entre {var_aliases.get(col_a, col_a)} y {var_aliases.get(col_b, col_b)}."
-                if 'APORTE_SEG_SOC' in (col_a, col_b) and 'ESTADO_LABORAL' in (col_a, col_b):
-                    impact_text = "El registro a pensiones y salud es el predictor determinante más directo de estabilidad formal."
-                elif 'TAM_EMPRESA' in (col_a, col_b):
-                    impact_text = "Empresas medianas/grandes muestran elasticidad formal significativamente superior."
-                elif 'EDUCACION_ANIOS' in (col_a, col_b) or 'CAPITAL_HUMANO' in (col_a, col_b):
-                    impact_text = "Retorno de capital humano sustantivo que facilita la formalización contractual."
-                    
+                impact_text = f"Interdependencia observada entre {var_aliases.get(col_a, col_a)} y {var_aliases.get(col_b, col_b)}."
                 high_correlations.append({
                     "varA": var_aliases.get(col_a, col_a),
                     "varB": var_aliases.get(col_b, col_b),
@@ -266,90 +220,66 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
                     "impact": impact_text,
                 })
 
-    # Fallback high correlations if dataset is very small or synthetic
-    if not high_correlations:
-        high_correlations = [
-            {
-                "varA": "Aporte Continuo a Seguridad Social",
-                "varB": "Probabilidad de Formalidad Laboral",
-                "r": 0.84,
-                "pValue": "< 0.0001",
-                "direction": "Positiva Fuerte",
-                "impact": "El registro a pensiones y salud es el predictor determinante más directo de estabilidad formal.",
-            },
-            {
-                "varA": "Tamaño de la Unidad Productiva (Personal)",
-                "varB": "Aporte a Seguridad Social Colectivo",
-                "r": 0.79,
-                "pValue": "< 0.0001",
-                "direction": "Positiva Fuerte",
-                "impact": "Empresas con más de 10 trabajadores muestran elasticidad formal superior a 80%.",
-            }
-        ]
-
-    # Build Histograms
     is_formal_series = df['ESTADO_LABORAL'] if 'ESTADO_LABORAL' in df.columns else pd.Series(np.ones(total_records))
     formal_mask = is_formal_series == 1
     informal_mask = ~formal_mask
 
-    # 1. Salary distribution (USD/mes)
-    salary_series = df['INGRESO_NETO_DIA'] if 'INGRESO_NETO_DIA' in df.columns else pd.Series(np.random.uniform(5, 40, total_records))
-    salary_usd_month = salary_series * 30.0
-    salary_bins = [
-        ("< $200", 0, 200),
-        ("$200 - $350", 200, 350),
-        ("$350 - $550", 350, 550),
-        ("$550 - $800", 550, 800),
-        ("$800 - $1200", 800, 1200),
-        ("> $1200", 1200, 100000),
-    ]
+    # 1. Histograma de Ingresos (Moneda local)
     salary_hist_data = []
-    for lbl, low, high in salary_bins:
-        f_count = int(((salary_usd_month >= low) & (salary_usd_month < high) & formal_mask).sum())
-        inf_count = int(((salary_usd_month >= low) & (salary_usd_month < high) & informal_mask).sum())
-        total_bin = f_count + inf_count
-        density = round(total_bin / max(1, total_records), 2)
-        salary_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
+    if 'INGRESO_NETO_DIA' in df.columns:
+        salary_series = df['INGRESO_NETO_DIA'] * 30.0
+        salary_bins = [
+            ("< 200", 0, 200),
+            ("200 - 350", 200, 350),
+            ("350 - 550", 350, 550),
+            ("550 - 800", 550, 800),
+            ("800 - 1200", 800, 1200),
+            ("> 1200", 1200, 1000000),
+        ]
+        for lbl, low, high in salary_bins:
+            f_count = int(((salary_series >= low) & (salary_series < high) & formal_mask).sum())
+            inf_count = int(((salary_series >= low) & (salary_series < high) & informal_mask).sum())
+            total_bin = f_count + inf_count
+            density = round(total_bin / max(1, total_records), 2)
+            salary_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
 
-    # 2. Hours distribution
-    hours_series = df['HORAS_SEMANA'] if 'HORAS_SEMANA' in df.columns else pd.Series(np.random.normal(40, 8, total_records))
-    hours_bins = [
-        ("< 20h", 0, 20),
-        ("20 - 35h", 20, 35),
-        ("36 - 40h", 35, 40.5),
-        ("41 - 48h", 40.5, 48.5),
-        ("49 - 60h", 48.5, 60.5),
-        ("> 60h", 60.5, 200),
-    ]
+    # 2. Histograma de Horas
     hours_hist_data = []
-    for lbl, low, high in hours_bins:
-        f_count = int(((hours_series >= low) & (hours_series < high) & formal_mask).sum())
-        inf_count = int(((hours_series >= low) & (hours_series < high) & informal_mask).sum())
-        total_bin = f_count + inf_count
-        density = round(total_bin / max(1, total_records), 2)
-        hours_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
+    if 'HORAS_SEMANA' in df.columns:
+        hours_series = df['HORAS_SEMANA']
+        hours_bins = [
+            ("< 20h", 0, 20),
+            ("20 - 35h", 20, 35),
+            ("36 - 40h", 35, 40.5),
+            ("41 - 48h", 40.5, 48.5),
+            ("49 - 60h", 48.5, 60.5),
+            ("> 60h", 60.5, 200),
+        ]
+        for lbl, low, high in hours_bins:
+            f_count = int(((hours_series >= low) & (hours_series < high) & formal_mask).sum())
+            inf_count = int(((hours_series >= low) & (hours_series < high) & informal_mask).sum())
+            total_bin = f_count + inf_count
+            density = round(total_bin / max(1, total_records), 2)
+            hours_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
 
-    # 3. Education distribution
-    educ_series = df['EDUCACION_ANIOS'] if 'EDUCACION_ANIOS' in df.columns else pd.Series(np.random.normal(10, 3, total_records))
-    educ_bins = [
-        ("0 - 5 años (Primaria inc.)", 0, 6),
-        ("6 - 9 años (Primaria comp.)", 6, 10),
-        ("10 - 12 años (Secundaria)", 10, 13),
-        ("13 - 16 años (Superior)", 13, 17),
-        ("17+ años (Posgrado)", 17, 100),
-    ]
+    # 3. Histograma de Educación
     educ_hist_data = []
-    for lbl, low, high in educ_bins:
-        f_count = int(((educ_series >= low) & (educ_series < high) & formal_mask).sum())
-        inf_count = int(((educ_series >= low) & (educ_series < high) & informal_mask).sum())
-        total_bin = f_count + inf_count
-        density = round(total_bin / max(1, total_records), 2)
-        educ_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
+    if 'EDUCACION_ANIOS' in df.columns:
+        educ_series = df['EDUCACION_ANIOS']
+        educ_bins = [
+            ("0 - 5 años (Básica inc.)", 0, 6),
+            ("6 - 9 años (Básica comp.)", 6, 10),
+            ("10 - 12 años (Media)", 10, 13),
+            ("13 - 16 años (Superior)", 13, 17),
+            ("17+ años (Posgrado)", 17, 100),
+        ]
+        for lbl, low, high in educ_bins:
+            f_count = int(((educ_series >= low) & (educ_series < high) & formal_mask).sum())
+            inf_count = int(((educ_series >= low) & (educ_series < high) & informal_mask).sum())
+            total_bin = f_count + inf_count
+            density = round(total_bin / max(1, total_records), 2)
+            educ_hist_data.append({"range": lbl, "formalCount": f_count, "informalCount": inf_count, "density": density})
 
-    # Compute Boxplot metrics for Salary
-    formal_salaries = salary_usd_month[formal_mask]
-    informal_salaries = salary_usd_month[informal_mask]
-    
     def compute_box_stats(series: pd.Series, group_name: str) -> Dict[str, Any]:
         if len(series) == 0:
             return {"group": group_name, "min": 0, "q1": 0, "median": 0, "q3": 0, "max": 0, "outliers": []}
@@ -370,12 +300,16 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
             "outliers": outliers,
         }
 
-    boxplots = [
-        compute_box_stats(formal_salaries, "Empleo Formal"),
-        compute_box_stats(informal_salaries, "Empleo Informal"),
-    ]
+    boxplots = []
+    if 'INGRESO_NETO_DIA' in df.columns:
+        salary_m = df['INGRESO_NETO_DIA'] * 30.0
+        boxplots = [
+            compute_box_stats(salary_m[formal_mask], "Empleo Formal"),
+            compute_box_stats(salary_m[informal_mask], "Empleo Informal"),
+        ]
 
     return {
+        "has_data": True,
         "kpis": {
             "dataQuality": data_quality,
             "completeness": data_quality,
@@ -385,16 +319,16 @@ def compute_eda(df: pd.DataFrame, survey_source: Optional[str] = None) -> Dict[s
             "totalCols": total_variables,
             "nullPercentage": null_pct,
             "missingRate": null_pct,
-            "imputedRows": round(total_records * 0.08),
+            "imputedRows": 0,
             "numericCols": len(numeric_df.columns),
             "categoricalCols": total_variables - len(numeric_df.columns),
-            "imputationMethod": "Mediana / Moda (Demostración)",
-            "surveySource": survey_source or "Datos sintéticos de demostración; no son microdatos oficiales",
+            "imputationMethod": "Ninguno (microdatos reales oficiales)",
+            "surveySource": survey_source or "Microdatos reales cargados",
         },
         "histograms": {
-            "salary": {"label": "Ingreso Salarial Mensual", "unit": "USD", "data": salary_hist_data},
+            "salary": {"label": "Ingreso Laboral Mensual", "unit": "Moneda local", "data": salary_hist_data},
             "hours": {"label": "Horas Trabajadas Semanales", "unit": "Horas", "data": hours_hist_data},
-            "education": {"label": "Años de Educación Formal", "unit": "Años", "data": educ_hist_data},
+            "education": {"label": "Años de Educación", "unit": "Años", "data": educ_hist_data},
         },
         "correlationVariables": corr_variables,
         "correlationMatrix": corr_matrix,
@@ -617,141 +551,13 @@ def predict_cohort_transition(
     policy_params: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
-    Computes cohort transition probabilities over 1, 3, and 5-year horizons,
-    applying policy elasticities and extracting top-3 local SHAP feature drivers.
+    Las transiciones de cohortes requieren modelos entrenados sobre microdatos reales.
+    Sin microdatos reales cargados, retorna lista vacía según el Principio General.
     """
-    policy_params = policy_params or {}
-    
-    reg_reduc = float(policy_params.get("registrationCostReduction", 0.0))
-    sme_sub = float(policy_params.get("smeSubsidyUSDMonth", 0.0))
-    skills_cov = float(policy_params.get("skillsTrainingCoverage", 0.0))
-    insp_cov = float(policy_params.get("smartInspectionCoverage", 0.0))
-    
-    # Calculate policy acceleration factor (0.0 to ~0.35 boost)
-    policy_boost = (
-        (reg_reduc / 100.0) * 0.14 +
-        (sme_sub / 150.0) * 0.16 +
-        (skills_cov / 100.0) * 0.12 +
-        (insp_cov / 100.0) * 0.08
-    )
-
-    base_cohorts: List[Dict[str, Any]] = [
-        {
-            "id": "cohort-01",
-            "label": "Jóvenes (18-24) en comercio informal urbano",
-            "populationShare": 24.8,
-            "baseProb": 52.0,
-            "baseMonths": 18,
-            "drivers": [
-                ("Subsidio Guardería & Costo Cero RUC", 88, 0.34 + (reg_reduc / 250)),
-                ("Capacitación en Habilidades Digitales / E-commerce", 74, 0.27 + (skills_cov / 300)),
-                ("Microcrédito Bonificado con Monotributo", 62, 0.21 + (sme_sub / 500)),
-            ],
-            "policyIntervention": "Ventanilla única digital móvil con exención del 100% de aportes en el año 1 y créditos productivos vinculados a facturación electrónica.",
-            "barrier": "Altos costos fijos de entrada inicial y falta de historial crediticio en banca comercial.",
-        },
-        {
-            "id": "cohort-02",
-            "label": "Mujeres jefas de hogar en microcomercio y servicios",
-            "populationShare": 21.2,
-            "baseProb": 44.0,
-            "baseMonths": 24,
-            "drivers": [
-                ("Red de Cuidado Infantil Comunitario", 92, 0.41),
-                ("Seguro Social No Contributivo Transitorio", 79, 0.31 + (sme_sub / 400)),
-                ("Acceso a Terminales de Cobro Digital POS", 58, 0.19 + (reg_reduc / 400)),
-            ],
-            "policyIntervention": "Políticas integradas de economía del cuidado que liberan 18h semanales para gestión formal y formalización asociativa cooperativa.",
-            "barrier": "Pobreza de tiempo por sobrecarga de labores domésticas no remuneradas y precariedad de ingresos.",
-        },
-        {
-            "id": "cohort-03",
-            "label": "Trabajadores agrarios y rurales estacionales",
-            "populationShare": 18.6,
-            "baseProb": 32.0,
-            "baseMonths": 34,
-            "drivers": [
-                ("Régimen Laboral Agrario Discontinuo / Por Cosecha", 85, 0.38),
-                ("Seguro Catastrófico Climático Estatal", 69, 0.26),
-                ("Asociatividad Cooperativa de Productores", 64, 0.22 + (skills_cov / 350)),
-            ],
-            "policyIntervention": "Contratos agropecuarios temporales con cotización proporcional acumulable por jornales sin pérdida de programas sociales.",
-            "barrier": "Intermitencia de ingresos por ciclos climáticos y dispersión geográfica de las inspecciones laborales.",
-        },
-        {
-            "id": "cohort-04",
-            "label": "Microemprendedores de talleres y manufactura (Jua Kali)",
-            "populationShare": 19.5,
-            "baseProb": 56.0,
-            "baseMonths": 16,
-            "drivers": [
-                ("Conexión a Red Eléctrica Industrial Tarifa Social", 90, 0.43 + (sme_sub / 350)),
-                ("Compras Públicas Reservadas a Microempresas (20%)", 81, 0.33),
-                ("Certificación de Competencias Laborales", 56, 0.18 + (skills_cov / 400)),
-            ],
-            "policyIntervention": "Parques industriales ligeros con infraestructura compartida, maquinaria en alquiler y titulación acelerada de locales comerciales.",
-            "barrier": "Inseguridad jurídica sobre locales y costos exorbitantes de servicios básicos monofásicos.",
-        },
-        {
-            "id": "cohort-05",
-            "label": "Trabajadores de plataformas digitales y Gig Economy",
-            "populationShare": 15.9,
-            "baseProb": 62.0,
-            "baseMonths": 12,
-            "drivers": [
-                ("Aporte Automático en Fuente por Algoritmo de App", 95, 0.49 + (insp_cov / 300)),
-                ("Portabilidad de Beneficios Sociales Inter-Apps", 83, 0.35 + (reg_reduc / 400)),
-                ("Seguro contra Accidentes de Tránsito Cubierto por App", 71, 0.24),
-            ],
-            "policyIntervention": "Obligación a plataformas digitales de retener el 4% para fondo mutuo de pensiones y salud sin tipificación de relación de dependencia estricta.",
-            "barrier": "Vacío regulatorio internacional y asimetría de poder en la fijación de tarifas dinámicas por algoritmo.",
-        },
-    ]
-
-    result_cohorts = []
-    for c in base_cohorts:
-        raw_prob = c.get("baseProb", 0.0)
-        base_prob = float(raw_prob) if isinstance(raw_prob, (int, float)) else 50.0
-        raw_months = c.get("baseMonths", 12)
-        base_months = float(raw_months) if isinstance(raw_months, (int, float)) else 12.0
-        # Probabilities at 1, 3, and 5 years
-        effective_prob_1yr: float = min(96.0, base_prob * (1.0 + policy_boost))
-        effective_prob_3yr: float = min(98.5, effective_prob_1yr * 1.35)
-        effective_prob_5yr: float = min(99.4, effective_prob_3yr * 1.18)
-        
-        est_months = max(6, int(base_months * (1.0 - policy_boost * 0.7)))
-
-        # Format SHAP drivers
-        top_drivers = []
-        drivers_list = c.get("drivers", [])
-        if isinstance(drivers_list, list):
-            for item in drivers_list:
-                if isinstance(item, tuple) and len(item) == 3:
-                    feat_name, imp, shap_val = item
-                    shap_num = float(shap_val) if isinstance(shap_val, (int, float)) else 0.0
-                    shap_sign = f"+{round(shap_num, 2)}" if shap_num > 0 else f"{round(shap_num, 2)}"
-                    top_drivers.append({
-                        "feature": feat_name,
-                        "importance": imp,
-                        "shapValue": shap_sign,
-                    })
-
-        result_cohorts.append({
-            "id": c["id"],
-            "label": c["label"],
-            "populationShare": c["populationShare"],
-            "prob1Year": round(effective_prob_1yr, 1),
-            "prob3Year": round(effective_prob_3yr, 1),
-            "prob5Year": round(effective_prob_5yr, 1),
-            "estimatedMonths": est_months,
-            "topDrivers": top_drivers,
-            "policyIntervention": c["policyIntervention"],
-            "barrier": c["barrier"],
-        })
-
     return {
-        "model_id": model_id or "model-xgboost-prod-opt",
-        "cohorts": result_cohorts
+        "model_id": model_id or "ninguno",
+        "cohorts": [],
+        "status": "Sin microdatos reales cargados"
     }
 
 
@@ -760,53 +566,9 @@ def predict_cohort_transition(
 # =====================================================================
 
 def generate_synthetic_microdata(num_records: int = 5000, seed: int = 42) -> pd.DataFrame:
-    """Generates realistic labor microdata with demographic, productivity and policy variables."""
-    np.random.seed(seed)
+    """DESACTIVADO: Prohibido según el Principio General."""
+    raise RuntimeError("Generación de microdatos sintéticos desactivada. Utilice microdatos reales en data/microdatos_reales/.")
 
-    age = np.random.normal(36, 11, num_records).clip(18, 65).astype(int)
-    gender = np.random.choice(["Femenino", "Masculino"], size=num_records, p=[0.48, 0.52])
-    education_years = np.random.choice([6, 9, 12, 16], size=num_records, p=[0.25, 0.35, 0.28, 0.12])
-    firm_size = np.random.choice([1, 4, 15, 80], size=num_records, p=[0.45, 0.30, 0.15, 0.10])
-    experience_years = np.clip(age - education_years - 6, 0, 45)
-    human_capital = np.clip((education_years * 4.5 + experience_years * 0.8 + np.random.normal(0, 8, num_records)), 10, 100)
-
-    # Base formalization latent probability
-    latent_score = (
-        -3.2
-        + 0.05 * human_capital
-        + 0.03 * (firm_size > 5).astype(int) * 20
-        + 0.04 * education_years
-        + (0.3 if gender.tolist() == "Masculino" else 0.0)
-        + np.random.normal(0, 0.9, num_records)
-    )
-    prob_formal = 1.0 / (1.0 + np.exp(-latent_score))
-    is_formal = (prob_formal > 0.52).astype(int)
-
-    # Wages (log-normal)
-    base_wage = np.exp(2.0 + 0.02 * human_capital + 0.5 * is_formal + np.random.normal(0, 0.35, num_records))
-
-    df = pd.DataFrame({
-        "id_trabajador": [f"ID-{i:05d}" for i in range(num_records)],
-        "edad": age,
-        "genero": gender,
-        "anos_educacion": education_years,
-        "anos_experiencia": experience_years,
-        "tamano_empresa": firm_size,
-        "capital_humano": np.round(human_capital, 1),
-        "ingreso_usd_dia": np.round(base_wage, 2),
-        "es_formal": is_formal,
-        "probabilidad_formal": np.round(prob_formal, 3),
-        "sector_actividad": np.random.choice(
-            ["Manufactura", "Comercio", "Servicios", "Agroindustria", "Construcción", "Tecnología"],
-            size=num_records,
-            p=[0.20, 0.32, 0.22, 0.12, 0.08, 0.06]
-        ),
-        "acceso_credito_pyme": np.random.choice([0, 1], size=num_records, p=[0.70, 0.30]),
-        "gasto_capacitacion_usd": np.random.exponential(120, size=num_records).round(1),
-        "dias_tramite_registro": np.random.choice([3, 14, 30, 60, 90], size=num_records, p=[0.10, 0.20, 0.35, 0.25, 0.10]),
-    })
-
-    return df
 
 
 def compute_eda_summary(df: pd.DataFrame) -> Dict[str, Any]:
@@ -951,53 +713,10 @@ def compute_cohort_projections(
     policy_params: Dict[str, float],
     country_code: str = "KENYA"
 ) -> List[Dict[str, Any]]:
-    """Calculates 1-year, 3-year, and 5-year formalization probability projections by population cohort."""
-    reg_factor = policy_params.get("registrationCostReduction", 30.0) / 100.0
-    sub_factor = policy_params.get("smeSubsidyUSDMonth", 50.0) / 150.0
-    train_factor = policy_params.get("skillsTrainingCoverage", 25.0) / 100.0
+    """
+    Proyecciones de cohortes: deshabilitadas en ausencia de microdatos reales
+    de encuestas longitudinales según el Principio General.
+    """
+    return []
 
-    cohorts = [
-        {
-            "id": "c-01",
-            "cohort": "Jóvenes Menores de 25 años",
-            "share_pct": 28.5,
-            "base_prob": 14.2,
-            "prob_1y": round(14.2 + (train_factor * 12.0 + sub_factor * 6.0) * 0.4, 1),
-            "prob_3y": round(14.2 + (train_factor * 18.0 + sub_factor * 12.0 + reg_factor * 10.0) * 0.8, 1),
-            "prob_5y": round(14.2 + (train_factor * 26.0 + sub_factor * 19.0 + reg_factor * 16.0), 1),
-            "top_driver": "Capacitación Técnica Dual y Subsidio al Primer Empleo",
-        },
-        {
-            "id": "c-02",
-            "cohort": "Mujeres en Talleres y Autoempleo Familiar",
-            "share_pct": 34.0,
-            "base_prob": 11.5,
-            "prob_1y": round(11.5 + (reg_factor * 14.0 + sub_factor * 11.0) * 0.4, 1),
-            "prob_3y": round(11.5 + (reg_factor * 22.0 + sub_factor * 20.0 + train_factor * 10.0) * 0.8, 1),
-            "prob_5y": round(11.5 + (reg_factor * 32.0 + sub_factor * 28.0 + train_factor * 15.0), 1),
-            "top_driver": "Ventanilla Digital Móvil y Microcrédito con Subsidio",
-        },
-        {
-            "id": "c-03",
-            "cohort": "Trabajadores Urbanos de Plataformas y Gig Economy",
-            "share_pct": 18.2,
-            "base_prob": 22.0,
-            "prob_1y": round(22.0 + (reg_factor * 18.0 + sub_factor * 8.0) * 0.5, 1),
-            "prob_3y": round(22.0 + (reg_factor * 30.0 + sub_factor * 15.0 + train_factor * 14.0) * 0.85, 1),
-            "prob_5y": round(22.0 + (reg_factor * 42.0 + sub_factor * 22.0 + train_factor * 20.0), 1),
-            "top_driver": "Simplificación Tributaria Digital y Régimen Monotributo",
-        },
-        {
-            "id": "c-04",
-            "cohort": "Pequeños Productores Agroindustriales",
-            "share_pct": 19.3,
-            "base_prob": 9.8,
-            "prob_1y": round(9.8 + (sub_factor * 14.0 + train_factor * 8.0) * 0.35, 1),
-            "prob_3y": round(9.8 + (sub_factor * 26.0 + train_factor * 16.0 + reg_factor * 10.0) * 0.75, 1),
-            "prob_5y": round(9.8 + (sub_factor * 38.0 + train_factor * 24.0 + reg_factor * 15.0), 1),
-            "top_driver": "Encadenamiento Productivo y Certificación de Origen",
-        },
-    ]
-
-    return cohorts
 

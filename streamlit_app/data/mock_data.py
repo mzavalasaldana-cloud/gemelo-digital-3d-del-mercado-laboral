@@ -347,56 +347,7 @@ MOCK_USERS = DEMO_USERS
 # 5. DATASETS SINTÉTICOS DE PRECARGA (Datos de Demostración)
 # ==============================================================================
 
-DEMO_DATASETS: List[Dict[str, Any]] = [
-    {
-        "id": "ds-plfs-india",
-        "name": "SINTETICO_calibrado_PLFS_India.csv",
-        "country": "INDIA",
-        "records": 48500,
-        "variables": 14,
-        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
-        "institution": "Generador sintético calibrado (Demostración)",
-        "fileFormat": "CSV / Sintético Demostración",
-        "isVerified": False,
-        "isDemo": True,
-    },
-    {
-        "id": "ds-knbs-kenya",
-        "name": "SINTETICO_calibrado_KNBS_Kenya.csv",
-        "country": "KENYA",
-        "records": 38000,
-        "variables": 14,
-        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
-        "institution": "Generador sintético calibrado (Demostración)",
-        "fileFormat": "CSV / Sintético Demostración",
-        "isVerified": False,
-        "isDemo": True,
-    },
-    {
-        "id": "ds-nbs-nigeria",
-        "name": "SINTETICO_calibrado_NBS_Nigeria.csv",
-        "country": "NIGERIA",
-        "records": 42000,
-        "variables": 14,
-        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
-        "institution": "Generador sintético calibrado (Demostración)",
-        "fileFormat": "CSV / Sintético Demostración",
-        "isVerified": False,
-        "isDemo": True,
-    },
-    {
-        "id": "ds-bbs-bangladesh",
-        "name": "SINTETICO_calibrado_BBS_Bangladesh.csv",
-        "country": "BANGLADESH",
-        "records": 36000,
-        "variables": 14,
-        "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
-        "institution": "Generador sintético calibrado (Demostración)",
-        "fileFormat": "CSV / Sintético Demostración",
-        "isVerified": False,
-        "isDemo": True,
-    },
-]
+DEMO_DATASETS: List[Dict[str, Any]] = []
 
 # Alias de compatibilidad
 PRELOADED_DATASETS = DEMO_DATASETS

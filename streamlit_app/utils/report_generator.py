@@ -68,13 +68,12 @@ def generate_pdf_report(
     metrics_data = [
         ["Indicador Macroeconómico", "Valor Simulado", "Impacto vs Línea Base"],
         ["Tasa de Informalidad Laboral", f"{metrics.get('informalityRate', 0)}%", "Favorable (Reducción)"],
+        ["Informalidad Femenina", f"{metrics.get('informalityFemale', 0)}%", "Desagregación por Sexo"],
+        ["Informalidad Masculina", f"{metrics.get('informalityMale', 0)}%", "Desagregación por Sexo"],
+        ["Brecha de Género", f"{metrics.get('genderGap', 0):+.2f} pp", "Equidad de Género"],
         ["Índice de Concentración de Gini", f"{metrics.get('giniIndex', 0)}", "Mayor Equidad Salarial"],
-        ["Índice de Trabajo Decente OIT", f"{metrics.get('decentWorkIndex', 0)} / 100", "Alineado con ODS 8"],
-        ["Salario Promedio Formal (USD/día)", f"${metrics.get('avgFormalWageUSD', 0)}", "+ Habilidades y Productividad"],
-        ["Salario Promedio Informal (USD/día)", f"${metrics.get('avgInformalWageUSD', 0)}", "+ Red de Apoyo PYME"],
-        ["Ingresos Fiscales Proyectados", f"${metrics.get('fiscalRevenueMillionUSD', 0)}M USD", "Sostenibilidad Tributaria"],
-        ["Costo de Implementación del Paquete", f"${metrics.get('policyCostMillionUSD', 0)}M USD", "Inversión Pública"],
-        ["Balance Fiscal Neto", f"${metrics.get('netFiscalBalanceMillionUSD', 0)}M USD", "Superávit / Déficit Controlado"],
+        ["Recaudación Fiscal (Unidades Modelo)", f"{metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD', 0)):,.1f} u.m.", "Sostenibilidad Tributaria ITDT"],
+        ["Tasa Anual de Quiebra Empresarial", f"{metrics.get('annualExitRate', 0):.1f}%", "Fragilidad Estructural"],
     ]
     t1 = Table(metrics_data, colWidths=[240, 140, 160])
     t1.setStyle(TableStyle([
@@ -96,7 +95,7 @@ def generate_pdf_report(
     policies_data = [
         ["Palanca de Reforma", "Intensidad / Nivel", "Mecanismo de Transmisión"],
         ["Reducción de Costos de Registro", f"{policy_params.get('registrationCostReduction', 0)}%", "Disminuye barrera de entrada a formalidad"],
-        ["Subsidio Salarial Directo a PYMEs", f"${policy_params.get('smeSubsidyUSDMonth', 0)} USD/mes", "Fomenta absorción de empleo formal"],
+        ["Subsidio Salarial Directo a PYMEs", f"{policy_params.get('smeSubsidyUSDMonth', 0)} u.m./mes", "Fomenta absorción de empleo formal"],
         ["Cobertura de Formación y Habilidades", f"{policy_params.get('skillsTrainingCoverage', 0)}%", "Aumenta productividad laboral marginal"],
         ["Inspección Laboral Inteligente", f"{policy_params.get('smartInspectionCoverage', 0)}%", "Detección no punitiva y regularización"],
         ["Tasa de Contribución Social", f"{policy_params.get('socialProtectionTax', 0)}%", "Financiamiento de cobertura solidaria"],
@@ -140,15 +139,15 @@ def generate_excel_report(
         summary_df = pd.DataFrame([
             {"Parámetro": "País Analizado", "Valor": country_name},
             {"Parámetro": "Tasa de Informalidad Proyectada", "Valor": f"{metrics.get('informalityRate')}%"},
+            {"Parámetro": "Informalidad Femenina", "Valor": f"{metrics.get('informalityFemale')}%"},
+            {"Parámetro": "Informalidad Masculina", "Valor": f"{metrics.get('informalityMale')}%"},
+            {"Parámetro": "Brecha de Género (pp)", "Valor": f"{metrics.get('genderGap')}"},
             {"Parámetro": "Índice de Gini", "Valor": metrics.get("giniIndex")},
-            {"Parámetro": "Índice de Trabajo Decente", "Valor": f"{metrics.get('decentWorkIndex')}/100"},
             {"Parámetro": "Trabajadores Formales", "Valor": metrics.get("formalWorkersCount")},
             {"Parámetro": "Trabajadores Informales", "Valor": metrics.get("informalWorkersCount")},
-            {"Parámetro": "Salario Formal Promedio (USD)", "Valor": metrics.get("avgFormalWageUSD")},
-            {"Parámetro": "Salario Informal Promedio (USD)", "Valor": metrics.get("avgInformalWageUSD")},
-            {"Parámetro": "Ingresos Fiscales ($M)", "Valor": metrics.get("fiscalRevenueMillionUSD")},
-            {"Parámetro": "Costo de Políticas ($M)", "Valor": metrics.get("policyCostMillionUSD")},
-            {"Parámetro": "Balance Fiscal Neto ($M)", "Valor": metrics.get("netFiscalBalanceMillionUSD")},
+            {"Parámetro": "Recaudación Fiscal (Unidades del Modelo)", "Valor": metrics.get("fiscalRevenueModelUnits", metrics.get("fiscalRevenueMillionUSD"))},
+            {"Parámetro": "Tasa Anual de Quiebra (%)", "Valor": metrics.get("annualExitRate")},
+            {"Parámetro": "Fuente Oficial", "Valor": "Modelo ITDT calibrado / ILOSTAT"},
         ])
         summary_df.to_excel(writer, sheet_name="Resumen Ejecutivo", index=False)
 
@@ -207,8 +206,8 @@ def generate_html_report(
                 <div class="card-val">{metrics.get('giniIndex')}</div>
             </div>
             <div class="card">
-                <div class="card-label">Trabajo Decente OIT</div>
-                <div class="card-val">{metrics.get('decentWorkIndex')}/100</div>
+                <div class="card-label">Brecha de Género</div>
+                <div class="card-val">{metrics.get('genderGap', 0):+.2f} pp</div>
             </div>
         </div>
 
@@ -216,7 +215,7 @@ def generate_html_report(
         <table>
             <tr><th>Palanca</th><th>Valor</th></tr>
             <tr><td>Reducción Costos Registro</td><td>{policy_params.get('registrationCostReduction')}%</td></tr>
-            <tr><td>Subsidio PYMEs USD/mes</td><td>${policy_params.get('smeSubsidyUSDMonth')} USD</td></tr>
+            <tr><td>Subsidio PYMEs u.m./mes</td><td>{policy_params.get('smeSubsidyUSDMonth')} u.m.</td></tr>
             <tr><td>Cobertura Habilidades</td><td>{policy_params.get('skillsTrainingCoverage')}%</td></tr>
             <tr><td>Inspección Inteligente</td><td>{policy_params.get('smartInspectionCoverage')}%</td></tr>
             <tr><td>Tasa Protección Social</td><td>{policy_params.get('socialProtectionTax')}%</td></tr>

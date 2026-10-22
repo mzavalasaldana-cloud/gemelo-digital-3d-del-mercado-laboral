@@ -104,13 +104,14 @@ def render_dashboard_view():
             badge="Agentes ITDT"
         )
     with c4:
+        formal_pct = round(100.0 - metrics.get('informalityRate', 0.0), 1)
         render_metric_card(
-            label="Trabajo Decente",
-            value=f"{metrics.get('decentWorkIndex', 50)}/100",
-            delta="Indicador ilustrativo, no forma parte del artículo",
+            label="Empleo Formal",
+            value=f"{formal_pct}%",
+            delta=f"{metrics.get('formalWorkersCount', 0):,} trabajadores",
             delta_positive=True,
-            icon="🛡️",
-            badge="Ilustrativo"
+            icon="👔",
+            badge="ITDT"
         )
     with c5:
         exit_rate = metrics.get("annualExitRate", 0.0)
@@ -123,13 +124,14 @@ def render_dashboard_view():
             badge="Fragilidad"
         )
     with c6:
+        rev_val = metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD', 0.0))
         render_metric_card(
             label="Recaudación Fiscal",
-            value=f"${metrics.get('fiscalRevenueMillionUSD', 0.0)}M",
-            delta="Imp. Soc + Seg. Soc",
+            value=f"{rev_val:,.1f}",
+            delta="Unidades de modelo (ITDT)",
             delta_positive=True,
             icon="🏛️",
-            badge="Fiscal"
+            badge="Modelo"
         )
 
     st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)

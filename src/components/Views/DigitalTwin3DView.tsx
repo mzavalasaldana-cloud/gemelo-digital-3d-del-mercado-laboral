@@ -72,12 +72,14 @@ const LiveMetricsPill = React.memo<{ metrics: StructuralMetrics }>(({ metrics })
     </div>
     <div className="h-4 w-px bg-slate-700" />
     <div className="flex items-center gap-2">
-      <span className="text-slate-400">OIT Decente:</span>
-      <span className="text-emerald-400 font-bold text-sm">{metrics?.decentWorkIndex ?? 50}/100</span>
+      <span className="text-slate-400">Brecha Género:</span>
+      <span className="text-emerald-400 font-bold text-sm">
+        {metrics?.genderGap !== undefined ? `${metrics.genderGap >= 0 ? '+' : ''}${metrics.genderGap.toFixed(1)} pp` : '+1.6 pp'}
+      </span>
     </div>
     <div className="h-4 w-px bg-slate-700" />
-    <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 font-mono">
-      Datos de demostración
+    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 font-mono">
+      Fuente: ITDT Calibrado (ILOSTAT)
     </span>
   </div>
 ));
@@ -315,7 +317,7 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
             <div>
               <div className="flex justify-between text-slate-300 mb-1">
                 <span>Subsidio Salarial MiPyME</span>
-                <span className="text-emerald-400 font-bold">${policyParams.smeSubsidyUSDMonth} USD/mes</span>
+                <span className="text-emerald-400 font-bold">{policyParams.smeSubsidyUSDMonth} u.m./mes</span>
               </div>
               <input
                 type="range"

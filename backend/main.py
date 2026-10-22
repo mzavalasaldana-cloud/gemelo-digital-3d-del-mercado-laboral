@@ -4,7 +4,7 @@ import asyncio
 import logging
 import json
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Tuple
 from contextlib import asynccontextmanager
 
 from fastapi import (
@@ -45,8 +45,8 @@ from .ml_engine import (
     compute_eda,
     run_stratified_cv,
     predict_cohort_transition,
-    generate_synthetic_benchmark_dataset,
-    generate_country_preset_dataset,
+    load_real_country_microdata,
+    scan_real_microdatasets,
     DATA_STORE_DIR,
 )
 from .simulation_engine import (
@@ -66,9 +66,9 @@ logger = logging.getLogger("labortwin.server")
 # In-memory cached active dataset
 ACTIVE_DATASET_CACHE: Dict[str, Any] = {
     "df": None,
-    "filename": "SINTETICO_benchmark_microdatos_armonizados.csv",
+    "filename": None,
     "records_count": 0,
-    "model_id": "model-xgboost-prod-opt",
+    "model_id": None,
 }
 
 @asynccontextmanager
@@ -76,56 +76,39 @@ async def lifespan(app: FastAPI):
     # 1. Initialize database schema
     await init_db()
     
-    # 2. Check or initialize active benchmark dataset
+    # 2. Check for active microdataset in database or data/microdatos_reales/
     async with AsyncSessionLocal() as session:
         result = await session.execute(
             select(DatasetModel).where(DatasetModel.is_active == True).order_by(desc(DatasetModel.created_at))
         )
         active_ds = result.scalars().first()
-        
-        benchmark_path = os.path.join(DATA_STORE_DIR, "SINTETICO_benchmark_microdatos_armonizados.csv")
 
         if active_ds is not None and getattr(active_ds, "filepath", None):
             filepath_str = str(active_ds.filepath)
-            if os.path.exists(filepath_str):
-                logger.info(f"Loading existing active dataset from {filepath_str}")
+            if os.path.exists(filepath_str) and "_archivado" not in filepath_str and not os.path.basename(filepath_str).startswith("SINTETICO_"):
+                logger.info(f"Loading existing active real dataset from {filepath_str}")
                 ACTIVE_DATASET_CACHE["df"] = pd.read_csv(filepath_str)
                 ACTIVE_DATASET_CACHE["filename"] = active_ds.filename
                 ACTIVE_DATASET_CACHE["records_count"] = active_ds.records_count
-        elif os.path.exists(benchmark_path):
-            logger.info(f"Loading existing benchmark dataset from {benchmark_path}")
-            df = pd.read_csv(benchmark_path)
-            ACTIVE_DATASET_CACHE["df"] = df
-            ACTIVE_DATASET_CACHE["filename"] = "SINTETICO_benchmark_microdatos_armonizados.csv"
-            ACTIVE_DATASET_CACHE["records_count"] = len(df)
-            new_ds = DatasetModel(
-                filename="SINTETICO_benchmark_microdatos_armonizados.csv",
-                filepath=benchmark_path,
-                records_count=len(df),
-                features_list=df.columns.tolist(),
-                is_active=True,
-            )
-            session.add(new_ds)
-            await session.commit()
+            else:
+                ACTIVE_DATASET_CACHE["df"] = None
+                ACTIVE_DATASET_CACHE["filename"] = None
+                ACTIVE_DATASET_CACHE["records_count"] = 0
         else:
-            logger.info("Generating initial synthetic benchmark dataset...")
-            df = generate_synthetic_benchmark_dataset(num_records=15420)
-            df.to_csv(benchmark_path, index=False)
-            
-            new_ds = DatasetModel(
-                filename="SINTETICO_benchmark_microdatos_armonizados.csv",
-                filepath=benchmark_path,
-                records_count=len(df),
-                features_list=df.columns.tolist(),
-                is_active=True,
-            )
-            session.add(new_ds)
-            await session.commit()
-            
-            ACTIVE_DATASET_CACHE["df"] = df
-            ACTIVE_DATASET_CACHE["filename"] = new_ds.filename
-            ACTIVE_DATASET_CACHE["records_count"] = len(df)
-            logger.info(f"Initial benchmark dataset registered (ID: {new_ds.id}, Records: {len(df)})")
+            # Check if any official microdata exists in data/microdatos_reales/
+            real_data = load_real_country_microdata("kenya")
+            if real_data is not None:
+                df, fname, inst = real_data
+                ACTIVE_DATASET_CACHE["df"] = df
+                ACTIVE_DATASET_CACHE["filename"] = fname
+                ACTIVE_DATASET_CACHE["records_count"] = len(df)
+                ACTIVE_DATASET_CACHE["institution"] = inst
+                logger.info(f"Real microdata loaded from data/microdatos_reales/: {fname}")
+            else:
+                logger.info("Sin microdatos reales cargados en data/microdatos_reales/. Motor IA en espera.")
+                ACTIVE_DATASET_CACHE["df"] = None
+                ACTIVE_DATASET_CACHE["filename"] = None
+                ACTIVE_DATASET_CACHE["records_count"] = 0
             
     yield
     logger.info("Shutting down LaborTwin API server.")
@@ -241,10 +224,19 @@ async def select_preset_dataset(
     db: AsyncSession = Depends(get_async_db)
 ):
     """
-    Loads and activates a specific official survey dataset (PLFS India, KNBS Kenya, NBS Nigeria, BBS Bangladesh).
+    Carga microdatos reales desde data/microdatos_reales/<pais>/.
+    Si no existen archivos reales cargados, retorna 'Sin microdatos reales cargados'.
     """
-    preset_id = payload.get("dataset_id") or payload.get("id") or "ds-plfs-ind"
-    df, filename, institution = generate_country_preset_dataset(preset_id)
+    preset_id = payload.get("dataset_id") or payload.get("id") or "kenya"
+    real_data = load_real_country_microdata(preset_id)
+    if real_data is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Sin microdatos reales cargados para este país en data/microdatos_reales/. "
+                   "Consulte data/microdatos_reales/README.md para las instrucciones de carga."
+        )
+
+    df, filename, institution = real_data
     file_path = os.path.join(DATA_STORE_DIR, filename)
     df.to_csv(file_path, index=False)
 
@@ -265,10 +257,10 @@ async def select_preset_dataset(
     ACTIVE_DATASET_CACHE["records_count"] = len(df)
     ACTIVE_DATASET_CACHE["institution"] = institution
 
-    logger.info(f"Preset dataset '{filename}' activated ({len(df)} records).")
+    logger.info(f"Microdatos reales '{filename}' activados ({len(df)} registros).")
     return {
         "status": "success",
-        "message": f"Dataset '{filename}' cargado en memoria exitosamente ({len(df):,} observaciones).",
+        "message": f"Microdatos reales '{filename}' cargados exitosamente ({len(df):,} observaciones).",
         "dataset": new_dataset.to_dict(),
         "institution": institution,
     }
@@ -364,121 +356,12 @@ async def perform_cross_validation(req: CrossValidationRequest):
 
 
 # Models Leaderboard Registry & Active Deployed Champion Model
-MODELS_REGISTRY = [
-    {
-        "id": "algo-xgboost",
-        "name": "XGBoost Gradient Boosted Trees v3.4",
-        "algorithm": "xgboost",
-        "f1Score": 0.914,
-        "rocAuc": 0.948,
-        "latencyMs": 1.8,
-        "interpretability": 82,
-        "accuracy": 92.6,
-        "isDeployed": True,
-        "parameters": {
-            "max_depth": 5,
-            "learning_rate": 0.08,
-            "n_estimators": 150,
-            "subsample": 0.85,
-            "colsample_bytree": 0.80,
-            "reg_lambda": 1.25,
-            "eval_metric": "logloss"
-        }
-    },
-    {
-        "id": "algo-lightgbm",
-        "name": "LightGBM Hist-Gradient Boost v4.1",
-        "algorithm": "lightgbm",
-        "f1Score": 0.921,
-        "rocAuc": 0.954,
-        "latencyMs": 1.4,
-        "interpretability": 84,
-        "accuracy": 93.1,
-        "isDeployed": False,
-        "parameters": {
-            "num_leaves": 31,
-            "learning_rate": 0.05,
-            "n_estimators": 200,
-            "feature_fraction": 0.85,
-            "bagging_fraction": 0.80,
-            "min_child_samples": 20
-        }
-    },
-    {
-        "id": "algo-catboost",
-        "name": "CatBoost Categorical Boosting v1.2",
-        "algorithm": "catboost",
-        "f1Score": 0.918,
-        "rocAuc": 0.951,
-        "latencyMs": 2.2,
-        "interpretability": 80,
-        "accuracy": 92.9,
-        "isDeployed": False,
-        "parameters": {
-            "iterations": 250,
-            "depth": 6,
-            "learning_rate": 0.07,
-            "l2_leaf_reg": 3.0
-        }
-    },
-    {
-        "id": "algo-rf",
-        "name": "Random Forest Ensemble (500 Trees)",
-        "algorithm": "random_forest",
-        "f1Score": 0.887,
-        "rocAuc": 0.921,
-        "latencyMs": 3.4,
-        "interpretability": 89,
-        "accuracy": 89.8,
-        "isDeployed": False,
-        "parameters": {
-            "n_estimators": 500,
-            "max_depth": 14,
-            "min_samples_split": 5,
-            "bootstrap": True
-        }
-    },
-    {
-        "id": "algo-deepnn",
-        "name": "Deep Residual Network (Embedding PyTorch)",
-        "algorithm": "deepnn",
-        "f1Score": 0.928,
-        "rocAuc": 0.961,
-        "latencyMs": 7.2,
-        "interpretability": 44,
-        "accuracy": 93.9,
-        "isDeployed": False,
-        "parameters": {
-            "hidden_layers": [256, 128, 64],
-            "dropout": 0.25,
-            "learning_rate": 0.001,
-            "batch_size": 64
-        }
-    },
-    {
-        "id": "algo-logreg",
-        "name": "Regresión Logística Regularizada (ElasticNet)",
-        "algorithm": "logreg",
-        "f1Score": 0.815,
-        "rocAuc": 0.852,
-        "latencyMs": 0.6,
-        "interpretability": 98,
-        "accuracy": 82.4,
-        "isDeployed": False,
-        "parameters": {
-            "penalty": "elasticnet",
-            "l1_ratio": 0.5,
-            "C": 1.0,
-            "solver": "saga"
-        }
-    },
-]
+MODELS_REGISTRY: List[Dict[str, Any]] = []
 
 ACTIVE_DEPLOYED_MODEL: Dict[str, Any] = {
-    **MODELS_REGISTRY[0],
-    "deployedBy": "Streamlit AI Studio (Auto-Champion)",
-    "deployedAt": "2026-09-28T11:20:00Z",
-    "status": "active"
+    "active_model_id": None,
+    "active_model": None,
+    "status": "Sin microdatos reales cargados"
 }
 
 

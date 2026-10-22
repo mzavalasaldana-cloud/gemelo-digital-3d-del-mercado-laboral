@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "title": "ILOSTAT Gradients by Education and Geographic Area",
+    "query_date": "2026-10-22",
+    "indicators": [
+      "EMP_NIFL_SEX_EDU_RT",
+      "EMP_NIFL_SEX_GEO_RT"
+    ],
+    "countries": [
+      "KEN",
+      "NGA",
+      "IND",
+      "BGD"
+    ]
+  },
+  "raw_files": [
+    "ilostat_EMP_NIFL_SEX_EDU_RT_KEN_raw.json",
+    "ilostat_EMP_NIFL_SEX_EDU_RT_NGA_raw.json",
+    "ilostat_EMP_NIFL_SEX_EDU_RT_IND_raw.json",
+    "ilostat_EMP_NIFL_SEX_EDU_RT_BGD_raw.json",
+    "ilostat_EMP_NIFL_SEX_GEO_RT_KEN_raw.json",
+    "ilostat_EMP_NIFL_SEX_GEO_RT_NGA_raw.json",
+    "ilostat_EMP_NIFL_SEX_GEO_RT_IND_raw.json",
+    "ilostat_EMP_NIFL_SEX_GEO_RT_BGD_raw.json"
+  ],
+  "missing_combinations": []
+}

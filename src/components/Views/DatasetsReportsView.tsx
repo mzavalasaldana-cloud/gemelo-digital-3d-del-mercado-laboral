@@ -621,7 +621,14 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {DEMO_DATASETS.map((ds) => {
+                {DEMO_DATASETS.length === 0 ? (
+                  <div className={`col-span-full p-8 text-center rounded-2xl border border-dashed ${isLight ? 'border-slate-300 bg-slate-50 text-slate-600' : 'border-slate-800 bg-slate-900/40 text-slate-400'}`}>
+                    <Database className="w-8 h-8 mx-auto mb-2 text-slate-400 opacity-60" />
+                    <p className="font-semibold text-sm">Sin microdatos reales cargados</p>
+                    <p className="text-xs text-slate-400 mt-1">Coloque las encuestas de empleo en <code>data/microdatos_reales/&lt;pais&gt;/</code> según las especificaciones de <code>README.md</code>.</p>
+                  </div>
+                ) : (
+                  DEMO_DATASETS.map((ds) => {
                   const isCurrentActive = isDatasetLoaded && (loadedDatasetName === ds.name || country === ds.country);
                   const isLoadingThis = loadingDatasetId === ds.id;
 
@@ -712,7 +719,8 @@ export const DatasetsReportsView: React.FC<DatasetsReportsViewProps> = ({
                       </button>
                     </div>
                   );
-                })}
+                })
+              )}
               </div>
             </div>
 

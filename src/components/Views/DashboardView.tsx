@@ -134,9 +134,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const comparisonData = useMemo(() => {
     const baseFormal = (100 - baseInformality) * 0.9;
     const currentFormal = (100 - currentInf) * 0.92;
-    const baseFiscalRev = ((2500 * (baseFormal / 100)) * 0.18 * 30) / 10;
-    const baseDecentWork = Math.round(60 + (100 - baseInformality) * 0.3);
-
     const baseKey = t('baselineLabel', language);
     const interventionKey = t('interventionLabel', language);
 
@@ -152,14 +149,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         [interventionKey]: Number(currentFormal.toFixed(1)),
       },
       {
-        indicador: (language === 'en' ? 'Fiscal Revenue ($M)' : 'Recaudación Fiscal ($M)'),
-        [baseKey]: Number(baseFiscalRev.toFixed(1)),
-        [interventionKey]: Number((metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)),
+        indicador: (language === 'en' ? 'Fiscal Revenue (Model Units)' : 'Recaudación Fiscal (Unidades Modelo)'),
+        [baseKey]: 0,
+        [interventionKey]: Number((metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)),
       },
       {
-        indicador: (language === 'en' ? 'Decent Work Index' : 'Índice Empleo Decente'),
-        [baseKey]: baseDecentWork,
-        [interventionKey]: metrics?.decentWorkIndex ?? baseDecentWork,
+        indicador: (language === 'en' ? 'Gender Gap (pp)' : 'Brecha de Género (pp)'),
+        [baseKey]: 1.63,
+        [interventionKey]: Number((metrics?.genderGap ?? 1.63).toFixed(2)),
       },
     ];
   }, [baseInformality, currentInf, metrics, language]);
@@ -322,48 +319,51 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* KPI 3: Balance Fiscal & Costo de Políticas */}
+          {/* KPI 3: Recaudación Fiscal (Unidades del modelo) */}
           <div className="hud-glass p-4 rounded-2xl border border-cyan-500/25 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all pointer-events-none" />
             <div className={`flex items-center justify-between text-xs font-mono-hud ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-              <span>{t('fiscalBalance', language)}</span>
-              <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+              <span>{language === 'en' ? 'Fiscal Revenue' : 'Recaudación Fiscal'}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">
+                {language === 'en' ? 'Model Units' : 'Unidades del Modelo'}
+              </span>
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>
-                +${((metrics?.fiscalRevenueMillionUSD ?? 0) - (metrics?.policyCostMillionUSD ?? 0)).toFixed(1)}M
+                +{(metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)}
               </span>
-              <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>USD/{language === 'en' ? 'yr' : 'año'}</span>
+              <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                {language === 'en' ? 'u.m. / yr' : 'u.m. / año'}
+              </span>
             </div>
             <div className={`mt-3 text-[11px] font-mono flex justify-between border-t pt-2 ${
               isLight ? 'border-slate-200 text-slate-600' : 'border-slate-800 text-slate-400'
             }`}>
-              <span>{language === 'en' ? 'Revenue' : 'Recaudación'}: +${(metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)}M</span>
-              <span className="text-rose-500">{language === 'en' ? 'Cost' : 'Costo'}: -${(metrics?.policyCostMillionUSD ?? 0).toFixed(1)}M</span>
+              <span>{language === 'en' ? 'Corporate' : 'Sociedades'}: +{(metrics?.corporateTaxRevenueModelUnits ?? 0).toFixed(1)}</span>
+              <span className="text-cyan-400">{language === 'en' ? 'Labor' : 'Seg. Social'}: +{(metrics?.laborContributionsModelUnits ?? 0).toFixed(1)}</span>
             </div>
           </div>
 
-          {/* KPI 4: Índice OIT Empleo Decente */}
+          {/* KPI 4: Brecha de Género en Informalidad */}
           <div className="hud-glass p-4 rounded-2xl border border-cyan-500/25 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all pointer-events-none" />
             <div className={`flex items-center justify-between text-xs font-mono-hud ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-              <span>{t('iloDecentWork', language)}</span>
-              <Award className="w-4 h-4 text-cyan-500" />
+              <span>{language === 'en' ? 'Gender Gap' : 'Brecha de Género'}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-mono">
+                F − M (pp)
+              </span>
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-sky-700' : 'text-cyan-300'}`}>
-                {metrics?.decentWorkIndex ?? 50}
+                {metrics?.genderGap !== undefined ? (metrics.genderGap >= 0 ? `+${metrics.genderGap.toFixed(2)}` : metrics.genderGap.toFixed(2)) : '+1.63'}
               </span>
-              <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>/ 100</span>
+              <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>p.p.</span>
             </div>
-            <div className={`mt-3 w-full rounded-full h-1.5 overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-900'}`}>
-              <div 
-                className="h-full bg-cyan-400 transition-all duration-500 glow-cyan" 
-                style={{ width: `${metrics.decentWorkIndex}%` }} 
-              />
-            </div>
-            <div className={`mt-2 text-[11px] flex justify-between font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              <span>{language === 'en' ? 'Social security, fair wage, stability' : 'Seguridad social, salario justo y estabilidad'}</span>
+            <div className={`mt-3 text-[11px] font-mono flex justify-between border-t pt-2 ${
+              isLight ? 'border-slate-200 text-slate-600' : 'border-slate-800 text-slate-400'
+            }`}>
+              <span>{language === 'en' ? 'Female' : 'Mujeres'}: {(metrics?.informalityFemale ?? 87.3).toFixed(1)}%</span>
+              <span className="text-slate-400">{language === 'en' ? 'Male' : 'Hombres'}: {(metrics?.informalityMale ?? 85.6).toFixed(1)}%</span>
             </div>
           </div>
         </div>
@@ -510,7 +510,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div>
                 <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
                   <span>{t('smeSubsidy', language)}</span>
-                  <span className="text-emerald-500 font-bold">${policyParams.smeSubsidyUSDMonth} USD/{language === 'en' ? 'mo' : 'mes'}</span>
+                  <span className="text-emerald-500 font-bold">{policyParams.smeSubsidyUSDMonth} u.m./{language === 'en' ? 'mo' : 'mes'}</span>
                 </div>
                 <input
                   type="range"

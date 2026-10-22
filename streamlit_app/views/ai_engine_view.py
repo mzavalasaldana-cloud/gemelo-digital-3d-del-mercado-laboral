@@ -14,7 +14,7 @@ import urllib.request
 import urllib.error
 
 from backend.ml_engine import (
-    generate_synthetic_microdata,
+    load_real_country_microdata,
     compute_eda_summary,
     run_cross_validation_models,
     compute_cohort_projections
@@ -26,14 +26,6 @@ from streamlit_app.utils.ui_components import (
     render_explainability_card,
     apply_chart_theme
 )
-
-@st.cache_data(show_spinner=False)
-def get_cached_ml_data():
-    """Generates and caches 5,000 synthetic survey microdata records for ML training."""
-    df = generate_synthetic_microdata(num_records=5000)
-    cv_res = run_cross_validation_models(df)
-    eda_res = compute_eda_summary(df)
-    return df, cv_res, eda_res
 
 def deploy_model_to_backend(model_id: str, model_data: dict) -> dict:
     """Sends deploy command to FastAPI backend to update the active champion model."""
@@ -69,10 +61,35 @@ def deploy_model_to_backend(model_id: str, model_data: dict) -> dict:
 
 def render_ai_engine_view():
     """Renders the comprehensive AI Engine & Algorithm Explainability Module."""
-    df, cv_res, eda_res = get_cached_ml_data()
-    policy_params = st.session_state.get("policy_params", {})
     country_code = st.session_state.get("country", "KENYA")
+    policy_params = st.session_state.get("policy_params", {})
     role = st.session_state.get("role", "ADMIN")
+
+    df = load_real_country_microdata(country_code)
+
+    if df is None or len(df) == 0:
+        st.markdown(f"""
+        <div style="background: rgba(11, 18, 32, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(245, 158, 11, 0.4);
+                    border-radius: 16px; padding: 32px; margin-top: 20px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 12px;">📁🔒</div>
+            <h2 style="color: #f8fafc; margin-bottom: 8px;">Sin microdatos reales cargados</h2>
+            <p style="color: #94a3b8; max-width: 620px; margin: 0 auto 16px auto; font-size: 0.95rem; line-height: 1.6;">
+                El sistema opera bajo el principio estricto de integridad científica: está prohibido el uso de datos sintéticos o inventados. 
+                Para habilitar el entrenamiento de modelos de Machine Learning (XGBoost, LightGBM, Random Forest), el análisis exploratorio (EDA) 
+                y las proyecciones de cohortes para <b>{country_code}</b>, coloque los microdatos oficiales de la encuesta laboral en:
+            </p>
+            <code style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 240, 255, 0.3); padding: 8px 16px; border-radius: 8px; color: #00f0ff; font-size: 0.9rem;">
+                data/microdatos_reales/{country_code.lower()}/
+            </code>
+            <p style="color: #64748b; font-size: 0.82rem; margin-top: 14px;">
+                Consulte <b>data/microdatos_reales/README.md</b> para la especificación del esquema de variables requeridas.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        return
+
+    cv_res = run_cross_validation_models(df)
+    eda_res = compute_eda_summary(df)
 
     # Initialize Active Deployed Model in Session State if not present
     if "deployed_model_id" not in st.session_state:

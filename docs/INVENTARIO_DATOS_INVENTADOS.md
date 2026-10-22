@@ -1,0 +1,48 @@
+# Inventario Exhaustivo de Datos Inventados, Sintéticos y Sin Fuente
+
+**Fecha de auditoría:** 21 de octubre de 2026  
+**Objetivo:** Identificar todos los datos sintéticos, constantes `DEMO_`/`MOCK_`, números fijos no empíricos, fórmulas sin fuente y conversiones a USD en la aplicación web (`backend/`, `streamlit_app/`, `src/`, `web_demo/`, `data_store/`, `models_store/`), para su remoción o archivado, garantizando que el sistema opere exclusivamente con datos reales o salidas del modelo canónico `itdt/`.
+
+---
+
+## 1. Tabla de Inventario
+
+| Archivo | Líneas aprox. | Elemento / Variable | Qué inventa | Acción a realizar |
+| :--- | :--- | :--- | :--- | :--- |
+| **`data_store/`** | — | `SINTETICO_calibrado_PLFS_India.csv`<br>`SINTETICO_calibrado_KNBS_Kenya.csv`<br>`SINTETICO_calibrado_NBS_Nigeria.csv`<br>`SINTETICO_benchmark_microdatos_armonizados.csv` | Microdatos sintéticos creados con distribuciones estadísticas artificiales (`np.random`). | **Mover a `data_store/_archivado/`**. Nunca volver a usar como microdatos reales. |
+| **`models_store/`** | — | `model-lightgbm-0f0dbbfc.joblib`<br>`model-random_forest-082db6a3.joblib`<br>`model-xgboost-3a05e766.joblib` | Modelos de Machine Learning entrenados sobre los datasets sintéticos artificiales de `data_store/`. | **Mover a `models_store/_archivado/`**. La app solo entrenará si el usuario carga microdatos reales en `data/microdatos_reales/`. |
+| **`backend/ml_engine.py`** | 47–195 | `generate_country_preset_dataset()` | Genera 36 000 a 48 500 registros con distribuciones `np.random` (ingreso, capital humano, inspecciones, aportes) para KEN, NGA, IND y BGD. | **Desactivar completamente**. Modificar para que no genere datos y devuelva "Sin microdatos reales cargados". |
+| **`backend/ml_engine.py`** | 762–840 | `generate_synthetic_microdata()` | Generador sintético de 5 000 registros con `np.random` usado por Streamlit. | **Desactivar / archivar**. Reemplazar por cargador de microdatos reales desde `data/microdatos_reales/`. |
+| **`backend/ml_engine.py`** | 950–1002 | `compute_cohort_projections()` | Fórmulas polinómicas ad-hoc para probabilidades de formalización a 1, 3 y 5 años por cohortes (jóvenes, mujeres, gig economy, agro). | **Eliminar proyecciones inventadas**. Indicar en la interfaz "Sin proyecciones empíricas de cohortes disponibles". |
+| **`web_demo/simulation.py`** | 60–100 | `COUNTRY_BASELINES` (`formalWageBaselineUSD`, `informalWageBaselineUSD`) | Salarios base diarios en dólares ficticios: Kenia ($28.5 / $14.2), Nigeria ($22.0 / $10.5), India ($25.0 / $11.8), Bangladés ($20.0 / $9.4). | **Eliminar salarios en USD**. Conservar solo tasas oficiales de ILOSTAT e indicar "Sin datos salariales en USD en el modelo canónico". |
+| **`web_demo/simulation.py`** | 102–108 | `MOCK_FIRMS_COORDS` | Nombres y alturas de firmas ficticias ("Apex Synth & Tech Corp", etc.). | **Sustituir o desvincular** de métricas; usar únicamente la cuenta real de firmas formales/informales de `ITDTModel`. |
+| **`web_demo/simulation.py`** | 250–254 | `avg_formal_wage`, `avg_informal_wage`, `decent_work_idx` | Conversión ficticia de salarios a USD y cálculo ad-hoc de `decentWorkIndex = 20 + 0.70*(100-inf) - 0.4*gap`. | **Eliminar `decentWorkIndex` y salarios USD**. Exponer únicamente salarios relativos de equilibrio del modelo ($\omega_F h, \omega_I h$) o dejar vacío. |
+| **`web_demo/simulation.py`** | 263–270 | `policy_cost`, `sc_cost_map` (`{"A": 0, "B1": 12.5, "B2": 45.0, ...}`) | Costos presupuestarios inventados en millones de USD sin fuente ni respaldo en el artículo. | **Eliminar `sc_cost_map` y costos inventados**. Reportar solo el gasto endógeno del modelo si existe; nunca inventar millones de USD. |
+| **`web_demo/simulation.py`** | 293–295 | Etiquetas `"fiscalRevenueMillionUSD"`, `"policyCostMillionUSD"`, `"netFiscalBalanceMillionUSD"` | Aplica la etiqueta "MillionUSD" a las unidades abstractas de producto/recaudación del modelo canónico. | **Renombrar a unidades del modelo** (`fiscalRevenueModelUnits`, `netFiscalBalanceModelUnits`). Eliminar toda alusión a USD. |
+| **`backend/copilot_tools.py`** | 54–63 | Salidas de `get_simulation_metrics`: `avgFormalWageUSD`, `policyCostMillionUSD`, `decentWorkIndex` | Pasa indicadores ficticios al contexto del LLM. | **Limpiar el diccionario**: remover salarios en USD, costo ficticio y Decent Work Index. Exponer métricas reales del modelo y de ILOSTAT. |
+| **`backend/copilot_service.py`** | 150–156 | Prompt de contexto para Langflow/LLM | Inyecta en el prompt: salarios en USD/día, recaudación en $M USD, costo en $M USD e Índice OIT 0-100. | **Eliminar del prompt**. Mostrar solo tasa de informalidad (modelo e ILOSTAT), brecha de género, tasa de salida de empresas y recaudación en unidades del modelo. |
+| **`backend/copilot_service.py`** | 188–204 | Valores de fallback numéricos en `generate_econometric_copilot_response` | Valores por defecto: `informalityRate: 88.6`, `giniIndex: 0.341`, `formalWorkersCount: 262`, `avgFormalWageUSD: 37.5`, `avgInformalWageUSD: 11.2`, `fiscalRevenueMillionUSD: 141.5`, `decentWorkIndex: 60`. | **Eliminar todos los fallbacks numéricos**. Si un dato no existe, el copiloto debe responder explícitamente "Dato no disponible en la simulación". |
+| **`streamlit_app/data/mock_data.py`** | 350–403 | `DEMO_DATASETS` | Metadata que publicita y enlaza los archivos `SINTETICO_*.csv` como si fuesen datasets de precarga. | **Archivar o vaciar**. Cambiar a catálogo de microdatos reales que indique "No hay microdatos reales cargados". |
+| **`streamlit_app/views/digital_twin_3d_view.py`** | 62 | Badge OIT en HUD 3D | Renderiza `metrics.get('decentWorkIndex', 50)}/100 (Ilustrativo)`. | **Eliminar el badge** del Índice de Trabajo Decente. |
+| **`streamlit_app/views/dashboard_view.py`** | 109, 289 | Tarjeta y radar de Trabajo Decente | Muestra `decentWorkIndex` en tarjetas KPI y gráficos de radar. | **Eliminar tarjeta de Trabajo Decente**. Reemplazar por tasa de informalidad observada ILOSTAT vs. simulada por ITDT. |
+| **`streamlit_app/views/ilo_decent_work_view.py`** | 1–150 | Vista de Trabajo Decente | Utiliza el `decentWorkIndex` ficticio y metas inventadas. | **Reestructurar la vista**: mostrar solo los indicadores reales oficiales de ILOSTAT descargados (`data/ilostat_gradientes.csv` y `data/ilostat_s_F.csv`). |
+| **`streamlit_app/views/ai_engine_view.py`** | 33, 40–120 | Gráficos EDA y modelos ML | Llama a `generate_synthetic_microdata()` para poblar la vista. | **Condicionar la vista**: si no hay archivos en `data/microdatos_reales/`, mostrar "Sin microdatos reales cargados" y no entrenar. |
+| **`streamlit_app/views/datasets_reports_view.py`** | 101, 219 | Muestra sintética y reporte | Llama a `generate_synthetic_microdata(num_records=500)` y reporta `decentWorkIndex`. | **Eliminar generación sintética** y menciones al índice inventado en reportes. |
+| **`src/data/mockData.ts`** | 380–434 | `DEMO_DATASETS` / `MOCK_DATASETS` | Listado de datasets sintéticos (`SINTETICO_calibrado_*.csv`). | **Limpiar**: sustituir por lista vacía o catálogo de microdatos reales esperados con estado "No cargado". |
+| **`src/data/mockData.ts`** | 30–120 | `COUNTRY_PROFILES` (`baseInformalityRate`, etc.) | Valores hardcodeados como 83.2 para Kenia (en vez del 86.49 de ILOSTAT). | **Sincronizar con `outputs/table2_calibration.csv` y datos reales de ILOSTAT**. |
+| **`src/data/aiEngineMockData.ts`** | 1–497 | Todo el archivo (`DEMO_EDA_KPIS`, `DEMO_EDA_HISTOGRAMS`, `DEMO_CORRELATION_MATRIX`, `DEMO_BOXPLOT_METRICS`, `DEMO_ML_MODELS`, `DEMO_COHORT_PROJECTIONS`, `DEMO_SHAP_SUMMARY`) | Cientos de valores numéricos de KPIs, correlaciones, matrices de confusión, curvas ROC y proyecciones de cohortes totalmente fabricados. | **Mover a `src/data/_archivado/aiEngineMockData.ts`**. Las vistas del Motor IA en React deben mostrar "Sin microdatos reales cargados" cuando no existan datos en el backend. |
+| **`src/components/Views/DashboardView.tsx`** | 162, 355, 362 | Indicador de Trabajo Decente | Renderiza barra de progreso y valor de `decentWorkIndex`. | **Eliminar el indicador de Trabajo Decente de la interfaz**. |
+| **`src/components/Views/DigitalTwin3DView.tsx`** | 76 | Badge de Trabajo Decente | Muestra `{metrics?.decentWorkIndex ?? 50}/100`. | **Eliminar el badge**. |
+| **`src/components/HUD/AIChatbotModal.tsx`** | 96–97, 210–211 | Prompts y respuestas del modal de chat | Muestra en texto al usuario "Decent Work: {metrics.decentWorkIndex}/100" y 4 pilares fabricados. | **Eliminar referencias a Decent Work Index y salarios en USD**. Basar el diálogo en informalidad por sexo e impuestos del modelo. |
+| **`src/App.tsx`** | 70–175 | Fallback offline de trabajadores | Genera partículas con ingresos en USD y atributos ficticios (`socialCapital`, `riskTolerance`). | **Preservar únicamente la cinemática de posiciones 3D** (permitida bajo excepción b), eliminando atributos socioeconómicos inventados. |
+
+---
+
+## 2. Plan de Acción y Regla de No Eliminación
+
+Siguiendo la **Regla 1** ("NO borres nada. Lo que deje de usarse se mueve a una carpeta `_archivado/` dentro de su misma carpeta"):
+1. `data_store/SINTETICO_*.csv` $\rightarrow$ `data_store/_archivado/SINTETICO_*.csv`
+2. `models_store/*.joblib` $\rightarrow$ `models_store/_archivado/*.joblib`
+3. `src/data/aiEngineMockData.ts` $\rightarrow$ `src/data/_archivado/aiEngineMockData.ts`
+4. En el código activo, cualquier componente que dependa de microdatos consultará `data/microdatos_reales/`. Si la carpeta está vacía, se presentará el mensaje: **«Sin microdatos reales disponibles»**.
+5. Toda métrica macroeconómica provendrá exclusivamente de `outputs/` (calibrado con ILOSTAT) o directamente de `data/ilostat_*.csv`.

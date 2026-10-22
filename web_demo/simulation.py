@@ -64,8 +64,6 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 86.49,
         "baseInformalityFemale": 90.19,
         "baseInformalityMale": 83.13,
-        "formalWageBaselineUSD": 28.5,  # Indicador ilustrativo, no forma parte del artículo
-        "informalWageBaselineUSD": 14.2,  # Indicador ilustrativo, no forma parte del artículo
     },
     "NIGERIA": {
         "name": "Nigeria",
@@ -74,8 +72,6 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 93.18,
         "baseInformalityFemale": 96.39,
         "baseInformalityMale": 89.92,
-        "formalWageBaselineUSD": 22.0,  # Indicador ilustrativo, no forma parte del artículo
-        "informalWageBaselineUSD": 10.5,  # Indicador ilustrativo, no forma parte del artículo
     },
     "INDIA": {
         "name": "India",
@@ -84,8 +80,6 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 88.36,
         "baseInformalityFemale": 91.93,
         "baseInformalityMale": 86.76,
-        "formalWageBaselineUSD": 25.0,  # Indicador ilustrativo, no forma parte del artículo
-        "informalWageBaselineUSD": 11.8,  # Indicador ilustrativo, no forma parte del artículo
     },
     "BANGLADESH": {
         "name": "Bangladés",
@@ -94,8 +88,6 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
         "baseInformalityRate": 84.19,
         "baseInformalityFemale": 95.77,
         "baseInformalityMale": 78.08,
-        "formalWageBaselineUSD": 20.0,  # Indicador ilustrativo, no forma parte del artículo
-        "informalWageBaselineUSD": 9.4,  # Indicador ilustrativo, no forma parte del artículo
     },
 }
 
@@ -239,34 +231,13 @@ def calculate_structural_metrics(
     avg_formal_wage_model = round(float(rec.get("mean_formal_wage_model", 0.0)), 4)
     avg_informal_wage_model = round(float(rec.get("mean_informal_wage_model", 0.0)), 4)
 
-    # 2. Salarios en USD e Índice de Trabajo Decente:
-    # No forman parte del modelo canónico ni del artículo (que opera en unidades de modelo normalizadas).
-    # Se conservan los valores existentes como indicadores ilustrativos etiquetados explícitamente sin inventar valores nuevos:
-    ILLUSTRATIVE_NOTE = "Indicador ilustrativo, no forma parte del artículo"
-    omega_F = 1.30
-    omega_I = 1.00
-    tau_w = 0.10
-    base_formal_usd = baseline.get("formalWageBaselineUSD", 25.0)
-    base_informal_usd = baseline.get("informalWageBaselineUSD", 10.0)
-    avg_formal_wage = round(base_formal_usd * (1.0 - tau_w) * (omega_F / 1.0), 2)
-    avg_informal_wage = round(base_informal_usd * omega_I, 2)
-    decent_work_idx = round(max(20.0, min(95.0, 20.0 + (100.0 - inf_total) * 0.70 - abs(gender_gap) * 0.40)))
-
-    # Recaudación fiscal del modelo canónico (impuesto a sociedades + contribuciones de seguridad social)
+    # Recaudación fiscal del modelo canónico en unidades del modelo (impuesto a sociedades + contribuciones de seguridad social)
     fiscal_revenue = float(rec.get("fiscal_revenue", 0.0))
     corp_tax = float(rec.get("corporate_tax_revenue", 0.0))
     labor_tax = float(rec.get("labor_contributions_revenue", 0.0))
 
     # Tasa anual de cierre de empresas por quiebra
     annual_exit_rate = float(rec.get("annual_exit_rate", 0.0))
-
-    # Costo presupuestario de la política (en millones de USD)
-    policy_cost = float(rec.get("policy_cost", 0.0))
-    if policy_cost == 0.0 and policy_params:
-        policy_cost = round((policy_params.get("smeSubsidyUSDMonth", 0.0) * 1200 + policy_params.get("skillsTrainingCoverage", 0.0) * 800) / 10000, 2)
-    elif policy_cost == 0.0:
-        sc_cost_map = {"A": 0.0, "B1": 12.5, "B2": 45.0, "C": 28.0, "D": 65.0}
-        policy_cost = sc_cost_map.get(sc_clean, 0.0)
 
     res = {
         "country": country_clean,
@@ -286,13 +257,8 @@ def calculate_structural_metrics(
         "unemployedCount": unemployed_count,
         "avgFormalWageModel": avg_formal_wage_model,
         "avgInformalWageModel": avg_informal_wage_model,
-        "avgFormalWageUSD": avg_formal_wage,
-        "avgInformalWageUSD": avg_informal_wage,
-        "formalWageUSDNote": ILLUSTRATIVE_NOTE,
-        "informalWageUSDNote": ILLUSTRATIVE_NOTE,
-        "fiscalRevenueMillionUSD": round(fiscal_revenue, 2),
-        "policyCostMillionUSD": round(policy_cost, 2),
-        "netFiscalBalanceMillionUSD": round(fiscal_revenue - policy_cost, 2),
+        "fiscalRevenueModelUnits": round(fiscal_revenue, 2),
+        "fiscalRevenue": round(fiscal_revenue, 2),
         "corporateTaxRevenue": round(corp_tax, 2),
         "laborContributionsRevenue": round(labor_tax, 2),
         "annualExitRate": round(annual_exit_rate, 2),
@@ -300,8 +266,6 @@ def calculate_structural_metrics(
         "informalFirmsCount": int(rec.get("informal_firms_count", 0)),
         "formalVacancies": int(rec.get("formal_vacancies", 0)),
         "willingWorkersCount": int(rec.get("willing_workers_count", 0)),
-        "decentWorkIndex": decent_work_idx,
-        "decentWorkIndexNote": ILLUSTRATIVE_NOTE,
         "digitalCoverage": round(float(rec.get("d_sys", 0.3)), 4),
         "temperature": round(float(rec.get("temperature", 0.5)), 4),
         "informalityByEducation": rec.get("informality_by_education", {}),
@@ -309,6 +273,7 @@ def calculate_structural_metrics(
         "informalityByQuintile": rec.get("informality_by_quintile", {}),
         "phaseProgress": round(clamped_month / 120.0, 3),
         "source": "ITDTModel (Canonical Vectorized ABM - SMM Calibrated)",
+        "sourceCitation": "Calibración con microdatos de agregados de ILOSTAT (data/ilostat_s_F.csv) y simulación multiagente itdt/",
     }
     if not policy_params:
         _STRUCTURAL_METRICS_CACHE[(country_clean, sc_clean, clamped_month, seed)] = res

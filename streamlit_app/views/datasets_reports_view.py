@@ -145,8 +145,8 @@ def render_datasets_reports_view():
                 Resumen Ejecutivo: {profile['name']} &mdash; {rep_labels.get(report_scenario, report_scenario)}
             </div>
             <div style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.6;">
-                Informe técnico estructurado con evaluación de impacto macroeconómico, cumplimiento OIT (ODS 8),
-                informalidad simulada ({report_metrics.get('informalityRate', 0.0)}%) y balance fiscal (${report_metrics.get('fiscalRevenueMillionUSD', 0.0)}M USD).
+                Informe técnico estructurado con evaluación de impacto macroeconómico, brechas observadas de género (ILOSTAT),
+                informalidad simulada ({report_metrics.get('informalityRate', 0.0)}%) y recaudación ({report_metrics.get('fiscalRevenueModelUnits', report_metrics.get('fiscalRevenueMillionUSD', 0.0)):,.1f} u.m.).
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -210,14 +210,14 @@ def render_datasets_reports_view():
                 en un horizonte continuo de 10 años (Mes {month}).
             </p>
             <p>
-                El <b>Balance Fiscal Neto</b> se proyecta en <b>${metrics.get('netFiscalBalanceMillionUSD', round(metrics.get('fiscalRevenueMillionUSD', 0.0) - metrics.get('policyCostMillionUSD', 0.0), 2))} Millones USD</b>, 
-                soportado por una recaudación formal de <b>${metrics.get('fiscalRevenueMillionUSD', 0.0)}M USD</b> frente a un costo operativo del programa 
-                de <b>${metrics.get('policyCostMillionUSD', 0.0)}M USD</b>.
+                La <b>Recaudación Fiscal del Modelo</b> se proyecta en <b>{metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD', 0.0)):,.1f} unidades del modelo</b> 
+                (impuesto a sociedades y contribuciones laborales calculadas endógenamente en ITDTModel).
             </p>
-            <h4 style="color: #10b981;">Alineamiento con Estándares OIT</h4>
+            <h4 style="color: #10b981;">Alineamiento con Estándares y Brechas de Género</h4>
             <p>
-                El Índice de Trabajo Decente alcanza <b>{metrics.get('decentWorkIndex', 50)} puntos sobre 100</b>, reflejando mejoras sustanciales 
-                en cobertura de seguridad social y reducción de la brecha salarial informal-formal.
+                La brecha de informalidad por sexo se sitúa en <b>{metrics.get('genderGap', 0):+.2f} puntos porcentuales</b> 
+                (Informalidad femenina: {metrics.get('informalityFemale', 0):.1f}% vs masculina: {metrics.get('informalityMale', 0):.1f}%), 
+                evaluada conforme a las series observadas de ILOSTAT.
             </p>
         </div>
         """, unsafe_allow_html=True)

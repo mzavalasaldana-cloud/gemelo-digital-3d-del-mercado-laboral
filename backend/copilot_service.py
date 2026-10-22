@@ -133,27 +133,38 @@ def build_simulation_context_prompt(
 ) -> str:
     """
     Construye el payload enriquecido con datos cuantitativos reales y verificados
-    para que el agente en Langflow y Gemini no inventen cifras, incorporando
-    memoria conversacional previa persistida en PostgreSQL.
+    del modelo calibrado ITDT y de ILOSTAT para que el agente en Langflow y Gemini
+    no inventen cifras, incorporando memoria conversacional previa de PostgreSQL.
     """
+    c_name = metrics_data.get('country', 'KENYA')
+    sc_name = metrics_data.get('scenario', 'A')
+    inf_rate = metrics_data.get('informalityRate')
+    base_inf = metrics_data.get('baseInformalityRate')
+    inf_f = metrics_data.get('informalityFemale')
+    inf_m = metrics_data.get('informalityMale')
+    gap = metrics_data.get('genderGap')
+    gini = metrics_data.get('giniIndex')
+    rev_model = metrics_data.get('fiscalRevenueModelUnits')
+    exit_rate = metrics_data.get('annualExitRate')
+    citation = metrics_data.get('sourceCitation', 'Modelo ITDT calibrado / ILOSTAT')
+
     context_str = (
-        f"--- DATOS VERIFICADOS DE LA SIMULACIÓN ---\n"
-        f"País: {metrics_data.get('country', 'KENYA')}\n"
-        f"Escenario: {metrics_data.get('scenario', 'A')}\n"
+        f"--- DATOS VERIFICADOS DE LA SIMULACIÓN Y FUENTES OFICIALES ---\n"
+        f"País: {c_name}\n"
+        f"Escenario: {sc_name}\n"
         f"Mes de simulación: {metrics_data.get('month', 0)} (Año proyectado: {metrics_data.get('year', 2024)})\n"
-        f"Tasa de informalidad actual: {metrics_data.get('informalityRate', 0)}%\n"
-        f"Tasa de informalidad base: {metrics_data.get('baseInformalityRate', 0)}%\n"
-        f"Índice de Gini actual: {metrics_data.get('giniIndex', 0)}\n"
-        f"Índice de Gini base: {metrics_data.get('baseGiniIndex', 0)}\n"
-        f"Trabajadores Formales: {metrics_data.get('formalWorkersCount', 0):,}\n"
-        f"Trabajadores Informales: {metrics_data.get('informalWorkersCount', 0):,}\n"
-        f"Desempleados: {metrics_data.get('unemployedCount', 0):,}\n"
-        f"Salario formal promedio: ${metrics_data.get('avgFormalWageUSD', 0)} USD/día\n"
-        f"Salario informal promedio: ${metrics_data.get('avgInformalWageUSD', 0)} USD/día\n"
-        f"Recaudación fiscal proyectada: ${metrics_data.get('fiscalRevenueMillionUSD', 0)}M USD\n"
-        f"Costo de políticas activas: ${metrics_data.get('policyCostMillionUSD', 0)}M USD\n"
-        f"Índice de Trabajo Decente OIT: {metrics_data.get('decentWorkIndex', 0)}/100\n"
-        f"Parámetros de política: {json.dumps(metrics_data.get('policy_params', {}), ensure_ascii=False)}\n"
+        f"Tasa de informalidad simulada: {f'{inf_rate:.2f}%' if inf_rate is not None else 'Sin datos reales disponibles'}\n"
+        f"Tasa de informalidad observada (ILOSTAT base): {f'{base_inf:.2f}%' if base_inf is not None else 'Sin datos reales disponibles'}\n"
+        f"Informalidad femenina: {f'{inf_f:.2f}%' if inf_f is not None else 'Sin datos reales disponibles'}\n"
+        f"Informalidad masculina: {f'{inf_m:.2f}%' if inf_m is not None else 'Sin datos reales disponibles'}\n"
+        f"Brecha de género en informalidad: {f'{gap:.2f} pp' if gap is not None else 'Sin datos reales disponibles'}\n"
+        f"Índice de Gini simulado: {f'{gini:.4f}' if gini is not None else 'Sin datos reales disponibles'}\n"
+        f"Trabajadores Formales: {metrics_data.get('formalWorkersCount', 'N/D')}\n"
+        f"Trabajadores Informales: {metrics_data.get('informalWorkersCount', 'N/D')}\n"
+        f"Recaudación fiscal: {f'{rev_model:.2f} unidades del modelo' if rev_model is not None else 'Sin datos reales disponibles'}\n"
+        f"Tasa anual de cierre de empresas (quiebras): {f'{exit_rate:.2f}%' if exit_rate is not None else 'Sin datos reales disponibles'}\n"
+        f"Fuente oficial: {citation}\n"
+        f"Regla de integridad: No existen salarios en USD ni índice de trabajo decente calculados en el modelo canónico. Si el usuario pregunta por ellos, indicar que no forman parte del artículo ni del modelo calibrado.\n"
         f"--- FIN DATOS VERIFICADOS ---\n"
     )
 
@@ -180,77 +191,79 @@ def build_simulation_context_prompt(
 
 def generate_econometric_copilot_response(user_query: str, metrics: Dict[str, Any]) -> str:
     """
-    Motor de razonamiento econométrico autónomo para respuestas instantáneas
-    basadas en los datos cuantitativos reales del gemelo digital y estándares OIT.
+    Motor de razonamiento econométrico autónomo basado estrictamente en las salidas
+    del modelo ITDT calibrado y datos reales de ILOSTAT, sin datos inventados ni valores por defecto.
     """
     q = user_query.lower()
     c_name = metrics.get("country", "KENYA")
-    inf_rate = metrics.get("informalityRate", 88.6)
-    base_inf = metrics.get("baseInformalityRate", 88.6)
-    gini = metrics.get("giniIndex", 0.341)
-    formal_count = metrics.get("formalWorkersCount", 262)
-    informal_count = metrics.get("informalWorkersCount", 2215)
-    unemp_count = metrics.get("unemployedCount", 23)
-    avg_f_wage = metrics.get("avgFormalWageUSD", 37.5)
-    avg_i_wage = metrics.get("avgInformalWageUSD", 11.2)
-    fiscal_rev = metrics.get("fiscalRevenueMillionUSD", 141.5)
-    policy_cost = metrics.get("policyCostMillionUSD", 0.0)
-    decent_work = metrics.get("decentWorkIndex", 60)
+    sc_name = metrics.get("scenario", "A")
+    inf_rate = metrics.get("informalityRate")
+    base_inf = metrics.get("baseInformalityRate")
+    inf_f = metrics.get("informalityFemale")
+    inf_m = metrics.get("informalityMale")
+    gap = metrics.get("genderGap")
+    gini = metrics.get("giniIndex")
+    formal_count = metrics.get("formalWorkersCount")
+    informal_count = metrics.get("informalWorkersCount")
+    rev_model = metrics.get("fiscalRevenueModelUnits")
+    exit_rate = metrics.get("annualExitRate")
     month = metrics.get("month", 0)
-    policy_p = metrics.get("policy_params", {})
-    subsidio = policy_p.get("smeSubsidyUSDMonth", 0.0)
-    capacitacion = policy_p.get("skillsTrainingCoverage", 0.0)
-    reduccion_costos = policy_p.get("registrationCostReduction", 0.0)
-    inspeccion = policy_p.get("smartInspectionCoverage", 0.0)
 
-    # 1. Preguntas sobre qué política reduce más la informalidad
-    if any(k in q for k in ["política", "politica", "reduce", "reducir", "rapido", "rápido", "mas rapido", "más rápido", "efectiva", "mejor"]):
+    # Verificación de datos disponibles
+    if inf_rate is None or base_inf is None:
         return (
-            f"### 📊 Diagnóstico de Eficacia de Políticas para **{c_name}** (Mes {month}):\n\n"
-            f"Basado en el modelo econométrico y los microdatos activos:\n\n"
-            f"1. **Subsidios Directos a PyMEs y Reducción de Costos de Registro:**\n"
-            f"   - Es la palanca con **mayor velocidad de impacto inicial (meses 1 a 24)**. Al reducir las barreras de entrada y subsidiar cotizaciones iniciales, se incentiva la transición inmediata de micronegocios informales hacia la formalidad.\n\n"
-            f"2. **Capacitación Técnica y Formación de Capital Humano:**\n"
-            f"   - Es la política con **mayor sostenibilidad a mediano y largo plazo (meses 24 a 120)**. Aumenta la productividad marginal del trabajador, elevando el salario formal promedio a **${avg_f_wage} USD/día** frente a **${avg_i_wage} USD/día** en el sector informal.\n\n"
-            f"3. **Inspección Digital / Satelital Inteligente:**\n"
-            f"   - Incrementa el costo esperado de no registrarse, pero debe combinarse con incentivos para no destruir empleo en unidades de baja productividad.\n\n"
-            f"📌 **Estado Actual en Simulación:**\n"
-            f"- Tasa de Informalidad: **{inf_rate}%** (Base: {base_inf}%)\n"
-            f"- Trabajadores Formales: **{formal_count:,}** | Informales: **{informal_count:,}** | Desempleo: **{unemp_count:,}**\n"
-            f"- Índice de Trabajo Decente OIT: **{decent_work}/100** | Índice Gini: **{gini}**\n"
-            f"- Balance Fiscal: **${fiscal_rev}M USD** en recaudación vs **${policy_cost}M USD** en costos de intervención."
+            f"### ⚠️ Información del Gemelo Digital ({c_name}):\n\n"
+            "Sin datos reales disponibles para los parámetros solicitados. "
+            "El sistema opera exclusivamente con resultados del modelo calibrado (outputs/) o datos oficiales de ILOSTAT."
         )
 
-    # 2. Preguntas sobre salarios, ingresos o desigualdad / Gini
-    if any(k in q for k in ["salario", "ingreso", "gini", "desigualdad", "pobreza"]):
+    # 1. Preguntas sobre qué política reduce más la informalidad o escenarios de política
+    if any(k in q for k in ["política", "politica", "reduce", "reducir", "rapido", "rápido", "mas rapido", "más rápido", "efectiva", "mejor", "escenario"]):
         return (
-            f"### 💰 Análisis Salarial y de Desigualdad en **{c_name}**:\n\n"
-            f"- **Salario Formal Promedio:** ${avg_f_wage} USD/día\n"
-            f"- **Salario Informal Promedio:** ${avg_i_wage} USD/día (Brecha del {round((1 - avg_i_wage/max(1, avg_f_wage))*100, 1)}%)\n"
-            f"- **Índice de Gini Proyectado:** **{gini}** (conforme aumenta la formalización, el coeficiente de Gini tiende a converger hacia niveles más equitativos).\n\n"
-            f"💡 **Recomendación OIT:** Combinar un subsidio PyME mensual de $30-$50 USD con un programa de certificación técnica permite cerrar la brecha de ingresos sin asfixiar la competitividad de las pequeñas unidades económicas."
+            f"### 📊 Diagnóstico de Escenarios de Política para **{c_name}** (Mes {month}):\n\n"
+            f"Basado en los resultados del simulador ITDT calibrado con datos de ILOSTAT:\n\n"
+            f"1. **Escenario B2 (GovTech Intensivo / Sanciones 3×):**\n"
+            f"   - Logra la reducción más acelerada de la informalidad general, pero induce una tasa sustancial de cierres de empresas por insolvencia ante mayores sanciones.\n\n"
+            f"2. **Escenario C (Red Pública de Cuidados -60% horas no remuneradas):**\n"
+            f"   - Diseñado específicamente para reducir la brecha de género, facilitando la participación formal femenina sin destruir tejido empresarial.\n\n"
+            f"3. **Escenario D (Paquete Integrado: GovTech + Cuidados + Subsidio DCC):**\n"
+            f"   - Combina la aceleración de formalización con amortiguamiento a microempresas mediante subsidios de cumplimiento, mitigando quiebras.\n\n"
+            f"📌 **Estado Actual Simulado ({sc_name}):**\n"
+            f"- Informalidad Total: **{inf_rate:.2f}%** (Base observada ILOSTAT: {base_inf:.2f}%)\n"
+            f"- Informalidad Mujeres: **{inf_f:.2f}%** | Hombres: **{inf_m:.2f}%** | Brecha: **{gap:.2f} pp**\n"
+            f"- Tasa Anual de Quiebras de Empresas: **{exit_rate:.2f}%**\n"
+            f"- Recaudación Fiscal: **{rev_model:.2f} unidades del modelo**"
         )
 
-    # 3. Preguntas sobre recaudación fiscal y costos
-    if any(k in q for k in ["fiscal", "recaudacion", "recaudación", "costo", "gasto", "presupuesto"]):
-        balance = round(fiscal_rev - policy_cost, 2)
+    # 2. Preguntas sobre salarios o desigualdad / Gini
+    if any(k in q for k in ["salario", "ingreso", "gini", "desigualdad"]):
         return (
-            f"### 🏛️ Balance Fiscal y Financiamiento de Políticas (**{c_name}**):\n\n"
-            f"- **Recaudación Tributaria Proyectada:** **${fiscal_rev}M USD**\n"
-            f"- **Costo Total de Políticas Activas:** **${policy_cost}M USD**\n"
-            f"- **Superávit / Balance Neto:** **${balance}M USD**\n\n"
-            f"Por cada 5 puntos porcentuales de reducción en la informalidad, la base tributaria se expande aproximadamente en un 6.8%, generando autofinanciamiento del programa de formalización a partir del mes 18."
+            f"### 📈 Desigualdad y Distribución de Ingresos en **{c_name}** ({sc_name}):\n\n"
+            f"- **Coeficiente de Gini Simulado:** **{gini:.4f}** (calculado endógenamente a partir de los ingresos de agentes formales e informales en el modelo).\n"
+            f"- **Nota metodológica:** El modelo canónico ITDT opera con salarios normalizados en unidades del modelo; no se calculan salarios en USD sin una fuente empírica directa de microdatos de salarios armonizados."
         )
 
-    # 4. Respuesta general y contextualizada
+    # 3. Preguntas sobre recaudación fiscal
+    if any(k in q for k in ["fiscal", "recaudacion", "recaudación", "impuesto", "tribut"]):
+        corp_rev = metrics.get("corporateTaxRevenue", 0.0)
+        labor_rev = metrics.get("laborContributionsRevenue", 0.0)
+        return (
+            f"### 🏛️ Recaudación Fiscal del Modelo (**{c_name}** - Escenario {sc_name}):\n\n"
+            f"- **Recaudación Total:** **{rev_model:.2f} unidades del modelo** (no expresada en USD, ya que el modelo opera en unidades normalizadas).\n"
+            f"- **Impuesto a Sociedades:** {corp_rev:.2f} unidades\n"
+            f"- **Contribuciones a la Seguridad Social:** {labor_rev:.2f} unidades\n\n"
+            f"Fuente: ITDTModel (itdt/model.py), simulación canónica de empresas y contratos formales."
+        )
+
+    # 4. Respuesta general
     return (
-        f"### 🤖 Análisis Estratégico del Copiloto Laboral (**{c_name}**):\n\n"
-        f"En el escenario activo proyectado al mes **{month}**:\n"
-        f"- **Tasa de Informalidad:** **{inf_rate}%** (Brecha respecto al estado base: {round(inf_rate - base_inf, 2)}%)\n"
-        f"- **Fuerza Laboral:** Formales: **{formal_count:,}**, Informales: **{informal_count:,}**, Desempleados: **{unemp_count:,}**\n"
-        f"- **Métricas de Bienestar:** Índice OIT: **{decent_work}/100** | Coeficiente Gini: **{gini}**\n"
-        f"- **Políticas Activas:** Subsidio PyMEs (${subsidio} USD), Capacitación ({capacitacion}%), Reducción Trámites ({reduccion_costos}%), Inspección Inteligente ({inspeccion}%).\n\n"
-        f"Para acelerar la transición formal, se recomienda priorizar la reducción de costos de registro combinada con un esquema progresivo de protección social."
+        f"### 🤖 Análisis del Copiloto Laboral (**{c_name}** - Escenario {sc_name}):\n\n"
+        f"En la proyección activa al mes **{month}**:\n"
+        f"- **Informalidad Total:** **{inf_rate:.2f}%** (Observada ILOSTAT: {base_inf:.2f}%)\n"
+        f"- **Desagregación por Sexo:** Mujeres {inf_f:.2f}% | Hombres {inf_m:.2f}% (Brecha: {gap:.2f} pp)\n"
+        f"- **Estructura Laboral:** {formal_count:,} trabajadores formales y {informal_count:,} informales representados.\n"
+        f"- **Recaudación:** {rev_model:.2f} unidades del modelo | Tasa de quiebra empresarial: {exit_rate:.2f}%\n"
+        f"- **Fuente:** Calibración SMM con datos de ILOSTAT (data/ilostat_s_F.csv) y simulación multiagente itdt/."
     )
 
 
