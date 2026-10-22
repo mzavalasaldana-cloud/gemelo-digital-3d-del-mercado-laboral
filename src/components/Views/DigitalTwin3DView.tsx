@@ -287,45 +287,8 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
           </button>
         </div>
 
-        {/* Minimal Semi-Transparent Quick Policy Slider Drawer */}
-        {showQuickPolicyDrawer && (
-          <div className="hud-glass-solid p-4 rounded-2xl border border-cyan-500/40 w-80 text-xs font-mono-hud space-y-3.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
-              <span className="text-[10px] text-cyan-400 uppercase tracking-wider font-bold">
-                Controles Dinámicos Rápidos
-              </span>
-              <span className="text-[10px] text-slate-400">Impacto en tiempo real</span>
-            </div>
-
-            {/* Capacitación en Habilidades */}
-            <div>
-              <div className="flex justify-between text-slate-300 mb-1">
-                <span>Capacitación en Habilidades</span>
-                <span className="text-cyan-400 font-bold">{policyParams.skillsTrainingCoverage}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={policyParams.skillsTrainingCoverage}
-                onChange={(e) => onChangePolicy({ ...policyParams, skillsTrainingCoverage: Number(e.target.value) })}
-                className="w-full accent-cyan-400 cursor-pointer"
-              />
-            </div>
-
-            <button
-              onClick={() => {
-                playPolicyWaveSound();
-                onTriggerPolicyWave();
-              }}
-              className="w-full py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400 font-mono-hud text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer glow-cyan"
-            >
-              <Zap className="w-3.5 h-3.5 text-cyan-400" />
-              Propagar Choque Estructural
-            </button>
-          </div>
-        )}
+        {/* Minimal Semi-Transparent Quick Policy Slider Drawer: Oculto por fidelidad con el modelo ITDT */}
+        {/* showQuickPolicyDrawer && (...) */}
       </div>
 
       {/* Floating Bottom Center: Minimalist Timeline Bar with Scrubbing */}

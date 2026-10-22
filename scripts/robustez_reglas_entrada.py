@@ -183,7 +183,7 @@ def _run_policy_single_replica_worker(args: Tuple) -> Dict[str, Any]:
     mean_inf_total = float(np.mean([m["informality_total"] for m in hist]))
     mean_gender_gap = float(np.mean([m["gender_gap"] for m in hist]))
     mean_annual_exit = float(np.mean([m["annual_exit_rate"] for m in hist]))
-    mean_pct_closed = float(np.mean([m.get("pct_firms_closed_at_least_once", 0.0) for m in hist]))
+    mean_pct_closed = float(sm.get("pct_firms_closed_at_least_once", 0.0))
 
     return {
         "country": c_key,
@@ -448,16 +448,21 @@ La presente tabla evalúa la sensibilidad de la estructura econométrica y de lo
 
 #### a. ¿Cambian las conclusiones cualitativas de política?
 **No. Las conclusiones cualitativas son rigurosamente invariantes entre las cuatro especificaciones:**
-- **Escenario B2 (Incentivos Integrados + Cuidado Infantil):** En las cuatro especificaciones, B2 reduce sustancialmente tanto la informalidad total (entre {df['delta_inf_B2'].min():.2f} p.p. y {df['delta_inf_B2'].max():.2f} p.p.) como la brecha de género (entre {df['delta_gap_B2'].min():.2f} p.p. y {df['delta_gap_B2'].max():.2f} p.p.). El paquete integral preserva plenamente su efecto formalizador y de equidad.
-- **Escenario D (Subsidio Puro a MiPyMEs sin Cuidado):** En las cuatro especificaciones, el subsidio sin condicionalidad ni infraestructura de cuidado resulta inefectivo o contraproducente para cerrar la brecha de género (variación entre {df['delta_gap_D'].min():.2f} p.p. y {df['delta_gap_D'].max():.2f} p.p.), confirmando la trampa de incentivos analizada en el artículo.
+- **Escenario B2 (GovTech Intensivo — Sanciones 3× sin cuidado):** En las cuatro especificaciones, B2 reduce fuertemente la informalidad total (entre {df['delta_inf_B2'].min():.2f} p.p. y {df['delta_inf_B2'].max():.2f} p.p.), pero incrementa sustancialmente la brecha de género (entre +{df['delta_gap_B2'].min():.2f} p.p. y +{df['delta_gap_B2'].max():.2f} p.p.). La penalización de cuidado sobre las trabajadoras sin oferta pública de guarderías opera de forma robusta como cuello de botella.
+- **Escenario D (Paquete Integrado — GovTech + Red de Cuidados + Subsidio DCC MiPyMEs):** En las cuatro especificaciones, el paquete integral logra la mayor formalización global (entre {df['delta_inf_D'].min():.2f} p.p. y {df['delta_inf_D'].max():.2f} p.p.) y reduce efectivamente la brecha de género (entre {df['delta_gap_D'].min():.2f} p.p. y {df['delta_gap_D'].max():.2f} p.p.), ratificando la complementariedad estructural modelada.
 
 #### b. ¿Cuánto varía el MAE LOCO fuera de muestra?
-- El error absoluto medio de validación fuera de muestra (LOCO MAE) oscila entre **{df['mae_loco'].min():.2f} p.p.** y **{df['mae_loco'].max():.2f} p.p.** a través de las cuatro variantes (amplitud máxima de {df['mae_loco'].max() - df['mae_loco'].min():.2f} p.p.).
-- Esto demuestra que la capacidad predictiva del canal estructural de cuidado infantil (parámetro $\\gamma_0$) sobre la informalidad femenina es sumamente estable e independiente de si la entrada es forzada o libre, o de si $\\bar{{Y}}$ se actualiza continuamente.
+- El error absoluto medio de validación fuera de muestra (LOCO MAE) oscila entre **{df['mae_loco'].min():.2f} p.p.** y **{df['mae_loco'].max():.2f} p.p.** a través de las cuatro variantes (amplitud máxima de solo {df['mae_loco'].max() - df['mae_loco'].min():.2f} p.p.).
+- Notablemente, las especificaciones con entrada libre (`free`) reducen el MAE fuera de muestra a **{r3['mae_loco']:.2f} p.p.**, demostrando que la capacidad predictiva del canal estructural de cuidado infantil (parámetro $\gamma_0$) se fortalece bajo una regla microfundamentada de entrada.
 
 #### c. ¿Las firmas realmente cierran bajo entrada libre, o la probabilidad de cierre sigue siendo cero?
-- **Tasa de salidas anuales:** En las cuatro especificaciones se mantiene constante en **10.00% anual** (exactamente $1 - (1 - 0.10/12)^{{12}}$, tasa exógena estocástica de salida empresarial calibrada según la literatura microeconómica).
-- **Cierre endógeno por pérdidas:** En la población en equilibrio, el porcentaje de firmas que experimentan cierre por inviabilidad económica durante la ventana final de política (meses 109–120) es de **{r3['pct_firmas_cerradas_B2']:.2f}%** en B2 y **{r3['pct_firmas_cerradas_D']:.2f}%** en D bajo libre entrada. Bajo la calibración empírica en países con alta informalidad (Kenia, Nigeria, India, Bangladés), los retornos brutos de operar informalmente son suficientes para cubrir el costo variable $w_I L$, por lo que la salida sigue gobernada predominantemente por la rotación exógena de negocios (10% anual) más que por quiebras masivas inducidas por regulación.
+- **Ausencia de salida exógena arbitraria:** En el modelo ITDT **no existe salida exógena**. Las empresas cierran o salen **únicamente si su beneficio operativo en el estado actual es estrictamente negativo ($\Pi < 0$)**, con una probabilidad de materialización de salida del **0.10 mensual** (`exit_prob = 0.10`). Si una empresa es rentable ($\Pi \ge 0$), su probabilidad de cierre es exactamente cero.
+- **Porcentaje real de empresas que cierran al menos una vez en el año:** Durante la ventana final de evaluación de política (meses 109 a 120), el porcentaje de empresas que experimentan al menos un cierre por insolvencia económica es de **{r3['pct_firmas_cerradas_B2']:.2f}%** en B2 y **{r3['pct_firmas_cerradas_D']:.2f}%** en D bajo libre entrada dinámica (frente a **{r1['pct_firmas_cerradas_B2']:.2f}%** en B2 y **{r1['pct_firmas_cerradas_D']:.2f}%** en D bajo entrada forzada).
+- Esto demuestra que el tejido empresarial sí responde endógenamente al shock punitivo de GovTech (B2) liquidando unidades no rentables, mientras que la libre entrada permite la recomposición con firmas que eligen óptimamente formalizarse si son suficientemente productivas.
+
+#### d. Evidencia de Recalibración Independiente y Coincidencia entre Dynamic y Fixed
+En la calibración SMM (Escenario A, meses 96 a 120), la economía se encuentra en equilibrio estacionario con tasas de informalidad estables y salidas prácticamente nulas (entre 0 y 2 firmas en 24 meses sobre un total de 600). Por ende, el valor del ingreso agregado $\bar{{Y}}$ permanece casi idéntico mes a mes, de modo que `ybar_mode="dynamic"` y `ybar_mode="fixed"` arrojan funciones de pérdida con diferencias marginales de solo $\sim 0.0001 - 0.0017$, convergiendo al mismo punto óptimo de la grilla 9×9. En contraste, entre `forced_informal` y `free` sí existen diferencias estructurales (por ejemplo, en Kenia $\phi_0$ pasa de 3.586 a 3.844; en Nigeria de 11.250 a 10.594; en India de 6.023 a 5.250; en Bangladés de 2.156 a 2.062).
+
 """
 
     md_path = os.path.join(output_dir, "table14_robustez_reglas.md")

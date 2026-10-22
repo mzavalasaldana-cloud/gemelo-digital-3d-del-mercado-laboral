@@ -9,5 +9,12 @@
   "informalityRate": 87.36,
   "totalParticles": 2500,
   "totalTowers": 10,
-  "timestamp": "2026-10-22T13:38:48.677Z"
+  "timestamp": "2026-10-22T15:21:51.550Z",
+  "canvasRendered": true,
+  "renderedFrames": 26,
+  "cameraPosition": {
+    "x": 19.68,
+    "y": 37.62,
+    "z": 19.68
+  }
 }

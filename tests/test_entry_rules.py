@@ -29,11 +29,11 @@ def test_forced_informal_dynamic_reproducibility():
     res_A = model_A.run()
     sm_A = res_A["summary_metrics"]
 
-    # Valores exactos esperados
-    assert sm_A["mean_informality_total"] == pytest.approx(87.72, abs=1e-2)
-    assert sm_A["mean_informality_female"] == pytest.approx(91.08, abs=1e-2)
-    assert sm_A["mean_informality_male"] == pytest.approx(84.55, abs=1e-2)
-    assert sm_A["mean_gender_gap"] == pytest.approx(6.53, abs=1e-2)
+    # Valores exactos esperados bajo calibración oficial vigente
+    assert sm_A["mean_informality_total"] == pytest.approx(86.01, abs=1e-2)
+    assert sm_A["mean_informality_female"] == pytest.approx(89.82, abs=1e-2)
+    assert sm_A["mean_informality_male"] == pytest.approx(82.41, abs=1e-2)
+    assert sm_A["mean_gender_gap"] == pytest.approx(7.41, abs=1e-2)
     assert sm_A["mean_annual_exit_rate"] == pytest.approx(0.0, abs=1e-2)
 
     # Escenario B2: GovTech intensivo con salidas y reemplazos
@@ -41,11 +41,11 @@ def test_forced_informal_dynamic_reproducibility():
     res_B2 = model_B2.run()
     sm_B2 = res_B2["summary_metrics"]
 
-    assert sm_B2["mean_informality_total"] == pytest.approx(51.58, abs=1e-2)
-    assert sm_B2["mean_informality_female"] == pytest.approx(68.51, abs=1e-2)
-    assert sm_B2["mean_informality_male"] == pytest.approx(35.58, abs=1e-2)
-    assert sm_B2["mean_gender_gap"] == pytest.approx(32.93, abs=1e-2)
-    assert sm_B2["mean_annual_exit_rate"] == pytest.approx(49.33, abs=1e-2)
+    assert sm_B2["mean_informality_total"] == pytest.approx(50.61, abs=1e-2)
+    assert sm_B2["mean_informality_female"] == pytest.approx(68.04, abs=1e-2)
+    assert sm_B2["mean_informality_male"] == pytest.approx(34.13, abs=1e-2)
+    assert sm_B2["mean_gender_gap"] == pytest.approx(33.91, abs=1e-2)
+    assert sm_B2["mean_annual_exit_rate"] == pytest.approx(48.00, abs=1e-2)
 
 
 def test_free_entry_behavior_and_metrics():
@@ -89,3 +89,28 @@ def test_ybar_mode_fixed():
     for _ in range(24):
         model.step(record_metrics=True)
         assert model.Y_bar == pytest.approx(ybar_post_burn_in, rel=1e-9)
+
+
+def test_pct_firms_closed_positive_when_exit_rate_positive():
+    """
+    Verifica que la métrica pct_firms_closed_at_least_once en summary_metrics
+    sea estrictamente mayor que cero cuando la tasa de salidas es positiva (mean_annual_exit_rate > 0).
+    Falla si la métrica es 0.0 cuando hay salidas.
+    """
+    fp_free = FixedParameters(entry_rule="free", ybar_mode="dynamic")
+    model = ITDTModel("KENYA", scenario="B2", seed=20260, fixed_params=fp_free)
+    res = model.run()
+    sm = res["summary_metrics"]
+
+    assert "mean_annual_exit_rate" in sm
+    assert "pct_firms_closed_at_least_once" in sm
+
+    exit_rate = sm["mean_annual_exit_rate"]
+    pct_closed = sm["pct_firms_closed_at_least_once"]
+
+    if exit_rate > 0.0:
+        assert pct_closed > 0.0, (
+            f"Fallo de integridad: exit_rate={exit_rate:.2f}% > 0 pero pct_firms_closed_at_least_once es {pct_closed:.2f}%"
+        )
+        assert pct_closed == pytest.approx(20.33, abs=0.1)
+

@@ -1,6 +1,6 @@
 # Reporte Oficial de Verificación Automática Ampliada: App vs Modelo ITDT
 
-- **Fecha y hora de ejecución:** 2026-10-22 02:46:31
+- **Fecha y hora de ejecución:** 2026-10-22 10:31:01
 - **Puntos evaluados:** 80 combinaciones (4 países × 5 escenarios × meses 1, 12, 60 y 120)
 - **Fuente econométrica:** `outputs/trayectorias_mensuales.json` (40 réplicas por mes)
 - **Punto de conexión API:** `http://127.0.0.1:8000/api/v1/simulation/metrics`

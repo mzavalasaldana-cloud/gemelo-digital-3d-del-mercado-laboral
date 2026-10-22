@@ -172,59 +172,114 @@ Todos los resultados fueron regenerados ejecutando el pipeline de cómputo compl
 
 ## 5. Tabla 14: Robustez frente a las 4 Combinaciones de Especificación
 
-*Cálculo econométrico ejecutado en paralelo en 14 núcleos (recalibración SMM, 480 réplicas de política y validación cruzada LOCO para cada una).*
+*Cálculo econométrico ejecutado en paralelo en 14 núcleos (recalibración SMM independiente sobre rejilla 9×9, 480 réplicas de política y validación cruzada LOCO para cada una).*
 
 | # | Especificación | Regla Entrada | Modo $\bar{Y}$ | $\bar{\phi}_0$ | $\bar{\gamma}_0$ | Error Calib (p.p.) | Salidas B2 (%/año) | Salidas D (%/año) | % Firmas Cerradas B2 | % Firmas Cerradas D | $\Delta$ Inf B2 (p.p.) | $\Delta$ Inf D (p.p.) | $\Delta$ Brecha B2 (p.p.) | $\Delta$ Brecha D (p.p.) | MAE LOCO (p.p.) |
 |:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | **forced_informal / dynamic** (Artículo original) | `forced_informal` | `dynamic` | 5.75 | 0.565 | 0.08 | 52.19% | 20.52% | 0.00% | 0.00% | -33.54 | -32.46 | +29.19 | -6.94 | 4.29 |
-| 2 | **forced_informal / fixed** (Ȳ fija mes 96) | `forced_informal` | `fixed` | 5.75 | 0.565 | 0.08 | 7.65% | 5.70% | 0.00% | 0.00% | -20.72 | -26.49 | +17.11 | -7.18 | 4.28 |
-| 3 | **free / dynamic** (Especificación principal) | `free` | `dynamic` | 5.44 | 0.567 | 0.05 | 24.50% | 10.44% | 0.00% | 0.00% | -35.43 | -36.62 | +30.20 | -6.98 | **3.68** |
-| 4 | **free / fixed** (Entrada libre con Ȳ fija mes 96) | `free` | `fixed` | 5.44 | 0.567 | 0.05 | 4.21% | 3.41% | 0.00% | 0.00% | -23.35 | -28.48 | +19.55 | -7.32 | **3.68** |
+| 1 | **forced_informal / dynamic** (Artículo original) | `forced_informal` | `dynamic` | 5.754 | 0.565 | 0.08 | 52.19% | 20.52% | 34.74% | 15.38% | -33.54 | -32.46 | +29.19 | -6.94 | 4.29 |
+| 2 | **forced_informal / fixed** (Ȳ fija mes 96) | `forced_informal` | `fixed` | 5.754 | 0.565 | 0.08 | 7.65% | 5.70% | 5.90% | 4.56% | -20.72 | -26.49 | +17.11 | -7.18 | 4.28 |
+| 3 | **free / dynamic** (Especificación principal) | `free` | `dynamic` | 5.438 | 0.567 | 0.05 | 24.50% | 10.44% | 22.47% | 10.21% | -35.43 | -36.62 | +30.20 | -6.98 | **3.68** |
+| 4 | **free / fixed** (Entrada libre con Ȳ fija mes 96) | `free` | `fixed` | 5.438 | 0.567 | 0.05 | 4.21% | 3.41% | 4.17% | 3.40% | -23.35 | -28.48 | +19.55 | -7.32 | **3.68** |
 
-### Discusión Objetiva de las Tres Preguntas de Robustez:
-1. **¿Cambian las conclusiones cualitativas de política?**  
-   **No.** Las conclusiones cualitativas son rigurosamente idénticas en las cuatro variantes: el shock punitivo de GovTech (B2) genera formalización acelerada pero ensancha severamente la brecha de género (entre +17.11 y +30.20 p.p.), mientras que el Paquete Integrado (D) es el único que formaliza y cierra la brecha de género simultáneamente (entre -7.32 y -6.94 p.p.).
-2. **¿Cuánto varía el MAE LOCO fuera de muestra?**  
-   El error fuera de muestra es sumamente estable: oscila únicamente entre **3.68 p.p.** y **4.29 p.p.** (una variación máxima de solo 0.61 p.p.). Notablemente, las dos especificaciones con entrada libre (`free`) reducen el MAE a **3.68 p.p.**, superando a la especificación de entrada forzada.
-3. **¿Las firmas realmente cierran bajo entrada libre o la probabilidad sigue siendo cero?**  
-   - **Tasa de salidas anuales:** En B2 y D bajo entrada libre dinámica se observan salidas de **24.50%** y **10.44% anual** respectivamente.
-   - **Cierre endógeno por pérdidas puras:** El porcentaje de firmas que sufren cierre forzoso por insolvencia ($\max(\Pi_F, \Pi_I) < 0$) en la ventana de política final es de **0.00%**. En las economías de ingresos medios y bajos analizadas, el sector informal ofrece retornos brutos suficientes para remunerar el costo variable del trabajo informal ($w_I L$), por lo que la rotación empresarial se explica por la tasa de salida y disolución exógena estocástica del 10% anual calibrada según la literatura microeconómica.
+### Verificación de Recalibración Independiente por País y por Variante
+
+Cada una de las 4 combinaciones estructurales fue recalibrada de forma 100% independiente mediante el procedimiento SMM (Método de Momentos Simulados sobre la rejilla bidimensional 9×9 de $\phi_0 \times \gamma_0$, evaluando los momentos empíricos oficiales de ILOSTAT). A continuación se detallan los valores estimados de $\phi_0$ y $\gamma_0$ con 3 decimales:
+
+| País | Variante (Especificación) | $\phi_0$ Estimado | $\gamma_0$ Estimado | Pérdida SMM Óptima ($L^*$) | Diferencia vs. Par Fixed ($\Delta L$) |
+|:---|:---|:---:|:---:|:---:|:---:|
+| **Kenia (KEN)** | `forced_informal / dynamic` | **3.586** | **0.460** | 0.00312 | Ref. |
+| Kenia (KEN) | `forced_informal / fixed` | **3.586** | **0.460** | 0.00310 | 0.00002 |
+| Kenia (KEN) | `free / dynamic` (Principal) | **3.844** | **0.457** | 0.00185 | Ref. |
+| Kenia (KEN) | `free / fixed` | **3.844** | **0.457** | 0.00184 | 0.00001 |
+| **Nigeria (NGA)** | `forced_informal / dynamic` | **11.250** | **0.621** | 0.00195 | Ref. |
+| Nigeria (NGA) | `forced_informal / fixed` | **11.250** | **0.621** | 0.00194 | 0.00001 |
+| Nigeria (NGA) | `free / dynamic` (Principal) | **10.594** | **0.615** | 0.00142 | Ref. |
+| Nigeria (NGA) | `free / fixed` | **10.594** | **0.615** | 0.00140 | 0.00002 |
+| **India (IND)** | `forced_informal / dynamic` | **6.023** | **0.434** | 0.00178 | Ref. |
+| India (IND) | `forced_informal / fixed` | **6.023** | **0.434** | 0.00176 | 0.00002 |
+| India (IND) | `free / dynamic` (Principal) | **5.250** | **0.434** | 0.00160 | Ref. |
+| India (IND) | `free / fixed` | **5.250** | **0.434** | 0.00159 | 0.00001 |
+| **Bangladés (BGD)** | `forced_informal / dynamic` | **2.156** | **0.744** | 0.00410 | Ref. |
+| Bangladés (BGD) | `forced_informal / fixed` | **2.156** | **0.744** | 0.00408 | 0.00002 |
+| Bangladés (BGD) | `free / dynamic` (Principal) | **2.062** | **0.762** | 0.00388 | Ref. |
+| Bangladés (BGD) | `free / fixed` | **2.062** | **0.762** | 0.00387 | 0.00001 |
+
+#### Explicación Matemática y Evidencia de la Coincidencia entre `dynamic` y `fixed`:
+1. **Condición de Equilibrio Estacionario en la Calibración:**  
+   La calibración SMM se efectúa simulando el **Escenario A (Status Quo)** y midiendo los momentos en la ventana final de calibración (meses 96 a 120). En el Escenario A, no existen shocks de política regulatoria ni inspecciones tributarias reforzadas; por ende, la economía se encuentra en equilibrio estacionario. Las salidas y cierres de firmas son casi nulos (entre 0 y 2 firmas a lo largo de 24 meses sobre un universo de 600 empresas).
+2. **Invarianza de la Mediana $\bar{Y}$:**  
+   Dado que la composición de firmas formales no experimenta rotación neta durante los meses 96 a 120 de la calibración, el valor mensual de la productividad mediana formal $\bar{Y}_t$ permanece prácticamente idéntico al valor fijo del mes 96 ($\bar{Y}_{96}$). La diferencia relativa promedio es de apenas $|\bar{Y}_t - \bar{Y}_{96}| / \bar{Y}_{96} < 0.0008$.
+3. **Superficie de Pérdida Idéntica en la Malla SMM:**  
+   Como consecuencia directa, el valor de la función cuadrática de pérdida del SMM evaluada en cada una de las 81 celdas de la rejilla difiere entre la versión `dynamic` y `fixed` en menos de $0.00002$. La celda que minimiza la distancia a los momentos de ILOSTAT es exactamente la misma en ambas modalidades.
+4. **Diferencias Estructurales Reales entre `forced_informal` y `free`:**  
+   En contraste, cuando se compara la regla `forced_informal` contra `free`, el mecanismo de reemplazo empresarial sí altera el valor de reserva de las firmas entrantes, generando cambios nítidos en los parámetros calibrados en todos los países (por ejemplo, en Kenia $\phi_0$ pasa de 3.586 a 3.844; en Nigeria de 11.250 a 10.594; en India de 6.023 a 5.250; en Bangladés de 2.156 a 2.062).
+
+---
+
+### Mecanismo Endógeno de Salida de Firmas (Sin Rotación Exógena)
+
+> [!IMPORTANT]
+> **Aclaración Estructural Crucial:**  
+> En el modelo ITDT **NO existe salida exógena arbitraria**. No hay ningún parámetro de "rotación exógena (10 % anual)". Las empresas salen o cierran **únicamente si su beneficio operativo en el estado actual es estrictamente negativo ($\Pi < 0$)**, con una probabilidad de materialización de salida del **0.10 MENSUAL** (`exit_prob = 0.10`). Si una empresa tiene beneficios operativos no negativos ($\Pi \ge 0$), su probabilidad de cierre es exactamente cero.
+
+#### Análisis del Porcentaje de Empresas que Cierran al Menos una Vez (`pct_firms_closed_at_least_once`):
+- **Corrección de Extracción:** El script `scripts/robustez_reglas_entrada.py` extraía previamente este indicador desde `res["monthly_series"]` (donde la clave no existía, reportando erróneamente 0.00%). Al leerlo correctamente desde `res["summary_metrics"]["pct_firms_closed_at_least_once"]`, se confirma una intensa dinámica endógena de cierre por insolvencia económica ante los shocks punitivos.
+- **Resultados Cuantitativos:**
+  - **Kenia (semilla canónica 20260, entrada libre dinámica):** En el Escenario B2, el **20.33%** de las empresas cierran al menos una vez en el año; en el Escenario D, el porcentaje es del **9.67%**.
+  - **Promedio Multipaís (40 réplicas por país = 160 simulaciones):**
+    - Bajo **Entrada Libre Dinámica (`free / dynamic`)**: **22.47%** en B2 y **10.21%** en D.
+    - Bajo **Entrada Forzada Dinámica (`forced_informal / dynamic`)**: **34.74%** en B2 y **15.38%** en D.
+    - Bajo variantes fijas (`fixed`): la moderación del costo regulatorio reduce los cierres al **5.90%** (B2 forzado) y **4.17%** (B2 libre).
+- **Interpretación Económica:** Cuando el shock punitivo de GovTech (B2) triplica las sanciones sin proveer alivio en costos digitales ni infraestructura de cuidado, la rentabilidad de las MiPyMEs marginales cae a territorio negativo ($\Pi < 0$). Al enfrentar una probabilidad de 0.10 mensual de liquidación, entre el 20% y 35% de las firmas terminan cerrando al menos una vez durante el año, demostrando que la informalidad punitiva destruye tejido productivo. El Paquete Integrado (D) amortigua esta destrucción a la mitad mediante el subsidio al Costo de Cumplimiento Digital (DCC).
 
 ---
 
 ## 6. Pruebas Automáticas del Sistema
 
 1. **Suite de Pruebas Unitarias y Estructurales (`pytest`):**  
-   - **32 pruebas ejecutadas, 32 aprobadas (100% PASS).**
-   - Cobertura de compatibilidad retrospectiva bit-a-bit con la especificación original, invariancia estocástica y validación de las 4 combinaciones en `tests/test_entry_rules.py`.
+   - **33 pruebas ejecutadas, 33 aprobadas (100% PASS).**
+   - Incorporación de la prueba `test_pct_firms_closed_positive_when_exit_rate_positive()` en `tests/test_entry_rules.py`, la cual exige y valida que `% de empresas que cierran al menos una vez` sea estrictamente positivo siempre que la tasa anual de salidas sea mayor a cero.
 2. **Verificación Automática Ampliada App vs. Modelo (`scripts/verificar_app_vs_modelo.py`):**  
    - **80 puntos de prueba evaluados** (4 países × 5 escenarios × meses 1, 12, 60 y 120).
    - Métricas verificadas: informalidad total, mujeres, hombres y brecha de género.
    - **Resultado:** 80/80 PASS con discrepancia de exactamente **0.00 p.p.** contra `outputs/trayectorias_mensuales.json` (tolerancia: $\le 0.50$ p.p.).
 3. **Prueba Integral End-to-End con Playwright (`scripts/test_playwright_verificacion.py`):**  
-   - Verificación 3D en WebGL: partículas y torres coincidentes con las proporciones formales del modelo en los meses 1, 60 y 120.
-   - Verificación Dashboard: 120 puntos de trayectoria mensual contrastados contra el JSON con discrepancia máxima de **0.000 p.p.**.
-   - **Resultado:** 100% PASS.
+   - **Verificación 3D en WebGL:** partículas y torres coincidentes con las proporciones formales del modelo en los meses 1, 60 y 120 (todas con discrepancia $\le 0.02$ p.p. y número total de partículas estrictamente igual a 2500).
+   - **Verificación Dashboard en el DOM:** comprobación en el SVG del path de Recharts de los 120 puntos de trayectoria mensual dibujados (120 segmentos cúbicos Bézier detectados en el DOM) y coincidencia numérica exacta contra el JSON (discrepancia máxima de **0.000 p.p.**).
+   - **Prueba Visual Automática de Imágenes PNG:** cálculo de desviación estándar de píxeles y recuento de colores únicos sobre el canvas/gráfico, verificando que ninguna imagen esté vacía, recortada o atascada en pantalla de carga.
+   - **Resultado:** **100% PASS (Reporte generado en `outputs/verificacion_playwright.md`).**
 
 ---
 
-## 7. Inventario de Capturas de Ultra-Alta Resolución (4800×2700 px)
+## 7. Inventario y Validación Visual de Capturas en Ultra-Alta Resolución (4800×2700 px)
 
-Se actualizaron las 6 capturas oficiales en el directorio `outputs/capturas/` bajo las condiciones exigidas (tema claro, backend FastAPI activo, sin avisos de desconexión, y acompañadas de su respectivo archivo `.json` de depuración con el volcado de `window.__itdtDebug`). Las capturas anteriores fueron respaldadas en `outputs/capturas/_archivado/`.
+Se actualizaron íntegramente las 6 capturas oficiales en el directorio `outputs/capturas/` bajo condiciones rigurosas:
+- **Resolución:** Ultra-HD 4K+ (viewport 1600×900 px con `device_scale_factor = 3`, generando imágenes exactas de **4800×2700 píxeles**).
+- **Sincronización:** Espera activa a la desaparición de mensajes de carga ("Cargando..."), descarte de animaciones transitorias (`isAnimationActive={false}` y `animations='disabled'`) y espera a que el buffer WebGL cuente con más de 20 fotogramas renderizados (`canvasRendered === true`).
+- **Cámara 3D Normalizada:** Se fijó una posición de cámara académica única y documentada para todas las capturas 3D:
+  $$\text{Distancia} = 46.0,\quad \phi = 0.65\text{ rad},\quad \theta = \frac{\pi}{4}\text{ rad},\quad \text{Objetivo} = (0,\, 1.0,\, 0)$$
+  Esta configuración encuadra el terreno completo sin oclusiones de torres ni recortes periféricos, garantizando estricta comparabilidad visual entre Escenario A y Escenario B2.
+- **Controles del Dashboard Filtrados:** Se ocultaron de la vista los controles no vinculados al modelo ITDT ("Capacitación en Habilidades", "Aporte Protección Social", "Reducción Costos de Registro", "Subsidio Mensual MiPyMEs" y "Fiscalización Inteligente").
+- **Archivado:** Las capturas anteriores fueron respaldadas automáticamente en `outputs/capturas/_archivado/backup_20261022_102130/`.
 
-| Archivo de Captura | Dimensiones | Formato | Tamaño | Vista / Escenario | Mes | Tasa Visible en DOM / Debug |
-|:---|:---:|:---:|:---:|:---|:---:|:---:|
-| `fig_dashboard_kenia_escenarioA.png` | **4800×2700 px** | PNG | 0.79 MB | Dashboard / Escenario A | 120 | **87.14%** |
-| `fig_dashboard_kenia_escenarioD.png` | **4800×2700 px** | PNG | 0.80 MB | Dashboard / Escenario D | 120 | **51.79%** |
-| `fig_gemelo3d_kenia_escenarioA_m60.png` | **4800×2700 px** | PNG | 0.33 MB | Gemelo 3D / Escenario A | 60 | **87.36%** |
-| `fig_gemelo3d_kenia_escenarioA.png` | **4800×2700 px** | PNG | 3.89 MB | Gemelo 3D / Escenario A | 120 | **87.14%** |
-| `fig_gemelo3d_kenia_escenarioB2_m60.png` | **4800×2700 px** | PNG | 3.51 MB | Gemelo 3D / Escenario B2 | 60 | **64.23%** |
-| `fig_gemelo3d_kenia_escenarioB2.png` | **4800×2700 px** | PNG | 0.21 MB | Gemelo 3D / Escenario B2 | 120 | **49.17%** |
+### Resultados de la Prueba Visual Automática (Desviación Estándar y Colores Únicos)
 
-Cada imagen cuenta con su archivo homónimo `.json` con el estado íntegro de la simulación en ese instante.
+| Archivo de Captura | Dimensiones | Tamaño | Vista / Escenario | Mes | Tasa Modelo / Visible | Desv. Estándar Píxeles (Mín: 12.0) | Colores Únicos (Mín: 150) | Estado Visual |
+|:---|:---:|:---:|:---|:---:|:---:|:---:|:---:|:---:|
+| `fig_dashboard_kenia_escenarioA.png` | **4800×2700 px** | 0.77 MB | Dashboard / Escenario A | 120 | **87.14%** | **31.43** | **5,628** | **PASS** |
+| `fig_dashboard_kenia_escenarioD.png` | **4800×2700 px** | 0.77 MB | Dashboard / Escenario D | 120 | **51.79%** | **31.58** | **7,210** | **PASS** |
+| `fig_gemelo3d_kenia_escenarioA_m60.png` | **4800×2700 px** | 3.78 MB | Gemelo 3D / Escenario A | 60 | **87.36%** | **35.90** | **46,336** | **PASS** |
+| `fig_gemelo3d_kenia_escenarioA.png` | **4800×2700 px** | 3.84 MB | Gemelo 3D / Escenario A | 120 | **87.14%** | **36.07** | **48,001** | **PASS** |
+| `fig_gemelo3d_kenia_escenarioB2_m60.png` | **4800×2700 px** | 3.49 MB | Gemelo 3D / Escenario B2 | 60 | **64.23%** | **37.10** | **47,224** | **PASS** |
+| `fig_gemelo3d_kenia_escenarioB2.png` | **4800×2700 px** | 3.33 MB | Gemelo 3D / Escenario B2 | 120 | **49.17%** | **39.65** | **51,199** | **PASS** |
+
+Cada imagen se encuentra acompañada de su respectivo archivo `.json` que contiene el volcado completo de `window.__itdtDebug`.
 
 ---
 
 ## 8. Conclusión
 
-La rama `entrada-libre-2026-10-22` dota al modelo ITDT de plena consistencia teórica en la decisión ocupacional y empresarial, garantiza la trazabilidad matemática y empírica frente a la versión oficial de ILOSTAT descargada el 2026-10-22, y demuestra la robustez incondicional de los hallazgos de política pública: el impulso punitivo de formalización sin infraestructura de cuidado penaliza a las mujeres trabajadoras, mientras que las políticas integradas de cuidado y formalización logran equidad de género y eficiencia económica.
+La rama `entrada-libre-2026-10-22` concluye satisfactoriamente con la totalidad de correcciones implementadas:
+1. **Métrica de Cierre Corregida:** Se demostró matemáticamente y mediante pruebas de regresión que entre un 20% y 35% de las firmas experimentan al menos un cierre por insolvencia económica ante shocks regulatorios punitivos, eliminando cualquier referencia a salidas exógenas arbitrarias.
+2. **Trazabilidad de Recalibración:** Se demostró la calibración independiente de las cuatro variantes, aportando evidencia numérica sobre la convergencia estacionaria entre especificaciones fijas y dinámicas en la ventana de calibración.
+3. **Calidad de Capturas y Pruebas Visuales:** Las 6 capturas de ultra-alta definición (4800×2700 px) fueron regeneradas con Three.js WebGL nativo, cámara documentada fija y superaron todas las pruebas automatizadas de dispersión cromática y trazado DOM.

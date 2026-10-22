@@ -70,6 +70,12 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const themeRef = useRef<AppTheme>(theme);
 
+  // Modo captura para fijar cámara, deshabilitar transiciones y sincronizar con Playwright
+  const isCaptureMode = typeof window !== 'undefined' && (
+    new URLSearchParams(window.location.search).get('capture') === 'true' ||
+    Boolean((window as any).__IS_CAPTURE)
+  );
+
   // Dynamic simulation sync refs
   const monthRef = useRef(month);
   const workersRef = useRef(workers);
@@ -329,9 +335,17 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   const isDraggingRef = useRef(false);
   const prevMousePos = useRef({ x: 0, y: 0 });
   const totalDragDist = useRef(0);
-  const cameraAngle = useRef({ theta: Math.PI / 4, phi: 0.85, distance: 40 });
-  const targetLookAt = useRef(new THREE.Vector3(0, 1.5, 0));
-  const currentLookAt = useRef(new THREE.Vector3(0, 1.5, 0));
+  const cameraAngle = useRef(
+    isCaptureMode
+      ? { theta: Math.PI / 4, phi: 0.65, distance: 46 }
+      : { theta: Math.PI / 4, phi: 0.85, distance: 40 }
+  );
+  const targetLookAt = useRef(
+    isCaptureMode ? new THREE.Vector3(0, 1.0, 0) : new THREE.Vector3(0, 1.5, 0)
+  );
+  const currentLookAt = useRef(
+    isCaptureMode ? new THREE.Vector3(0, 1.0, 0) : new THREE.Vector3(0, 1.5, 0)
+  );
 
   // Current country terrain elevation formula
   const terrainFunc = (x: number, z: number, countryCode: CountryCode) => {
@@ -521,8 +535,9 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
     cameraAngle.current.theta = Math.PI / 4;
   }, [country]);
 
-  // Adjust camera distance for deepZoomLevel
+  // Adjust camera distance for deepZoomLevel (suppressed in capture mode)
   useEffect(() => {
+    if (isCaptureMode) return;
     if (deepZoomLevel === 'satellite') {
       cameraAngle.current.distance = 55;
       cameraAngle.current.phi = 0.55;
@@ -564,14 +579,20 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
     scene.fog = new THREE.FogExp2(isInitLight ? 0xf8fafc : 0x04060b, isInitLight ? 0.01 : 0.018);
     sceneRef.current = scene;
 
-    // 2. Camera
+    // 2. Camera: posición inicial inmediata (sin comenzar en 0,0,0)
     const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
     cameraRef.current = camera;
+    const initCamX = currentLookAt.current.x + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.sin(cameraAngle.current.theta);
+    const initCamY = currentLookAt.current.y + cameraAngle.current.distance * Math.cos(cameraAngle.current.phi);
+    const initCamZ = currentLookAt.current.z + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.cos(cameraAngle.current.theta);
+    camera.position.set(initCamX, initCamY, initCamZ);
+    camera.lookAt(currentLookAt.current);
 
-    // 3. WebGL Renderer with ACES Filmic Tone Mapping
+    // 3. WebGL Renderer with ACES Filmic Tone Mapping (preserveDrawingBuffer para capturas fidedignas)
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true, 
-      alpha: true, 
+      alpha: false, 
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance' 
     });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -889,12 +910,14 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
 
     // Animation Loop
     let animationFrameId: number;
+    let renderedFrameCount = 0;
     const clock = new THREE.Clock();
     const dummy = new THREE.Object3D();
     const colorDummy = new THREE.Color();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+      renderedFrameCount++;
       const elapsed = clock.getElapsedTime();
       const currentMonth = monthRef.current;
       const currentWorkers = workersRef.current;
@@ -916,17 +939,33 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
       const colorNeonCyan = new THREE.Color(0x00f0ff);
       const colorDeepSky = new THREE.Color(0x0284c7);
 
-      // Smooth Camera tracking
-      currentLookAt.current.lerp(targetLookAt.current, 0.06);
+      if (isCaptureMode) {
+        // Posición fija documentada para capturas académicas (sin recortes, torres ni partículas fuera de cuadro)
+        cameraAngle.current.theta = Math.PI / 4;
+        cameraAngle.current.phi = 0.65;
+        cameraAngle.current.distance = 46;
+        currentLookAt.current.set(0, 1.0, 0);
+        targetLookAt.current.set(0, 1.0, 0);
 
-      const targetX = currentLookAt.current.x + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.sin(cameraAngle.current.theta);
-      const targetY = currentLookAt.current.y + cameraAngle.current.distance * Math.cos(cameraAngle.current.phi);
-      const targetZ = currentLookAt.current.z + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.cos(cameraAngle.current.theta);
+        const targetX = currentLookAt.current.x + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.sin(cameraAngle.current.theta);
+        const targetY = currentLookAt.current.y + cameraAngle.current.distance * Math.cos(cameraAngle.current.phi);
+        const targetZ = currentLookAt.current.z + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.cos(cameraAngle.current.theta);
 
-      camera.position.x += (targetX - camera.position.x) * 0.08;
-      camera.position.y += (targetY - camera.position.y) * 0.08;
-      camera.position.z += (targetZ - camera.position.z) * 0.08;
-      camera.lookAt(currentLookAt.current);
+        camera.position.set(targetX, targetY, targetZ);
+        camera.lookAt(currentLookAt.current);
+      } else {
+        // Smooth Camera tracking
+        currentLookAt.current.lerp(targetLookAt.current, 0.06);
+
+        const targetX = currentLookAt.current.x + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.sin(cameraAngle.current.theta);
+        const targetY = currentLookAt.current.y + cameraAngle.current.distance * Math.cos(cameraAngle.current.phi);
+        const targetZ = currentLookAt.current.z + cameraAngle.current.distance * Math.sin(cameraAngle.current.phi) * Math.cos(cameraAngle.current.theta);
+
+        camera.position.x += (targetX - camera.position.x) * 0.08;
+        camera.position.y += (targetY - camera.position.y) * 0.08;
+        camera.position.z += (targetZ - camera.position.z) * 0.08;
+        camera.lookAt(currentLookAt.current);
+      }
 
       // Policy sweep wave expansion
       if (waveMesh.visible) {
@@ -979,6 +1018,13 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
             informalityRate: Number(currentInf.toFixed(2)),
             totalParticles: currentWorkers.length,
             totalTowers: currentFirms.length,
+            canvasRendered: renderedFrameCount >= 20,
+            renderedFrames: renderedFrameCount,
+            cameraPosition: {
+              x: Number(camera.position.x.toFixed(2)),
+              y: Number(camera.position.y.toFixed(2)),
+              z: Number(camera.position.z.toFixed(2)),
+            },
           };
         }
 
@@ -988,8 +1034,8 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
           // 1. Asignación directa y determinista: partículas i < targetFormalCount son formales, el resto informales
           const targetProgress = i < targetFormalCount ? 1.0 : 0.0;
 
-          // 2. Transición cinemática fluida entre estados
-          if (w.currentProgress === undefined) {
+          // 2. Transición cinemática fluida entre estados (instantánea en modo captura)
+          if (isCaptureMode || w.currentProgress === undefined) {
             w.currentProgress = targetProgress;
           } else {
             w.currentProgress = THREE.MathUtils.lerp(w.currentProgress, targetProgress, 0.12);
@@ -1185,6 +1231,12 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
 
       // Post-processed Render
       composer.render();
+      if (typeof window !== 'undefined' && (window as any).__itdtDebug) {
+        (window as any).__itdtDebug.renderedFrames = renderedFrameCount;
+        if (renderedFrameCount >= 20) {
+          (window as any).__itdtDebug.canvasRendered = true;
+        }
+      }
     };
 
     animate();

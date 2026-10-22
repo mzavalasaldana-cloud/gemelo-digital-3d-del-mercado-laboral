@@ -81,6 +81,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const isReduced = informalityDelta <= 0;
   const isLight = theme === 'light';
 
+  // Modo captura para deshabilitar animaciones y fijar renderizado instantáneo
+  const isCaptureMode = typeof window !== 'undefined' && (
+    new URLSearchParams(window.location.search).get('capture') === 'true' ||
+    Boolean((window as any).__IS_CAPTURE)
+  );
+
   const [evolutionTab, setEvolutionTab] = useState<'sim' | 'hist'>('sim');
 
   // 1. Serie Histórica de ILOSTAT leída de la API (/api/v1/simulation/historical)
@@ -557,66 +563,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             </div>
 
-            {/* Policy Tuning Sliders */}
-            <div className={`space-y-4 pt-2 border-t ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
-              <span className="text-[10px] font-mono-hud text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block font-bold">
-                {language === 'en' ? 'Fiscal & Regulatory Levers' : 'Palancas de Intervención Fiscal & Regulatoria'}
-              </span>
-
-              {/* Slider 1: Capacitación en Habilidades */}
-              <div>
-                <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
-                  <span>{t('skillsTraining', language)}</span>
-                  <span className="text-cyan-600 dark:text-cyan-400 font-bold">{policyParams.skillsTrainingCoverage}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={policyParams.skillsTrainingCoverage}
-                  onChange={(e) => handleSlider('skillsTrainingCoverage', Number(e.target.value))}
-                  className="w-full accent-cyan-400 cursor-pointer"
-                />
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t('skillsTrainingDesc', language)}</span>
-              </div>
-
-              {/* Slider 4: Impuesto Protección Social */}
-              <div>
-                <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
-                  <span>{t('socialTax', language)}</span>
-                  <span className="text-indigo-500 font-bold">{policyParams.socialProtectionTax}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="45"
-                  step="2"
-                  value={policyParams.socialProtectionTax}
-                  onChange={(e) => handleSlider('socialProtectionTax', Number(e.target.value))}
-                  className="w-full accent-indigo-400 cursor-pointer"
-                />
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t('socialTaxDesc', language)}</span>
-              </div>
-
-              {/* Slider 5: Inspección Inteligente */}
-              <div>
-                <div className={`flex justify-between text-xs font-mono-hud mb-1 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
-                  <span>{t('smartInspection', language)}</span>
-                  <span className="text-cyan-600 dark:text-cyan-400 font-bold">{policyParams.smartInspectionCoverage}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={policyParams.smartInspectionCoverage}
-                  onChange={(e) => handleSlider('smartInspectionCoverage', Number(e.target.value))}
-                  className="w-full accent-cyan-400 cursor-pointer"
-                />
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t('smartInspectionDesc', language)}</span>
-              </div>
-            </div>
+            {/* Policy Tuning Sliders: Ocultos por no formar parte del modelo matemático ITDT calibrado */}
+            {/* Los escenarios A, B1, B2, C y D representan fielmente las especificaciones estructurales del modelo */}
 
             {/* Policy Wave Trigger */}
             <div className="pt-2">
@@ -704,6 +652,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         fill="#f59e0b" 
                         fillOpacity={0.15} 
                         name="IC 95% Informalidad" 
+                        isAnimationActive={!isCaptureMode}
                       />
                       <Line 
                         type="monotone" 
@@ -713,6 +662,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         strokeWidth={2.5} 
                         dot={false} 
                         activeDot={{ r: 5, stroke: '#ffffff' }} 
+                        isAnimationActive={!isCaptureMode}
                       />
                       <Line 
                         type="monotone" 
@@ -722,6 +672,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         strokeWidth={2.5} 
                         dot={false} 
                         activeDot={{ r: 5, stroke: '#ffffff' }} 
+                        isAnimationActive={!isCaptureMode}
                       />
                       <Line 
                         type="monotone" 
@@ -731,6 +682,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         strokeWidth={1.8} 
                         strokeDasharray="4 4"
                         dot={false} 
+                        isAnimationActive={!isCaptureMode}
                       />
                       <Line 
                         type="monotone" 
@@ -740,6 +692,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         strokeWidth={1.8} 
                         strokeDasharray="4 4"
                         dot={false} 
+                        isAnimationActive={!isCaptureMode}
                       />
                     </LineChart>
                   ) : (
@@ -841,8 +794,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <XAxis dataKey="indicador" stroke="#64748b" tick={{ fontSize: 11, fill: '#64748b' }} />
                     <YAxis stroke="#64748b" tick={{ fontSize: 11, fill: '#64748b' }} />
                     <Tooltip contentStyle={tooltipStyle} />
-                    <Bar dataKey={t('baselineLabel', language)} fill="#64748b" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey={t('interventionLabel', language)} fill="#00f0ff" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey={t('baselineLabel', language)} fill="#64748b" radius={[4, 4, 0, 0]} isAnimationActive={!isCaptureMode} />
+                    <Bar dataKey={t('interventionLabel', language)} fill="#00f0ff" radius={[4, 4, 0, 0]} isAnimationActive={!isCaptureMode} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -887,11 +840,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <YAxis stroke="#64748b" tick={{ fontSize: 11, fill: '#64748b' }} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace' }} />
-                    <Area type="monotone" dataKey="formalManufactura" name={language === 'en' ? 'Formal: Manufacturing' : 'Formal: Manufactura'} stackId="1" stroke="#00f0ff" fill="#00f0ff" fillOpacity={0.35} />
-                    <Area type="monotone" dataKey="formalServiciosTech" name={language === 'en' ? 'Formal: Tech & Services' : 'Formal: Tech & Servicios'} stackId="1" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.35} />
-                    <Area type="monotone" dataKey="formalRetail" name={language === 'en' ? 'Formal: Retail' : 'Formal: Comercio'} stackId="1" stroke="#818cf8" fill="#818cf8" fillOpacity={0.35} />
-                    <Area type="monotone" dataKey="informalTalleres" name={language === 'en' ? 'Informal: Urban Workshops' : 'Informal: Talleres Urbanos'} stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.35} />
-                    <Area type="monotone" dataKey="informalAmbulante" name={language === 'en' ? 'Informal: Street Vendors' : 'Informal: Vía Pública'} stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.35} />
+                    <Area type="monotone" dataKey="formalManufactura" name={language === 'en' ? 'Formal: Manufacturing' : 'Formal: Manufactura'} stackId="1" stroke="#00f0ff" fill="#00f0ff" fillOpacity={0.35} isAnimationActive={!isCaptureMode} />
+                    <Area type="monotone" dataKey="formalServiciosTech" name={language === 'en' ? 'Formal: Tech & Services' : 'Formal: Tech & Servicios'} stackId="1" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.35} isAnimationActive={!isCaptureMode} />
+                    <Area type="monotone" dataKey="formalRetail" name={language === 'en' ? 'Formal: Retail' : 'Formal: Comercio'} stackId="1" stroke="#818cf8" fill="#818cf8" fillOpacity={0.35} isAnimationActive={!isCaptureMode} />
+                    <Area type="monotone" dataKey="informalTalleres" name={language === 'en' ? 'Informal: Urban Workshops' : 'Informal: Talleres Urbanos'} stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.35} isAnimationActive={!isCaptureMode} />
+                    <Area type="monotone" dataKey="informalAmbulante" name={language === 'en' ? 'Informal: Street Vendors' : 'Informal: Vía Pública'} stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.35} isAnimationActive={!isCaptureMode} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

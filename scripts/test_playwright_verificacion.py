@@ -97,13 +97,15 @@ def run_tests():
             viewport={"width": 1600, "height": 900},
             device_scale_factor=1,
         )
-        page = context.new_page()
+        context.route("**fonts.googleapis.com**", lambda r: r.abort())
+        context.route("**fonts.gstatic.com**", lambda r: r.abort())
 
         # -------------------------------------------------------------
         # 1. VERIFICACIÓN 3D: PARTÍCULAS Y TORRES EN MESES 1, 60 Y 120
         # -------------------------------------------------------------
         print("\n=== PARTE 1: VERIFICACIÓN 3D (window.__itdtDebug) ===")
         for tc in test_cases_3d:
+            page = context.new_page()
             c = tc["country"]
             sc = tc["scenario"]
             m = tc["month"]
@@ -111,6 +113,12 @@ def run_tests():
             url = f"{FRONTEND_URL}/?view=digital_twin_3d&country={c}&scenario={sc}&month={m}&theme=light"
             print(f"\n[*] Navegando a 3D: {c} Escenario {sc} Mes {m}...")
             page.goto(url, wait_until="networkidle", timeout=30000)
+
+            # Esperar a que desaparezca cualquier indicador de carga
+            try:
+                page.wait_for_selector("text=Cargando", state="detached", timeout=15000)
+            except Exception:
+                pass
 
             # Asegurar slider en el mes correspondiente
             page.evaluate(
@@ -124,10 +132,13 @@ def run_tests():
             }""",
                 m,
             )
-            time.sleep(2.0)
+            time.sleep(1.0)
 
-            # Esperar a que window.__itdtDebug esté disponible
-            page.wait_for_function("() => window.__itdtDebug !== undefined", timeout=10000)
+            # Esperar a que window.__itdtDebug esté disponible y tenga frames renderizados
+            page.wait_for_function(
+                "() => window.__itdtDebug !== undefined && window.__itdtDebug.canvasRendered === true",
+                timeout=15000,
+            )
             debug = page.evaluate("() => window.__itdtDebug")
 
             # Modelo esperado
@@ -188,18 +199,20 @@ def run_tests():
             print(f" -> Partículas: {drawn_informal} inf, {drawn_formal} form (Total: {total_particles}) | P2: {'OK' if p2_pass else 'FAIL'} | P3: {'OK' if p3_pass else 'FAIL'}")
             print(f" -> Torres: {towers_formal} formales (Esperado: {exp_towers_formal}), {towers_informal} informales | P4: {'OK' if p4_pass else 'FAIL'}")
             print(f" -> ESTADO CASO: {'APROBADO (PASS)' if tc_passed else 'RECHAZADO (FAIL)'}")
+            page.close()
 
         # -------------------------------------------------------------
         # 2. VERIFICACIÓN DASHBOARD: 120 PUNTOS DE TRAYECTORIA REAL
         # -------------------------------------------------------------
         print("\n=== PARTE 2: VERIFICACIÓN DASHBOARD (120 Puntos vs JSON) ===")
         for dc in dashboard_cases:
+            page = context.new_page()
             c = dc["country"]
             sc = dc["scenario"]
             url = f"{FRONTEND_URL}/?view=dashboard&country={c}&scenario={sc}&theme=light"
             print(f"\n[*] Navegando a Dashboard: {c} Escenario {sc}...")
             page.goto(url, wait_until="networkidle", timeout=30000)
-            time.sleep(2.0)
+            time.sleep(1.0)
 
             # Esperar a que la trayectoria esté en window.__itdtDebug o window.__dashboardTrajectory
             page.wait_for_function(
@@ -225,7 +238,16 @@ def run_tests():
                     max_diff = diff
                 diffs.append((idx + 1, dash_inf, model_inf, diff))
 
-            points_match = has_120 and (max_diff <= 0.50)
+            # Verificar en el DOM que el gráfico del dashboard tiene dibujados los 120 puntos (elementos SVG)
+            dom_line_d = page.evaluate("""() => {
+                const path = document.querySelector('.recharts-line-curve');
+                return path ? path.getAttribute('d') : null;
+            }""")
+            num_svg_segments = max(len(dom_line_d.split('C')), len(dom_line_d.split('L'))) if dom_line_d else 0
+            has_120_dom = num_svg_segments >= 115
+            print(f" -> Verificación DOM SVG: segmentos de curva en el path = {num_svg_segments} (Esperado: ~120) | DOM: {'OK' if has_120_dom else 'FAIL'}")
+
+            points_match = has_120 and (max_diff <= 0.50) and has_120_dom
             if not points_match:
                 all_passed = False
 
@@ -234,6 +256,8 @@ def run_tests():
                 "scenario": sc,
                 "num_points": num_points,
                 "has_120": has_120,
+                "has_120_dom": has_120_dom,
+                "num_svg_segments": num_svg_segments,
                 "max_diff": round(max_diff, 3),
                 "points_match": points_match,
                 "first_point": diffs[0] if diffs else None,
@@ -248,17 +272,78 @@ def run_tests():
             print(f" -> M60: Dash {diffs[59][1]}% vs JSON {diffs[59][2]}% (Δ{diffs[59][3]:.3f})")
             print(f" -> M120: Dash {diffs[119][1]}% vs JSON {diffs[119][2]}% (Δ{diffs[119][3]:.3f})")
             print(f" -> ESTADO DASHBOARD {sc}: {'APROBADO (PASS)' if points_match else 'RECHAZADO (FAIL)'}")
+            page.close()
 
         browser.close()
 
     # -------------------------------------------------------------
-    # 3. GENERAR REPORTE OFICIAL EN MARKDOWN
+    # 3. VERIFICACIÓN VISUAL AUTOMÁTICA DE IMÁGENES PNG
+    # -------------------------------------------------------------
+    print("\n=== PARTE 3: VERIFICACIÓN VISUAL AUTOMÁTICA DE IMÁGENES PNG ===")
+    from PIL import Image
+    import numpy as np
+
+    captures_to_check = [
+        ("fig_dashboard_kenia_escenarioA.png", "dashboard"),
+        ("fig_dashboard_kenia_escenarioD.png", "dashboard"),
+        ("fig_gemelo3d_kenia_escenarioA_m60.png", "3d"),
+        ("fig_gemelo3d_kenia_escenarioA.png", "3d"),
+        ("fig_gemelo3d_kenia_escenarioB2_m60.png", "3d"),
+        ("fig_gemelo3d_kenia_escenarioB2.png", "3d"),
+    ]
+
+    results_visual = []
+    captures_dir = os.path.join(OUTPUTS_DIR, "capturas")
+
+    for fname, c_type in captures_to_check:
+        img_path = os.path.join(captures_dir, fname)
+        if not os.path.exists(img_path):
+            print(f"[-] ERROR: No existe {img_path}")
+            all_passed = False
+            continue
+
+        with Image.open(img_path) as im:
+            w, h = im.size
+            rgb_im = im.convert("RGB")
+            if c_type == "3d":
+                crop_box = (int(w * 0.15), int(h * 0.15), int(w * 0.85), int(h * 0.85))
+            else:
+                crop_box = (int(w * 0.35), int(h * 0.15), int(w * 0.98), int(h * 0.65))
+
+            cropped = rgb_im.crop(crop_box)
+            np_crop = np.array(cropped, dtype=np.float32)
+            gray = 0.299 * np_crop[:, :, 0] + 0.587 * np_crop[:, :, 1] + 0.114 * np_crop[:, :, 2]
+            pixel_std = float(np.std(gray))
+            unique_colors = len(cropped.getcolors(maxcolors=2000000) or [])
+
+            min_std = 12.0
+            min_colors = 150
+            is_valid = (pixel_std >= min_std) and (unique_colors >= min_colors)
+            if not is_valid:
+                all_passed = False
+
+            res_vis = {
+                "filename": fname,
+                "type": c_type,
+                "width": w,
+                "height": h,
+                "pixel_std": round(pixel_std, 2),
+                "unique_colors": unique_colors,
+                "min_std": min_std,
+                "min_colors": min_colors,
+                "passed": is_valid,
+            }
+            results_visual.append(res_vis)
+            print(f" -> {fname}: {w}x{h} px | Desv. Estándar = {pixel_std:.2f} (mín {min_std}) | Colores = {unique_colors} (mín {min_colors}) | {'PASS' if is_valid else 'FAIL'}")
+
+    # -------------------------------------------------------------
+    # 4. GENERAR REPORTE OFICIAL EN MARKDOWN
     # -------------------------------------------------------------
     report_lines = [
         "# Reporte Oficial de Verificación Automática con Playwright",
         "",
         f"- **Fecha y hora:** {time.strftime('%Y-%m-%d %H:%M:%S')}",
-        "- **Entorno:** Playwright Chromium (modo interactivo/renderizado 3D real)",
+        "- **Entorno:** Playwright Chromium (modo interactivo/renderizado 3D real y visual de imágenes)",
         f"- **Resultado Global:** {'APROBADO' if all_passed else 'RECHAZADO'}",
         "",
         "## 1. Verificación del Gemelo Digital 3D (window.__itdtDebug)",
@@ -279,10 +364,10 @@ def run_tests():
 
     report_lines.extend([
         "",
-        "## 2. Verificación del Gráfico de Trayectoria en Dashboard (120 Puntos)",
+        "## 2. Verificación del Gráfico de Trayectoria en Dashboard (120 Puntos y DOM SVG)",
         "",
-        "| País | Escenario | Puntos Obtenidos | Esperado | Dif. Máxima (p.p.) | Mes 1 (Dash / JSON) | Mes 60 (Dash / JSON) | Mes 120 (Dash / JSON) | Estado |",
-        "|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+        "| País | Escenario | Puntos Memoria | Puntos DOM SVG | Esperado | Dif. Máxima (p.p.) | Mes 1 (Dash / JSON) | Mes 60 (Dash / JSON) | Mes 120 (Dash / JSON) | Estado |",
+        "|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
     ])
 
     for d in results_dash:
@@ -291,8 +376,24 @@ def run_tests():
         p120 = f"{d['m120_point'][1]:.2f}% / {d['m120_point'][2]:.2f}%" if d["m120_point"] else "N/A"
         status = "**PASS**" if d["points_match"] else "**FAIL**"
         line = (
-            f"| **{d['country']}** | {d['scenario']} | {d['num_points']} | 120 | "
+            f"| **{d['country']}** | {d['scenario']} | {d['num_points']} | {d.get('num_svg_segments', 0)} | 120 | "
             f"**{d['max_diff']:.3f}** | {p1} | {p60} | {p120} | {status} |"
+        )
+        report_lines.append(line)
+
+    report_lines.extend([
+        "",
+        "## 3. Prueba Visual Automática de Imágenes PNG (No Vacías ni Uniformes)",
+        "",
+        "| Archivo Captura | Tipo | Dimensiones | Desv. Estándar Píxeles | Mínimo Requerido | Colores Distintos | Mínimo Requerido | Estado Visual |",
+        "|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+    ])
+
+    for v in results_visual:
+        status_v = "**PASS**" if v["passed"] else "**FAIL**"
+        line = (
+            f"| `{v['filename']}` | {v['type']} | {v['width']}x{v['height']} | "
+            f"**{v['pixel_std']:.2f}** | >= {v['min_std']} | **{v['unique_colors']}** | >= {v['min_colors']} | {status_v} |"
         )
         report_lines.append(line)
 
@@ -301,10 +402,10 @@ def run_tests():
 
     print("\n" + "=" * 80)
     if all_passed:
-        print("[+] ÉXITO TOTAL: Todas las pruebas de Playwright pasaron satisfactoriamente.")
+        print("[+] ÉXITO TOTAL: Todas las pruebas de Playwright (3D, Dashboard y Visuales) pasaron satisfactoriamente.")
         print(f"[+] Reporte guardado en: {REPORT_PATH}")
     else:
-        print("[-] FALLA: Al menos una prueba no cumplió con las tolerancias especificadas.")
+        print("[-] FALLA: Al menos una prueba no cumplió con las tolerancias o controles visuales especificados.")
     print("=" * 80)
 
     return all_passed
@@ -313,3 +414,4 @@ def run_tests():
 if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)
+

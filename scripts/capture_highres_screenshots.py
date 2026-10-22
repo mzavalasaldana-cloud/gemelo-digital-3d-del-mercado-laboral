@@ -7,11 +7,16 @@ Captura de pantallas de ultra-alta resolución (4800x2700 px) para el artículo 
 - Modo ventana visible (headless=False) para renderizado WebGL/Three.js de alta fidelidad.
 - Viewport 1600x900 con device_scale_factor = 3 (4800x2700 px).
 - Tema claro (light theme).
-- Antes de cada captura, guarda el contenido de window.__itdtDebug junto a la imagen (mismo nombre, .json).
-- Verificación en el DOM / window.__itdtDebug de tasas del modelo de outputs/trayectorias_mensuales.json:
-    * Kenia Escenario A (Mes 120): 85.90% (+-0.5 p.p.)
-    * Kenia Escenario D (Mes 120): 55.24% (+-0.5 p.p.)
-- Gemelo 3D Kenia: Escenarios A y B2 en Mes 60 y Mes 120.
+- Espera activa antes de cada captura:
+    * Espera a que desaparezca cualquier pantalla o texto de carga ('Cargando...').
+    * En 3D: espera a que el canvas WebGL tenga contenido dibujado (canvasRendered === true, renderedFrames >= 20).
+    * En Dashboard: desactiva animaciones de Recharts (&capture=true) y espera a que los 120 puntos estén dibujados en el DOM.
+    * Posición de cámara fija y documentada para 3D: distance=46, phi=0.65, theta=pi/4, target=(0, 1.0, 0).
+- Antes de cada captura, archiva capturas anteriores en outputs/capturas/_archivado/.
+- Guarda el contenido de window.__itdtDebug junto a la imagen (mismo nombre, .json).
+- Prueba visual automática integrada: calcula la desviación estándar de los píxeles y el número
+  de colores distintos en la zona del canvas/gráfico; falla si la zona está vacía o uniforme.
+- Verificación en el DOM / window.__itdtDebug de tasas del modelo de outputs/trayectorias_mensuales.json.
 - Verificación con PIL de resolución >= 3840 px de ancho.
 """
 
@@ -20,6 +25,7 @@ import sys
 import time
 import json
 import urllib.request
+import numpy as np
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
@@ -57,7 +63,7 @@ CSS_HIDE_FLOATING = """
 TARGETS = [
     {
         "filename": "fig_dashboard_kenia_escenarioA.png",
-        "url": "http://localhost:5173/?view=dashboard&country=KENYA&scenario=A&theme=light&month=120",
+        "url": "http://localhost:5173/?view=dashboard&country=KENYA&scenario=A&theme=light&month=120&capture=true",
         "title": "Dashboard principal, Escenario A (Status Quo, Kenia, Mes 120 de la política)",
         "type": "dashboard",
         "scenario": "A",
@@ -66,7 +72,7 @@ TARGETS = [
     },
     {
         "filename": "fig_dashboard_kenia_escenarioD.png",
-        "url": "http://localhost:5173/?view=dashboard&country=KENYA&scenario=D&theme=light&month=120",
+        "url": "http://localhost:5173/?view=dashboard&country=KENYA&scenario=D&theme=light&month=120&capture=true",
         "title": "Dashboard principal, Escenario D (Integrado, Kenia, Mes 120 de la política)",
         "type": "dashboard",
         "scenario": "D",
@@ -75,7 +81,7 @@ TARGETS = [
     },
     {
         "filename": "fig_gemelo3d_kenia_escenarioA_m60.png",
-        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=A&theme=light&month=60",
+        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=A&theme=light&month=60&capture=true",
         "title": "Gemelo Digital 3D, Escenario A (Mes 60 de la política, Kenia)",
         "type": "3d",
         "scenario": "A",
@@ -84,7 +90,7 @@ TARGETS = [
     },
     {
         "filename": "fig_gemelo3d_kenia_escenarioA.png",
-        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=A&theme=light&month=120",
+        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=A&theme=light&month=120&capture=true",
         "title": "Gemelo Digital 3D, Escenario A (Mes 120 de la política, Kenia)",
         "type": "3d",
         "scenario": "A",
@@ -93,7 +99,7 @@ TARGETS = [
     },
     {
         "filename": "fig_gemelo3d_kenia_escenarioB2_m60.png",
-        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=B2&theme=light&month=60",
+        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=B2&theme=light&month=60&capture=true",
         "title": "Gemelo Digital 3D, Escenario B2 (GovTech 3x, Mes 60 de la política, Kenia)",
         "type": "3d",
         "scenario": "B2",
@@ -102,7 +108,7 @@ TARGETS = [
     },
     {
         "filename": "fig_gemelo3d_kenia_escenarioB2.png",
-        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=B2&theme=light&month=120",
+        "url": "http://localhost:5173/?view=digital_twin_3d&country=KENYA&scenario=B2&theme=light&month=120&capture=true",
         "title": "Gemelo Digital 3D, Escenario B2 (GovTech 3x, Mes 120 de la política, Kenia)",
         "type": "3d",
         "scenario": "B2",
@@ -131,8 +137,70 @@ def check_servers():
         raise RuntimeError(f"Frontend Vite no disponible en http://127.0.0.1:5173: {e}")
 
 
+def archive_existing_captures():
+    print("[*] Archivando capturas anteriores en outputs/capturas/_archivado/ ...")
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    sub_archive = os.path.join(ARCHIVE_DIR, f"backup_{timestamp}")
+    os.makedirs(sub_archive, exist_ok=True)
+    count = 0
+    for fname in os.listdir(OUTPUT_DIR):
+        if fname == "_archivado":
+            continue
+        full_p = os.path.join(OUTPUT_DIR, fname)
+        if os.path.isfile(full_p) and (fname.endswith(".png") or fname.endswith(".json")):
+            target_p = os.path.join(sub_archive, fname)
+            os.replace(full_p, target_p)
+            count += 1
+    print(f" -> {count} archivos archivados correctamente en: {sub_archive}")
+
+
+def evaluate_image_visual_metrics(img_path: str, target_type: str):
+    """
+    Calcula la desviación estándar de los píxeles y el número de colores únicos
+    en la zona de interés (canvas WebGL en 3D o gráfico Recharts en Dashboard).
+    """
+    with Image.open(img_path) as im:
+        w, h = im.size
+        rgb_im = im.convert("RGB")
+
+        # Coordenadas de la zona de interés
+        if target_type == "3d":
+            # Vista 3D: zona central donde se despliega el terreno y partículas
+            crop_box = (int(w * 0.15), int(h * 0.15), int(w * 0.85), int(h * 0.85))
+        else:
+            # Dashboard: zona derecha donde se renderiza el gráfico de evolución y comparación
+            crop_box = (int(w * 0.35), int(h * 0.15), int(w * 0.98), int(h * 0.65))
+
+        cropped = rgb_im.crop(crop_box)
+        np_crop = np.array(cropped, dtype=np.float32)
+
+        # Escala de grises perceptiva
+        gray = 0.299 * np_crop[:, :, 0] + 0.587 * np_crop[:, :, 1] + 0.114 * np_crop[:, :, 2]
+        pixel_std = float(np.std(gray))
+
+        # Contar colores RGB distintos
+        colors = len(cropped.getcolors(maxcolors=2000000) or [])
+
+        # Criterios mínimos: si la zona está vacía o uniforme, falla
+        min_std = 12.0
+        min_colors = 150
+        passed = (pixel_std >= min_std) and (colors >= min_colors)
+
+        return {
+            "width": w,
+            "height": h,
+            "crop_box": crop_box,
+            "pixel_std": round(pixel_std, 2),
+            "unique_colors": colors,
+            "visual_passed": passed,
+            "min_std": min_std,
+            "min_colors": min_colors,
+        }
+
+
 def capture_all():
     check_servers()
+    archive_existing_captures()
 
     print("\nIniciando Playwright (headless=False, viewport=1600x900, scale=3 -> 4800x2700 px)...")
     results = []
@@ -151,9 +219,12 @@ def capture_all():
             viewport={"width": 1600, "height": 900},
             device_scale_factor=3,
         )
-        page = context.new_page()
+        context.route("**fonts.googleapis.com**", lambda r: r.abort())
+        context.route("**fonts.gstatic.com**", lambda r: r.abort())
 
         for target in TARGETS:
+            page = context.new_page()
+            page.set_default_timeout(90000)
             out_path = os.path.join(OUTPUT_DIR, target["filename"])
             json_path = os.path.splitext(out_path)[0] + ".json"
 
@@ -163,43 +234,57 @@ def capture_all():
             print(f"URL: {target['url']}")
             print(f"==========================================")
 
-            page.goto(target["url"], wait_until="networkidle", timeout=45000)
-            time.sleep(1.5)
+            page.goto(target["url"], wait_until="networkidle", timeout=60000)
 
-            # Ocultar botones flotantes que tapan la interfaz
-            page.add_style_tag(content=CSS_HIDE_FLOATING)
+            # 1. Esperar a que desaparezca cualquier indicador o texto de carga
+            try:
+                page.wait_for_selector("text=Cargando", state="detached", timeout=30000)
+            except Exception:
+                pass
 
-            # Verificar ausencia estricta del aviso de backend caído
+            # 2. Verificar ausencia estricta del aviso de backend caído
             content = page.content()
             if "Backend no disponible" in content:
                 raise RuntimeError(
                     f"ERROR CRÍTICO: Se detectó el banner 'Backend no disponible' en {target['filename']}."
                 )
 
-            # Si es 3D view, asegurar slider en el mes exacto y esperar render de Three.js
+            # 4. Tratamiento específico por tipo de vista
             if target["type"] == "3d":
-                month_target = target["month"]
+                # Esperar a que el elemento canvas exista
+                page.wait_for_selector("canvas", timeout=30000)
 
-                page.evaluate(
-                    """(targetMonth) => {
-                    const sliders = document.querySelectorAll('input[type="range"]');
-                    sliders.forEach(slider => {
-                        slider.value = targetMonth;
-                        slider.dispatchEvent(new Event('input', { bubbles: true }));
-                        slider.dispatchEvent(new Event('change', { bubbles: true }));
-                    });
-                }""",
-                    month_target,
+                # Esperar a que el canvas WebGL haya dibujado contenido (canvasRendered === true, frames >= 20)
+                page.wait_for_function(
+                    "() => window.__itdtDebug && window.__itdtDebug.canvasRendered === true && window.__itdtDebug.renderedFrames >= 20",
+                    timeout=30000,
                 )
-                time.sleep(2.5)
+                time.sleep(1.0)
 
-            # Si es Dashboard view, asegurar selección y espera
-            if target["type"] == "dashboard":
-                time.sleep(2.5)
+            elif target["type"] == "dashboard":
+                # Esperar a que el contenedor Recharts esté presente
+                page.wait_for_selector(".recharts-responsive-container", timeout=30000)
+
+                # Esperar a que la trayectoria completa de 120 meses esté en memoria
+                page.wait_for_function(
+                    "() => (window.__itdtDebug && window.__itdtDebug.trajectoryPoints && window.__itdtDebug.trajectoryPoints.length >= 120) || (window.__dashboardTrajectory && window.__dashboardTrajectory.length >= 120)",
+                    timeout=30000,
+                )
+
+                # Esperar a que las curvas SVG de Recharts se hayan renderizado en el DOM
+                page.wait_for_function(
+                    "() => document.querySelectorAll('.recharts-line-curve').length > 0",
+                    timeout=30000,
+                )
+                time.sleep(1.0)
 
             # Esperar a que window.__itdtDebug esté disponible
             page.wait_for_function("() => window.__itdtDebug !== undefined", timeout=10000)
             debug_obj = page.evaluate("() => window.__itdtDebug")
+
+            # Tomar screenshot en 4800x2700 px (con animations='disabled' para captura inmediata y nítida)
+            page.screenshot(path=out_path, full_page=False, animations="disabled", timeout=30000)
+            print(f" -> Captura guardada en: {out_path}")
 
             # Guardar el contenido de window.__itdtDebug junto a la imagen
             with open(json_path, "w", encoding="utf-8") as jf:
@@ -211,40 +296,51 @@ def capture_all():
             print(f"    * Partículas: {debug_obj.get('informalParticles')} informales, {debug_obj.get('formalParticles')} formales")
             print(f"    * Torres: {debug_obj.get('formalTowers')} formales, {debug_obj.get('informalTowers')} informales")
             print(f"    * Informalidad: {debug_obj.get('informalityRate')}%")
+            if target["type"] == "3d":
+                print(f"    * Canvas Rendered: {debug_obj.get('canvasRendered')} (Frames: {debug_obj.get('renderedFrames')})")
+                print(f"    * Posición Cámara: {debug_obj.get('cameraPosition')}")
 
-            # Ocultar botones flotantes nuevamente antes del screenshot
-            page.add_style_tag(content=CSS_HIDE_FLOATING)
-            time.sleep(1.5)
+            # Verificación con PIL y métricas visuales
+            v_metrics = evaluate_image_visual_metrics(out_path, target["type"])
+            w = v_metrics["width"]
+            h = v_metrics["height"]
+            std = v_metrics["pixel_std"]
+            n_colors = v_metrics["unique_colors"]
+            passed = v_metrics["visual_passed"]
 
-            # Tomar screenshot
-            page.screenshot(path=out_path, full_page=False)
-            print(f" -> Captura guardada en: {out_path}")
-
-            # Verificación con PIL
-            with Image.open(out_path) as im:
-                w, h = im.size
-                print(f" -> Dimensiones PIL: {w} x {h} px (Formato: {im.format})")
-                if w < 3840:
-                    raise ValueError(
-                        f"La imagen {target['filename']} mide {w}px de ancho, que es menor al mínimo requerido (3840 px)."
-                    )
-                results.append(
-                    {
-                        "filename": target["filename"],
-                        "json_filename": os.path.basename(json_path),
-                        "title": target["title"],
-                        "dimensions": f"{w}x{h}",
-                        "size_bytes": os.path.getsize(out_path),
-                        "debug": debug_obj,
-                    }
+            print(f" -> Dimensiones PIL: {w} x {h} px")
+            print(f" -> Prueba Visual: Desv. Estándar = {std:.2f} (Mín: {v_metrics['min_std']}) | Colores Únicos = {n_colors} (Mín: {v_metrics['min_colors']})")
+            if w < 3840:
+                raise ValueError(
+                    f"La imagen {target['filename']} mide {w}px de ancho, que es menor al mínimo requerido (3840 px)."
                 )
+            if not passed:
+                raise ValueError(
+                    f"ERROR EN PRUEBA VISUAL: La imagen {target['filename']} tiene una zona uniforme o vacía "
+                    f"(std={std}, colores={n_colors}). Posible canvas en blanco o pantalla de carga."
+                )
+
+            print(f" -> ESTADO VISUAL: APROBADO (PASS)")
+            results.append(
+                {
+                    "filename": target["filename"],
+                    "json_filename": os.path.basename(json_path),
+                    "title": target["title"],
+                    "dimensions": f"{w}x{h}",
+                    "size_bytes": os.path.getsize(out_path),
+                    "pixel_std": std,
+                    "unique_colors": n_colors,
+                    "debug": debug_obj,
+                }
+            )
+            page.close()
 
         browser.close()
 
     print("\n" + "=" * 80)
     print("TODAS LAS CAPTURAS COMPLETADAS SATISFACTORIAMENTE:")
     for r in results:
-        print(f" - {r['filename']} ({r['dimensions']}, {r['size_bytes'] / 1024 / 1024:.2f} MB) -> JSON: {r['json_filename']}")
+        print(f" - {r['filename']} ({r['dimensions']}, {r['size_bytes'] / 1024 / 1024:.2f} MB, std={r['pixel_std']}, colores={r['unique_colors']}) -> JSON: {r['json_filename']}")
     print("=" * 80)
 
 

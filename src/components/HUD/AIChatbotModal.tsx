@@ -300,6 +300,10 @@ Would you like to test one of the macro preset scenarios?`
   };
 
   const isLight = theme === 'light';
+  const isCaptureMode = typeof window !== 'undefined' && window.location.search.includes('capture=true');
+  if (isCaptureMode) {
+    return null;
+  }
 
   return (
     <>
