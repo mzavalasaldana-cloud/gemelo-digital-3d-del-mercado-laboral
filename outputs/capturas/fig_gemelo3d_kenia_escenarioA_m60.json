@@ -1,0 +1,13 @@
+{
+  "country": "KENYA",
+  "scenario": "A",
+  "month": 60,
+  "formalParticles": 329,
+  "informalParticles": 2171,
+  "formalTowers": 1,
+  "informalTowers": 9,
+  "informalityRate": 86.85,
+  "totalParticles": 2500,
+  "totalTowers": 10,
+  "timestamp": "2026-10-22T05:25:15.205Z"
+}

@@ -106,150 +106,76 @@ export const INITIAL_POLICY_STATE: PolicyParameters = {
   smartInspectionCoverage: 20, // 20% inspection
 };
 
-// EMPRESAS DERIVADAS DIRECTAMENTE DE ITDTModel (N_F = 600, muestra representativa para visualización 3D)
-// Sin nombres comerciales ficticios, sin sectores inventados ni costos USD arbitrarios.
-export const DEMO_FIRMS: StructuralFirm[] = [
-  {
-    id: 'firm-f-018',
-    name: 'Unidad Productiva Formal #19',
-    type: 'formal',
-    x: 7.64,
-    z: 2.36,
-    sizeEmployees: 40,
-    baseEmployees: 40,
-    height: 8.5,
-    productivityScore: 55.2,
-    taxComplianceRate: 100,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-f-030',
-    name: 'Unidad Productiva Formal #31',
-    type: 'formal',
-    x: 1.77,
-    z: 7.8,
-    sizeEmployees: 37,
-    baseEmployees: 37,
-    height: 8.5,
-    productivityScore: 51.1,
-    taxComplianceRate: 100,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-f-031',
-    name: 'Unidad Productiva Formal #32',
-    type: 'formal',
-    x: -5.87,
-    z: 5.44,
-    sizeEmployees: 34,
-    baseEmployees: 34,
-    height: 8.5,
-    productivityScore: 60.4,
-    taxComplianceRate: 100,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-f-042',
-    name: 'Unidad Productiva Formal #43',
-    type: 'formal',
-    x: -7.64,
-    z: -2.36,
-    sizeEmployees: 40,
-    baseEmployees: 40,
-    height: 8.5,
-    productivityScore: 84.1,
-    taxComplianceRate: 100,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-f-055',
-    name: 'Unidad Productiva Formal #56',
-    type: 'formal',
-    x: -1.77,
-    z: -7.8,
-    sizeEmployees: 40,
-    baseEmployees: 40,
-    height: 8.5,
-    productivityScore: 67.0,
-    taxComplianceRate: 100,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-f-151',
-    name: 'Unidad Productiva Formal #152',
-    type: 'formal',
-    x: 5.87,
-    z: -5.44,
-    sizeEmployees: 40,
-    baseEmployees: 40,
-    height: 8.5,
-    productivityScore: 84.0,
-    taxComplianceRate: 100,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-inf-000',
-    name: 'Unidad Productiva Informal #1',
-    type: 'informal_mycelium',
-    x: 3.14,
-    z: 3.23,
-    sizeEmployees: 1,
-    baseEmployees: 1,
-    height: 1.8,
-    productivityScore: 10.7,
-    taxComplianceRate: 0,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-inf-001',
-    name: 'Unidad Productiva Informal #2',
-    type: 'informal_mycelium',
-    x: -3.23,
-    z: 3.14,
-    sizeEmployees: 10,
-    baseEmployees: 10,
-    height: 4.0,
-    productivityScore: 31.4,
-    taxComplianceRate: 0,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-inf-002',
-    name: 'Unidad Productiva Informal #3',
-    type: 'informal_mycelium',
-    x: -3.14,
-    z: -3.23,
-    sizeEmployees: 1,
-    baseEmployees: 1,
-    height: 1.8,
-    productivityScore: 9.4,
-    taxComplianceRate: 0,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-  {
-    id: 'firm-inf-003',
-    name: 'Unidad Productiva Informal #4',
-    type: 'informal_mycelium',
-    x: 3.23,
-    z: -3.14,
-    sizeEmployees: 2,
-    baseEmployees: 2,
-    height: 1.8,
-    productivityScore: 15.8,
-    taxComplianceRate: 0,
-    emergenceMonth: 0,
-    growthSpanMonths: 1,
-  },
-];
+import trayectoriasData from './trayectorias_mensuales.json';
+
+// GENERADOR DINÁMICO DE EMPRESAS SEGÚN LA PROPORCIÓN REAL DE FIRMAS FORMALES DE ITDTModel
+export function getModelFirms(
+  country: CountryCode = 'KENYA',
+  scenario: ScenarioPreset = 'A',
+  month: number = 0
+): StructuralFirm[] {
+  const cClean = (country || 'KENYA').toUpperCase();
+  const scClean = (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+  
+  const cData = (trayectoriasData as any)[cClean] || (trayectoriasData as any)['KENYA'];
+  const scData = cData?.[scClean] || cData?.['A'] || [];
+  
+  const clampedMonth = Math.max(1, Math.min(120, month > 0 ? month : 1));
+  const monthItem = scData[clampedMonth - 1] || {};
+  const formalRatio = monthItem.formal_firms_ratio ?? 0.05;
+
+  let numFormal = Math.round(10 * formalRatio);
+  if (formalRatio > 0.005 && numFormal === 0) {
+    numFormal = 1;
+  }
+  numFormal = Math.min(10, Math.max(0, numFormal));
+
+  const firms: StructuralFirm[] = [];
+  for (let slot = 0; slot < 10; slot++) {
+    const angle = (slot / 10.0) * Math.PI * 2 + 0.3;
+    const isFormal = slot < numFormal;
+    const radius = isFormal ? 8.5 : 5.2;
+    const x = Number((Math.cos(angle) * radius).toFixed(2));
+    const z = Number((Math.sin(angle) * radius).toFixed(2));
+
+    if (isFormal) {
+      firms.push({
+        id: `firm-f-${slot + 1}`,
+        name: `Unidad Productiva Formal #${slot + 1}`,
+        type: 'formal',
+        x,
+        z,
+        sizeEmployees: 35,
+        baseEmployees: 35,
+        height: 8.5,
+        productivityScore: 65.0,
+        taxComplianceRate: 100,
+        emergenceMonth: 0,
+        growthSpanMonths: 1,
+        isFormalizedScenario: true,
+      });
+    } else {
+      firms.push({
+        id: `firm-inf-${slot + 1}`,
+        name: `Unidad Productiva Informal #${slot + 1}`,
+        type: 'informal_mycelium',
+        x,
+        z,
+        sizeEmployees: 3,
+        baseEmployees: 3,
+        height: 2.2,
+        productivityScore: 18.0,
+        taxComplianceRate: 0,
+        emergenceMonth: 0,
+        growthSpanMonths: 1,
+        isFormalizedScenario: false,
+      });
+    }
+  }
+  return firms;
+}
+
+export const DEMO_FIRMS: StructuralFirm[] = getModelFirms('KENYA', 'A', 0);
 export const MODEL_FIRMS = DEMO_FIRMS;
 export const MOCK_FIRMS = DEMO_FIRMS;
 

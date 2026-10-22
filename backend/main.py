@@ -543,11 +543,24 @@ async def get_trajectories_endpoint(
 async def get_firms_endpoint(
     country: str = Query(default="KENYA"),
     scenario: str = Query(default="A"),
+    month: int = Query(default=0),
 ):
     """
     Expone las empresas del propio ITDTModel para el país y escenario seleccionados.
     """
-    return get_model_firms(country_code=country, scenario=scenario)
+    return get_model_firms(country_code=country, scenario=scenario, month=month)
+
+
+@app.get("/api/v1/simulation/historical")
+@app.get("/api/v1/simulations/historical")
+async def get_historical_endpoint(
+    country: str = Query(default="KENYA"),
+):
+    """
+    Expone la serie histórica de ILOSTAT leída directamente de data/ilostat_series_historicas.csv
+    con metadatos y fuente original sin inventar nombres ni cifras.
+    """
+    return get_historical_ilostat_series(country_code=country)
 
 
 

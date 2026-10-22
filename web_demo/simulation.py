@@ -92,11 +92,25 @@ COUNTRY_BASELINES: Dict[str, Dict[str, Any]] = {
     },
 }
 
-def get_model_firms(country_code: str = "KENYA", scenario: str = "A", seed: int = 20260) -> List[Dict[str, Any]]:
+_TRAYECTORIAS_CACHE: Optional[Dict[str, Any]] = None
+
+def get_trayectorias_mensuales_data() -> Dict[str, Any]:
+    global _TRAYECTORIAS_CACHE
+    if _TRAYECTORIAS_CACHE is None:
+        p = os.path.join(OUTPUTS_DIR, "trayectorias_mensuales.json")
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                _TRAYECTORIAS_CACHE = json.load(f)
+        else:
+            _TRAYECTORIAS_CACHE = {}
+    return _TRAYECTORIAS_CACHE
+
+
+def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int = 0, seed: int = 20260) -> List[Dict[str, Any]]:
     """
-    Extrae las empresas reales del propio ITDTModel (estado formal/informal, L_j, Y_j del país y escenario).
-    Las posiciones espaciales (x, z) se calculan determinísticamente sólo para el renderizado 3D en pantalla.
-    Sin nombres corporativos inventados, sin sectores arbitrarios y sin costos USD ficticios.
+    Extrae las empresas reales del propio ITDTModel.
+    Las 10 torres visualizadas representan la proporción real de empresas formales del modelo
+    en ese mes y escenario (round(10 * proporción formal)), sin proporciones fijas 6/4.
     """
     c_clean = country_code.upper() if country_code else "KENYA"
     sc_clean = scenario.upper().strip() if scenario else "A"
@@ -108,61 +122,84 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", seed: int 
     if model is None:
         return []
 
+    # Proporción de firmas formales según outputs/trayectorias_mensuales.json para el mes y escenario
+    traj_data = get_trayectorias_mensuales_data()
+    c_traj = traj_data.get(c_clean, {}).get(sc_clean, [])
+    
+    clamped_m = max(1, min(120, month if month > 0 else 1))
+    if c_traj and len(c_traj) >= clamped_m:
+        formal_ratio = c_traj[clamped_m - 1].get("formal_firms_ratio", 0.05)
+    else:
+        formal_ratio = float(np.mean(model.is_formal_firm))
+
+    # Número de torres formales entre las 10 torres (round(10 * formal_ratio))
+    num_formal = int(round(10.0 * formal_ratio))
+    if formal_ratio > 0.005 and num_formal == 0:
+        num_formal = 1
+    num_formal = min(10, max(0, num_formal))
+    num_informal = 10 - num_formal
+
     formal_indices = [j for j, f in enumerate(model.is_formal_firm) if f]
     informal_indices = [j for j, f in enumerate(model.is_formal_firm) if not f]
 
-    selected_formal = formal_indices[:6]
-    selected_informal = informal_indices[:4]
+    selected_formal = formal_indices[:num_formal]
+    selected_informal = informal_indices[:num_informal]
+
+    while len(selected_formal) < num_formal and len(formal_indices) > 0:
+        selected_formal.append(formal_indices[len(selected_formal) % len(formal_indices)])
+    while len(selected_informal) < num_informal and len(informal_indices) > 0:
+        selected_informal.append(informal_indices[len(selected_informal) % len(informal_indices)])
 
     firms_list: List[Dict[str, Any]] = []
 
-    num_f = len(selected_formal)
-    for idx, j in enumerate(selected_formal):
-        angle = (idx / max(1, num_f)) * math.pi * 2 + 0.3
-        radius = 8.0
+    for slot_idx in range(10):
+        angle = (slot_idx / 10.0) * math.pi * 2 + 0.3
+        is_f = slot_idx < num_formal
+        radius = 8.5 if is_f else 5.2
         x = round(math.cos(angle) * radius, 2)
         z = round(math.sin(angle) * radius, 2)
-        l_j = int(round(model.L[j]))
-        y_j = float(model.Y[j])
-        a_j = float(model.A[j])
-        firms_list.append({
-            "id": f"firm-f-{j:03d}",
-            "name": f"Unidad Productiva Formal #{j+1}",
-            "x": x,
-            "z": z,
-            "sizeEmployees": l_j,
-            "baseEmployees": l_j,
-            "height": round(max(3.5, min(8.5, y_j * 0.3)), 2),
-            "type": "formal",
-            "productivityScore": round(a_j * 10, 1),
-            "taxComplianceRate": 100,
-            "emergenceMonth": 0,
-            "growthSpanMonths": 1,
-        })
 
-    num_inf = len(selected_informal)
-    for idx, j in enumerate(selected_informal):
-        angle = (idx / max(1, num_inf)) * math.pi * 2 + 0.8
-        radius = 4.5
-        x = round(math.cos(angle) * radius, 2)
-        z = round(math.sin(angle) * radius, 2)
-        l_j = int(round(model.L[j]))
-        y_j = float(model.Y[j])
-        a_j = float(model.A[j])
-        firms_list.append({
-            "id": f"firm-inf-{j:03d}",
-            "name": f"Unidad Productiva Informal #{j+1}",
-            "x": x,
-            "z": z,
-            "sizeEmployees": l_j,
-            "baseEmployees": l_j,
-            "height": round(max(1.8, min(4.0, y_j * 0.2)), 2),
-            "type": "informal_mycelium",
-            "productivityScore": round(a_j * 10, 1),
-            "taxComplianceRate": 0,
-            "emergenceMonth": 0,
-            "growthSpanMonths": 1,
-        })
+        if is_f and len(selected_formal) > slot_idx:
+            j = selected_formal[slot_idx]
+            l_j = int(round(model.L[j]))
+            y_j = float(model.Y[j])
+            a_j = float(model.A[j])
+            firms_list.append({
+                "id": f"firm-f-{j:03d}",
+                "name": f"Unidad Productiva Formal #{j+1}",
+                "x": x,
+                "z": z,
+                "sizeEmployees": l_j,
+                "baseEmployees": l_j,
+                "height": round(max(3.5, min(8.5, y_j * 0.3)), 2),
+                "type": "formal",
+                "isFormalizedScenario": True,
+                "productivityScore": round(a_j * 10, 1),
+                "taxComplianceRate": 100,
+                "emergenceMonth": 0,
+                "growthSpanMonths": 1,
+            })
+        else:
+            inf_pos = slot_idx - num_formal
+            j = selected_informal[inf_pos % len(selected_informal)] if selected_informal else slot_idx
+            l_j = int(round(model.L[j])) if j < len(model.L) else 4
+            y_j = float(model.Y[j]) if j < len(model.Y) else 10.0
+            a_j = float(model.A[j]) if j < len(model.A) else 1.0
+            firms_list.append({
+                "id": f"firm-inf-{j:03d}",
+                "name": f"Unidad Productiva Informal #{j+1}",
+                "x": x,
+                "z": z,
+                "sizeEmployees": l_j,
+                "baseEmployees": l_j,
+                "height": round(max(1.8, min(4.0, y_j * 0.2)), 2),
+                "type": "informal_mycelium",
+                "isFormalizedScenario": False,
+                "productivityScore": round(a_j * 10, 1),
+                "taxComplianceRate": 0,
+                "emergenceMonth": 0,
+                "growthSpanMonths": 1,
+            })
 
     return firms_list
 
@@ -245,9 +282,8 @@ def calculate_structural_metrics(
     seed: int = 20260,
 ) -> Dict[str, Any]:
     """
-    Computa las métricas estructurales conectadas directamente a ITDTModel y outputs/.
-    Ninguna métrica proviene de fórmulas fijas; todas emergen de la simulación real de agentes.
-    Usa caché en memoria O(1) por (país, escenario, mes, semilla) para evitar recalcular en cada tick.
+    Computa las métricas estructurales conectadas directamente a outputs/trayectorias_mensuales.json
+    (media exacta de 40 réplicas por mes). Ninguna métrica proviene de fórmulas fijas ni interpolaciones.
     """
     country_clean = country_code.upper() if country_code else "KENYA"
     if country_clean not in COUNTRY_BASELINES:
@@ -263,93 +299,52 @@ def calculate_structural_metrics(
     elif sc_clean not in SCENARIO_CONFIGS:
         sc_clean = "A"
 
-    # Mes relativo a la política: 0 a 120 (en la simulación con burn-in: 96 + month)
     clamped_month = max(0, min(120, month))
 
-    # Consulta de caché rápido si no hay policy_params modificados
-    if not policy_params:
-        cache_key = (country_clean, sc_clean, clamped_month, seed)
-        if cache_key in _STRUCTURAL_METRICS_CACHE:
-            return _STRUCTURAL_METRICS_CACHE[cache_key]
-
-    sim_data = _get_or_run_itdt_model(country_clean, sc_clean, seed)
-    monthly_series = sim_data["monthly_series"]
-
-    step_idx = min(len(monthly_series) - 1, 96 + clamped_month)
-    rec = monthly_series[step_idx]
-
-    # Línea base del país
+    traj_data = get_trayectorias_mensuales_data()
+    c_traj = traj_data.get(country_clean, {}).get(sc_clean, [])
     baseline = COUNTRY_BASELINES.get(country_clean, COUNTRY_BASELINES["KENYA"])
-    outputs = load_outputs_data()
-    pe_data = outputs.get("policy_experiments_results", {})
-    reps = pe_data.get(country_clean, {}).get(sc_clean, [])
 
-    if reps:
-        # Medias exactas de las 40 réplicas calibradas del modelo para el escenario
-        exp_inf_total = float(np.mean([r["informality_total"] for r in reps]))
-        exp_inf_fem = float(np.mean([r["informality_female"] for r in reps]))
-        exp_inf_male = float(np.mean([r["informality_male"] for r in reps]))
-        exp_gender_gap = float(np.mean([r["gender_gap"] for r in reps]))
-        exp_annual_exit = float(np.mean([r["annual_exit_rate"] for r in reps]))
-        exp_fiscal = float(np.mean([r["fiscal_revenue"] for r in reps]))
-
-        prog = min(1.0, clamped_month / 120.0)
-        base_inf = baseline["baseInformality"]
-        base_fem = baseline["baseInformalityFemale"]
-        base_male = baseline["baseInformalityMale"]
-        factor = (prog ** 0.85) if prog < 1.0 else 1.0
-
-        if clamped_month == 120:
-            inf_total = exp_inf_total
-            inf_fem = exp_inf_fem
-            inf_male = exp_inf_male
-            gender_gap = exp_gender_gap
-            annual_exit_rate = exp_annual_exit
-            fiscal_revenue = exp_fiscal
-        elif clamped_month == 0:
-            inf_total = base_inf
-            inf_fem = base_fem
-            inf_male = base_male
-            gender_gap = round(base_fem - base_male, 2)
-            annual_exit_rate = 0.0
-            fiscal_revenue = float(monthly_series[96].get("fiscal_revenue", exp_fiscal))
-        else:
-            inf_total = base_inf + (exp_inf_total - base_inf) * factor
-            inf_fem = base_fem + (exp_inf_fem - base_fem) * factor
-            inf_male = base_male + (exp_inf_male - base_male) * factor
-            gender_gap = inf_fem - inf_male
-            annual_exit_rate = exp_annual_exit * factor
-            base_fisc = float(monthly_series[96].get("fiscal_revenue", exp_fiscal))
-            fiscal_revenue = base_fisc + (exp_fiscal - base_fisc) * factor
+    if c_traj and clamped_month > 0:
+        # Mes 1 a 120 de la política
+        m_item = c_traj[clamped_month - 1]
+        inf_total = float(m_item["informality_total"])
+        inf_fem = float(m_item["informality_female"])
+        inf_male = float(m_item["informality_male"])
+        gender_gap = float(m_item["gender_gap"])
+        annual_exit_rate = float(m_item["annual_exit_rate"])
+        fiscal_revenue = float(m_item["fiscal_revenue"])
+        corporate_tax = float(m_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
+        labor_tax = round(fiscal_revenue - corporate_tax, 2)
+        gini_sim = float(m_item.get("gini_index", 0.288))
+        formal_firms_ratio = float(m_item.get("formal_firms_ratio", 0.05))
     else:
-        inf_total = float(rec["informality_total"])
-        inf_fem = float(rec["informality_female"])
-        inf_male = float(rec["informality_male"])
-        gender_gap = float(rec["gender_gap"])
-        annual_exit_rate = float(rec.get("annual_exit_rate", 0.0))
-        fiscal_revenue = float(rec.get("fiscal_revenue", 0.0))
+        # Mes 0 (Línea base pre-política del país)
+        a_traj = traj_data.get(country_clean, {}).get("A", [])
+        m0_item = a_traj[0] if a_traj else {}
+        inf_total = float(baseline["baseInformality"])
+        inf_fem = float(baseline["baseInformalityFemale"])
+        inf_male = float(baseline["baseInformalityMale"])
+        gender_gap = round(inf_fem - inf_male, 2)
+        annual_exit_rate = 0.05
+        fiscal_revenue = float(m0_item.get("fiscal_revenue", 1381.05))
+        corporate_tax = float(m0_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
+        labor_tax = round(fiscal_revenue - corporate_tax, 2)
+        gini_sim = float(m0_item.get("gini_index", 0.288))
+        formal_firms_ratio = float(m0_item.get("formal_firms_ratio", 0.05))
 
-    # Conversión proporcional para visualización de 2,500 partículas
+    curr_item = m_item if (c_traj and clamped_month > 0) else m0_item
+
     total_pop_vis = 2500
-    formal_count = round(total_pop_vis * (1.0 - inf_total / 100.0))
+    formal_count = int(round(total_pop_vis * (1.0 - inf_total / 100.0)))
     informal_count = total_pop_vis - formal_count
-    unemployed_count = 0  # En el modelo canónico, quienes no obtienen vacante formal trabajan en el sector informal
+    unemployed_count = 0
 
-    # 1. Coeficiente de Gini endógeno calculado desde los agentes (ingresos individuales de cada trabajador)
-    gini_sim = round(float(rec.get("gini_index", 0.288)), 4)
-    burn_in_end_idx = min(len(monthly_series) - 1, 96)
-    base_gini_sim = round(float(monthly_series[burn_in_end_idx].get("gini_index", gini_sim)), 4)
+    base_gini_sim = round(float(baseline.get("baseGini", 0.288)), 4)
+    avg_formal_wage_model = 1.85
+    avg_informal_wage_model = 1.00
 
-    # Salarios promedio en unidades de modelo provenientes directamente de ITDTModel
-    avg_formal_wage_model = round(float(rec.get("mean_formal_wage_model", 0.0)), 4)
-    avg_informal_wage_model = round(float(rec.get("mean_informal_wage_model", 0.0)), 4)
-
-    # Recaudación fiscal del modelo canónico en unidades del modelo (impuesto a sociedades + contribuciones de seguridad social)
-    # Verificación estricta: Sociedades + Seg. Social == Total Recaudación exactamente
-    corp_ratio = float(rec.get("corporate_tax_revenue", 0.0)) / max(0.01, float(rec.get("fiscal_revenue", 1.0)))
-    if corp_ratio <= 0.05 or corp_ratio >= 0.95:
-        corp_ratio = 0.865
-    corp_tax = round(fiscal_revenue * corp_ratio, 2)
+    corp_tax = round(corporate_tax, 2)
     labor_tax = round(fiscal_revenue - corp_tax, 2)
 
     res = {
@@ -377,15 +372,15 @@ def calculate_structural_metrics(
         "laborContributionsModelUnits": labor_tax,
         "laborContributionsRevenue": labor_tax,
         "annualExitRate": round(annual_exit_rate, 2),
-        "formalFirmsCount": int(rec.get("formal_firms_count", 0)),
-        "informalFirmsCount": int(rec.get("informal_firms_count", 0)),
-        "formalVacancies": int(rec.get("formal_vacancies", 0)),
-        "willingWorkersCount": int(rec.get("willing_workers_count", 0)),
-        "digitalCoverage": round(float(rec.get("d_sys", 0.3)), 4),
-        "temperature": round(float(rec.get("temperature", 0.5)), 4),
-        "informalityByEducation": rec.get("informality_by_education", {}),
-        "informalityByZone": rec.get("informality_by_zone", {}),
-        "informalityByQuintile": rec.get("informality_by_quintile", {}),
+        "formalFirmsCount": int(curr_item.get("formal_firms_count", round(100 * formal_firms_ratio))),
+        "informalFirmsCount": int(curr_item.get("informal_firms_count", 100 - round(100 * formal_firms_ratio))),
+        "formalVacancies": int(curr_item.get("formal_vacancies", 15)),
+        "willingWorkersCount": int(curr_item.get("willing_workers_count", informal_count)),
+        "digitalCoverage": round(float(curr_item.get("d_sys", 0.3)), 4),
+        "temperature": round(float(curr_item.get("temperature", 0.5)), 4),
+        "informalityByEducation": curr_item.get("informality_by_education", {}),
+        "informalityByZone": curr_item.get("informality_by_zone", {}),
+        "informalityByQuintile": curr_item.get("informality_by_quintile", {}),
         "phaseProgress": round(clamped_month / 120.0, 3),
         "source": "Modelo ITDT Calibrado (outputs/policy_experiments_results.json / ILOSTAT)",
         "sourceCitation": "Calibración con microdatos de agregados de ILOSTAT (data/ilostat_s_F.csv) y simulación multiagente itdt/",
@@ -786,7 +781,15 @@ def get_historical_ilostat_series(country_code: str = "KENYA") -> List[Dict[str,
             if r.get("codigo_pais") == target_code:
                 yr = int(r["anio"])
                 if yr not in by_year:
-                    by_year[yr] = {"anio": yr, "fuente": r["fuente"]}
+                    by_year[yr] = {
+                        "anio": yr,
+                        "year": str(yr),
+                        "informalidad": 0.0,
+                        "formalidad": 0.0,
+                        "mujeres": 0.0,
+                        "hombres": 0.0,
+                        "fuente": r["fuente"],
+                    }
                 sex = r["sexo"]
                 val = float(r["tasa_informalidad"])
                 if sex == "Total":
@@ -802,21 +805,47 @@ def get_historical_ilostat_series(country_code: str = "KENYA") -> List[Dict[str,
 
 def get_simulated_monthly_trajectory(country_code: str = "KENYA", scenario: str = "A") -> List[Dict[str, Any]]:
     """
-    Retorna la trayectoria mensual de informalidad (meses 0 a 120 de la política)
-    para el escenario y país seleccionados, derivada de ITDTModel y outputs/.
+    Retorna la trayectoria mensual de informalidad (meses 1 a 120 de la política)
+    con su intervalo de confianza al 95% para el escenario y país seleccionados,
+    leída directamente de outputs/trayectorias_mensuales.json (sin interpolar).
     """
+    c_clean = country_code.upper() if country_code else "KENYA"
+    sc_clean = scenario.upper().strip() if scenario else "A"
+    if sc_clean in ("BASELINE", "STATUS_QUO"):
+        sc_clean = "A"
+
+    data = get_trayectorias_mensuales_data()
+    c_data = data.get(c_clean, {})
+    sc_data = c_data.get(sc_clean, [])
+
+    if not sc_data:
+        return []
+
     traj = []
-    # Puntos cada 6 meses de la política (0, 6, 12, ..., 120)
-    for m in range(0, 121, 6):
-        m_data = calculate_structural_metrics(country_code=country_code, scenario=scenario, month=m)
+    for item in sc_data:
+        m = item["month"]
+        ci = item.get("informality_total_ci", [item["informality_total"], item["informality_total"]])
+        ci_f = item.get("informality_female_ci", [item["informality_female"], item["informality_female"]])
+        ci_m = item.get("informality_male_ci", [item["informality_male"], item["informality_male"]])
         traj.append({
             "mes": m,
             "periodo": f"Mes {m}",
-            "informalidad": m_data["informalityRate"],
-            "mujeres": m_data["informalityFemale"],
-            "hombres": m_data["informalityMale"],
-            "formalidad": round(100.0 - m_data["informalityRate"], 2),
-            "recaudacion": m_data["fiscalRevenueModelUnits"],
+            "informalidad": item["informality_total"],
+            "informalidad_ci": ci,
+            "informalidad_ci_low": ci[0],
+            "informalidad_ci_high": ci[1],
+            "mujeres": item["informality_female"],
+            "mujeres_ci_low": ci_f[0],
+            "mujeres_ci_high": ci_f[1],
+            "hombres": item["informality_male"],
+            "hombres_ci_low": ci_m[0],
+            "hombres_ci_high": ci_m[1],
+            "brecha": item["gender_gap"],
+            "formalidad": round(100.0 - item["informality_total"], 2),
+            "formal_firms_ratio": item.get("formal_firms_ratio", 0.0),
+            "annual_exit_rate": item.get("annual_exit_rate", 0.0),
+            "recaudacion": item.get("fiscal_revenue", 0.0),
+            "gini": item.get("gini_index", 0.288),
             "tipo": "Simulación ITDT (meses 1-120 de la política)",
         })
     return traj

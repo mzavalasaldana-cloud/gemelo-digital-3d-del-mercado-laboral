@@ -16,9 +16,10 @@ import {
 import { 
   COUNTRY_PROFILES, 
   INITIAL_POLICY_STATE, 
-  DEMO_FIRMS, 
+  getModelFirms, 
   DEMO_USERS
 } from './data/mockData';
+import trayectoriasData from './data/trayectorias_mensuales.json';
 import { TopNavigationBar } from './components/HUD/TopNavigationBar';
 import { DashboardView } from './components/Views/DashboardView';
 const DigitalTwin3DView = React.lazy(() => 
@@ -206,7 +207,7 @@ export default function App() {
   const [scenario, setScenario] = useState<ScenarioPreset>(() => {
     const params = new URLSearchParams(window.location.search);
     const s = params.get('scenario') as ScenarioPreset;
-    return s || 'BASELINE';
+    return s || 'A';
   });
   const [policyParams, setPolicyParams] = useState<PolicyParameters>(INITIAL_POLICY_STATE);
 
@@ -242,10 +243,10 @@ export default function App() {
   const [isPlayingTimeline, setIsPlayingTimeline] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
 
-  // 6. Entity Collections & Selection (Initialized synchronously)
-  const [firms, setFirms] = useState<StructuralFirm[]>(DEMO_FIRMS);
+  // 6. Entity Collections & Selection (Initialized synchronously with dynamic model firms)
+  const [firms, setFirms] = useState<StructuralFirm[]>(() => getModelFirms('KENYA', 'A', 0));
   const [workers, setWorkers] = useState<WorkerAgent[]>(() => 
-    createWorkersPopulation('KENYA', COUNTRY_PROFILES['KENYA'].baseInformalityRate, DEMO_FIRMS)
+    createWorkersPopulation('KENYA', COUNTRY_PROFILES['KENYA'].baseInformalityRate, getModelFirms('KENYA', 'A', 0))
   );
   const [selectedWorker, setSelectedWorker] = useState<WorkerAgent | null>(null);
   const [selectedFirm, setSelectedFirm] = useState<StructuralFirm | null>(null);
@@ -451,64 +452,84 @@ export default function App() {
     };
   }, [country, scenario, month]);
 
-  // Fetch real model firms from backend FastAPI
+  // Fetch real model firms from backend FastAPI (with dynamic fallback to model proportions)
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/simulation/firms?country=${encodeURIComponent(country)}&scenario=${encodeURIComponent(scenario)}`)
+    const scClean = scenario.toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+    fetch(`${BACKEND_URL}/api/v1/simulation/firms?country=${encodeURIComponent(country)}&scenario=${encodeURIComponent(scClean)}&month=${month}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && Array.isArray(data) && data.length > 0) {
           setFirms(data);
+        } else {
+          setFirms(getModelFirms(country, scenario, month));
         }
       })
-      .catch(() => {});
-  }, [country, scenario]);
+      .catch(() => {
+        setFirms(getModelFirms(country, scenario, month));
+      });
+  }, [country, scenario, month]);
 
-  // Compute live Structural Metrics dynamically based on policies, scenarios and continuous month
-  // (Fallback offline sincronizado fielmente con outputs/policy_experiments_results.json)
+  // Compute live Structural Metrics dynamically from outputs/trayectorias_mensuales.json
   const calculateMetrics = (): StructuralMetrics => {
     const baseInformality = COUNTRY_PROFILES[country]?.baseInformalityRate ?? 86.49;
     const baseGini = COUNTRY_PROFILES[country]?.baseGini ?? 0.288;
-    const progress = Math.min(1.0, Math.max(0.0, month / 120.0));
+    const cClean = (country || 'KENYA').toUpperCase();
+    const scClean = scenario.toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+    const cData = (trayectoriasData as any)[cClean] || (trayectoriasData as any)['KENYA'];
+    const scData = cData?.[scClean] || cData?.['A'] || [];
 
-    // Resultados calibrados finales en mes 120 (outputs/policy_experiments_results.json)
-    const scenarioTargets: Record<string, { inf: number; f: number; m: number; gap: number; gini: number; rev: number; exit: number }> = {
-      A: { inf: 86.13, f: 89.92, m: 82.72, gap: 7.20, gini: 0.288, rev: 1381.05, exit: 0.05 },
-      BASELINE: { inf: 86.13, f: 89.92, m: 82.72, gap: 7.20, gini: 0.288, rev: 1381.05, exit: 0.05 },
-      B1: { inf: 86.18, f: 89.95, m: 82.78, gap: 7.17, gini: 0.288, rev: 1378.18, exit: 0.00 },
-      B2: { inf: 51.58, f: 68.51, m: 36.35, gap: 32.16, gini: 0.291, rev: 3846.67, exit: 44.70 },
-      C: { inf: 85.00, f: 85.27, m: 84.75, gap: 0.52, gini: 0.288, rev: 1515.65, exit: 0.02 },
-      D: { inf: 56.82, f: 57.40, m: 56.30, gap: 1.10, gini: 0.289, rev: 3259.10, exit: 14.96 },
-    };
+    if (month > 0 && scData.length >= month) {
+      const mItem = scData[month - 1];
+      const netInf = mItem.informality_total;
+      const netFem = mItem.informality_female;
+      const netMasc = mItem.informality_male;
+      const netGap = mItem.gender_gap;
+      const netGini = mItem.gini_index ?? 0.288;
+      const netRev = mItem.fiscal_revenue ?? 1381.05;
+      const netExit = mItem.annual_exit_rate ?? 0.05;
+      const corpTax = mItem.corporate_tax_revenue ?? Number((netRev * 0.865).toFixed(2));
+      const laborTax = Number((netRev - corpTax).toFixed(2));
+      const formalCount = Math.round(2500 * (1 - netInf / 100));
+      const informalCount = 2500 - formalCount;
 
-    const scKey = scenario.toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
-    const target = scenarioTargets[scenario] || scenarioTargets[scKey] || scenarioTargets.A;
+      return {
+        informalityRate: netInf,
+        informalityFemale: netFem,
+        informalityMale: netMasc,
+        genderGap: netGap,
+        giniIndex: netGini,
+        formalWorkersCount: formalCount,
+        informalWorkersCount: informalCount,
+        unemployedCount: 0,
+        fiscalRevenueModelUnits: netRev,
+        fiscalRevenue: netRev,
+        corporateTaxRevenueModelUnits: corpTax,
+        corporateTaxRevenue: corpTax,
+        laborContributionsModelUnits: laborTax,
+        laborContributionsRevenue: laborTax,
+        annualExitRate: netExit,
+        isRealData: true,
+        source: 'Modelo ITDT (outputs/trayectorias_mensuales.json)',
+      };
+    }
 
-    // Base mes 0 (post-burn-in)
+    // Mes 0 (Línea base pre-política del país)
+    const m0 = scData[0] || {};
     const baseFem = country === 'KENYA' ? 90.19 : country === 'NIGERIA' ? 96.39 : country === 'INDIA' ? 91.93 : 95.77;
     const baseMasc = country === 'KENYA' ? 83.13 : country === 'NIGERIA' ? 89.92 : country === 'INDIA' ? 86.76 : 78.08;
-    const baseRev = 1347.52;
-    const baseExit = 0.05;
-
-    const netInf = Number((baseInformality + progress * (target.inf - baseInformality)).toFixed(2));
-    const netFem = Number((baseFem + progress * (target.f - baseFem)).toFixed(2));
-    const netMasc = Number((baseMasc + progress * (target.m - baseMasc)).toFixed(2));
-    const netGap = Number((netFem - netMasc).toFixed(2));
-    const netGini = Number((baseGini + progress * (target.gini - baseGini)).toFixed(3));
-    const netRev = Number((baseRev + progress * (target.rev - baseRev)).toFixed(2));
-    const netExit = Number((baseExit + progress * (target.exit - baseExit)).toFixed(2));
-
-    const corpTax = Number((netRev * 0.865).toFixed(2));
+    const netGap = Number((baseFem - baseMasc).toFixed(2));
+    const netRev = m0.fiscal_revenue ?? 1381.05;
+    const corpTax = m0.corporate_tax_revenue ?? Number((netRev * 0.865).toFixed(2));
     const laborTax = Number((netRev - corpTax).toFixed(2));
-
-    const formalCount = Math.round(2500 * (1 - netInf / 100));
+    const formalCount = Math.round(2500 * (1 - baseInformality / 100));
     const informalCount = 2500 - formalCount;
 
     return {
-      informalityRate: netInf,
-      informalityFemale: netFem,
-      informalityMale: netMasc,
+      informalityRate: baseInformality,
+      informalityFemale: baseFem,
+      informalityMale: baseMasc,
       genderGap: netGap,
-      giniIndex: netGini,
+      giniIndex: baseGini,
       formalWorkersCount: formalCount,
       informalWorkersCount: informalCount,
       unemployedCount: 0,
@@ -518,15 +539,37 @@ export default function App() {
       corporateTaxRevenue: corpTax,
       laborContributionsModelUnits: laborTax,
       laborContributionsRevenue: laborTax,
-      annualExitRate: netExit,
+      annualExitRate: 0.05,
       isRealData: true,
-      source: 'Modelo ITDT Calibrado (outputs/policy_experiments_results.json / ILOSTAT)',
+      source: 'Modelo ITDT (Línea Base)',
     };
   };
 
   const currentMetrics = isPlayingTimeline 
     ? (streamMetrics || apiMetrics || calculateMetrics())
     : (apiMetrics || streamMetrics || calculateMetrics());
+
+  // Objeto de depuración window.__itdtDebug expuesto globalmente
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const formalTowers = firms.filter((f) => f.type === 'formal' || f.isFormalizedScenario).length;
+      const informalTowers = firms.length - formalTowers;
+      (window as any).__itdtDebug = {
+        ...((window as any).__itdtDebug || {}),
+        country,
+        scenario: scenario.toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A',
+        month,
+        formalParticles: currentMetrics.formalWorkersCount,
+        informalParticles: currentMetrics.informalWorkersCount,
+        formalTowers,
+        informalTowers,
+        informalityRate: currentMetrics.informalityRate,
+        totalParticles: 2500,
+        totalTowers: firms.length,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }, [country, scenario, month, currentMetrics, firms]);
 
   // Scenario Switcher with Transitions
   const handleSelectScenario = (newScenario: ScenarioPreset) => {
@@ -589,12 +632,13 @@ export default function App() {
           return w;
         })
       );
-    } else if (newScenario === 'BASELINE') {
+    } else if (newScenario === 'BASELINE' || newScenario === 'A') {
       playHoloClick(800);
       setPolicyParams(INITIAL_POLICY_STATE);
-      setFirms(DEMO_FIRMS);
+      const dynamicFirms = getModelFirms(country, 'A', month);
+      setFirms(dynamicFirms);
       const baseInf = COUNTRY_PROFILES[country].baseInformalityRate;
-      setWorkers(createWorkersPopulation(country, baseInf, DEMO_FIRMS));
+      setWorkers(createWorkersPopulation(country, baseInf, dynamicFirms));
     }
   };
 

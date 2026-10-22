@@ -138,6 +138,7 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
           isSimulatingTimeline={isPlayingTimeline}
           policyWaveTrigger={policyWaveTrigger}
           theme={theme}
+          metrics={metrics}
         />
       </div>
 
@@ -396,7 +397,7 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
             <span className={`text-sm sm:text-base font-display font-bold ${
               isLight ? 'text-slate-900' : 'text-cyan-300'
             }`}>
-              {formatSimMonth(month, (language || 'es') as 'es' | 'en')}
+              {language === 'en' ? `Month ${month} of policy` : `Mes ${month} de la política`}
             </span>
           </div>
 
@@ -414,9 +415,9 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
               }`}
             />
             <div className="flex justify-between text-[9px] text-slate-400 font-mono">
-              <span>{language === 'en' ? 'M0 (Jan 24)' : 'Mes 0 (Ene 2024)'}</span>
-              <span>{language === 'en' ? 'M60 (2029)' : 'Mes 60 (2029)'}</span>
-              <span>{language === 'en' ? 'M120 (Dec 33)' : 'Mes 120 (Dic 2033)'}</span>
+              <span>{language === 'en' ? 'Month 0' : 'Mes 0'}</span>
+              <span>{language === 'en' ? 'Month 60' : 'Mes 60'}</span>
+              <span>{language === 'en' ? 'Month 120' : 'Mes 120'}</span>
             </div>
           </div>
 

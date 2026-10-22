@@ -14,6 +14,7 @@ import {
 } from '../../types';
 import { COUNTRY_PROFILES } from '../../data/mockData';
 import { playHoloClick } from '../../utils/audioSynth';
+import trayectoriasData from '../../data/trayectorias_mensuales.json';
 
 interface DigitalTwinSceneProps {
   country: CountryCode;
@@ -32,6 +33,7 @@ interface DigitalTwinSceneProps {
   isSimulatingTimeline: boolean;
   policyWaveTrigger: number;
   theme?: AppTheme;
+  metrics?: StructuralMetrics;
 }
 
 interface OrganicNoduleMeta {
@@ -58,6 +60,7 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   isSimulatingTimeline,
   policyWaveTrigger,
   theme = 'dark',
+  metrics,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -71,6 +74,11 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   const monthRef = useRef(month);
   const workersRef = useRef(workers);
   const firmsRef = useRef(firms);
+  const metricsRef = useRef(metrics);
+
+  useEffect(() => {
+    metricsRef.current = metrics;
+  }, [metrics]);
 
   // Mesh, scene group, and lighting refs
   const workersMeshRef = useRef<THREE.InstancedMesh | null>(null);
@@ -321,7 +329,7 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   const isDraggingRef = useRef(false);
   const prevMousePos = useRef({ x: 0, y: 0 });
   const totalDragDist = useRef(0);
-  const cameraAngle = useRef({ theta: Math.PI / 4, phi: Math.PI / 3, distance: 34 });
+  const cameraAngle = useRef({ theta: Math.PI / 4, phi: 0.85, distance: 40 });
   const targetLookAt = useRef(new THREE.Vector3(0, 1.5, 0));
   const currentLookAt = useRef(new THREE.Vector3(0, 1.5, 0));
 
@@ -516,13 +524,16 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
   // Adjust camera distance for deepZoomLevel
   useEffect(() => {
     if (deepZoomLevel === 'satellite') {
-      cameraAngle.current.distance = 52;
+      cameraAngle.current.distance = 55;
+      cameraAngle.current.phi = 0.55;
       targetLookAt.current.set(0, 0, 0);
     } else if (deepZoomLevel === 'isometric') {
-      cameraAngle.current.distance = 32;
-      targetLookAt.current.set(0, 2, 0);
+      cameraAngle.current.distance = 40;
+      cameraAngle.current.phi = 0.85;
+      targetLookAt.current.set(0, 1.5, 0);
     } else if (deepZoomLevel === 'street') {
-      cameraAngle.current.distance = 14;
+      cameraAngle.current.distance = 16;
+      cameraAngle.current.phi = 1.1;
       if (selectedFirm) {
         targetLookAt.current.set(selectedFirm.x, 3, selectedFirm.z);
       } else if (selectedWorker) {
@@ -936,31 +947,52 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
 
         const activeFormalFirms = currentFirms.filter((f) => f.type === 'formal' || f.isFormalizedScenario);
 
+        // Informalidad del modelo para el país, escenario y mes actual (outputs/trayectorias_mensuales.json)
+        let currentInf = metricsRef.current?.informalityRate;
+        if (currentInf === undefined) {
+          const cClean = (country || 'KENYA').toUpperCase();
+          const scClean = (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+          const cData = (trayectoriasData as any)[cClean] || (trayectoriasData as any)['KENYA'];
+          const scData = cData?.[scClean] || cData?.['A'] || [];
+          if (currentMonth > 0 && scData.length >= currentMonth) {
+            currentInf = scData[currentMonth - 1].informality_total;
+          } else {
+            currentInf = COUNTRY_PROFILES[country]?.baseInformalityRate ?? 86.49;
+          }
+        }
+
+        // El número de partículas informales y formales mostradas debe ser round(2500 * informalidad) y el resto
+        const targetInformalCount = Math.round(2500 * (currentInf / 100.0));
+        const targetFormalCount = 2500 - targetInformalCount;
+
+        // Exponer el objeto global de depuración requerido por la especificación
+        if (typeof window !== 'undefined') {
+          (window as any).__itdtDebug = {
+            ...((window as any).__itdtDebug || {}),
+            country: country,
+            scenario: (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A',
+            month: currentMonth,
+            formalParticles: targetFormalCount,
+            informalParticles: targetInformalCount,
+            formalTowers: activeFormalFirms.length,
+            informalTowers: currentFirms.length - activeFormalFirms.length,
+            informalityRate: Number(currentInf.toFixed(2)),
+            totalParticles: currentWorkers.length,
+            totalTowers: currentFirms.length,
+          };
+        }
+
         for (let i = 0; i < currentWorkers.length; i++) {
           const w = currentWorkers[i];
 
-          // 1. Determine target formalization progress based on continuous month
-          const formalMonth = w.formalizationMonth ?? 120;
-          let targetProgress = 0.0;
+          // 1. Asignación directa y determinista: partículas i < targetFormalCount son formales, el resto informales
+          const targetProgress = i < targetFormalCount ? 1.0 : 0.0;
 
-          if (w.sector === 'unemployed') {
-            targetProgress = 0.0;
-          } else if (formalMonth === 0) {
-            targetProgress = 1.0;
-          } else if (currentMonth >= formalMonth) {
-            targetProgress = 1.0;
-          } else if (currentMonth >= formalMonth - 10) {
-            // Smooth 10-month transition window
-            targetProgress = (currentMonth - (formalMonth - 10)) / 10;
-          } else {
-            targetProgress = 0.0;
-          }
-
-          // 2. Smoothly interpolate transition progress over animation frames (Lerp)
+          // 2. Transición cinemática fluida entre estados
           if (w.currentProgress === undefined) {
             w.currentProgress = targetProgress;
           } else {
-            w.currentProgress = THREE.MathUtils.lerp(w.currentProgress, targetProgress, 0.08);
+            w.currentProgress = THREE.MathUtils.lerp(w.currentProgress, targetProgress, 0.12);
           }
           const p = w.currentProgress; // 0 = fully informal, 1 = fully formal
 

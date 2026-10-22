@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   CountryCode, 
   UserRole, 
@@ -10,6 +10,8 @@ import {
   AppTheme
 } from '../../types';
 import { COUNTRY_PROFILES, INITIAL_POLICY_STATE } from '../../data/mockData';
+import { BACKEND_URL } from '../../services/api';
+import trayectoriasData from '../../data/trayectorias_mensuales.json';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -81,101 +83,156 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const [evolutionTab, setEvolutionTab] = useState<'sim' | 'hist'>('sim');
 
-  // Serie Histórica real de ILOSTAT (data/ilostat_series_historicas.csv) sin interpolar
-  const historicalILOSTAT = useMemo(() => {
-    const historicalMap: Record<CountryCode, Array<{ year: string; informalidad: number; mujeres: number; hombres: number; formalidad: number; fuente: string }>> = {
-      KENYA: [
-        { year: '2019', informalidad: 86.49, mujeres: 90.19, hombres: 83.12, formalidad: 13.51, fuente: 'KNBS-ILFS 2019 (ILOSTAT EMP_NIFL_SEX_RT)' },
-      ],
-      NIGERIA: [
-        { year: '2022', informalidad: 93.92, mujeres: 96.58, hombres: 91.52, formalidad: 6.08, fuente: 'NBS-NLFS 2022/2024 (ILOSTAT EMP_NIFL_SEX_RT)' },
-      ],
-      INDIA: [
-        { year: '2010', informalidad: 88.29, mujeres: 91.49, hombres: 87.18, formalidad: 11.71, fuente: 'MoSPI PLFS (ILOSTAT)' },
-        { year: '2012', informalidad: 87.18, mujeres: 90.11, hombres: 86.20, formalidad: 12.82, fuente: 'MoSPI PLFS (ILOSTAT)' },
-        { year: '2018', informalidad: 88.61, mujeres: 89.93, hombres: 88.25, formalidad: 11.39, fuente: 'MoSPI PLFS (ILOSTAT)' },
-        { year: '2019', informalidad: 88.91, mujeres: 90.86, hombres: 88.28, formalidad: 11.09, fuente: 'MoSPI PLFS (ILOSTAT)' },
-        { year: '2020', informalidad: 90.26, mujeres: 92.35, hombres: 89.53, formalidad: 9.74, fuente: 'MoSPI PLFS (ILOSTAT)' },
-        { year: '2021', informalidad: 89.11, mujeres: 91.59, hombres: 88.21, formalidad: 10.89, fuente: 'MoSPI PLFS (ILOSTAT)' },
-        { year: '2022', informalidad: 89.03, mujeres: 91.32, hombres: 88.18, formalidad: 10.97, fuente: 'MoSPI PLFS (ILOSTAT)' },
-      ],
-      BANGLADESH: [
-        { year: '2010', informalidad: 87.81, mujeres: 92.26, hombres: 85.91, formalidad: 12.19, fuente: 'BBS LFS (ILOSTAT)' },
-        { year: '2013', informalidad: 89.42, mujeres: 93.73, hombres: 87.67, formalidad: 10.58, fuente: 'BBS LFS (ILOSTAT)' },
-        { year: '2017', informalidad: 94.70, mujeres: 96.57, hombres: 93.88, formalidad: 5.30, fuente: 'BBS LFS (ILOSTAT)' },
-        { year: '2022', informalidad: 82.00, mujeres: 93.88, hombres: 78.44, formalidad: 18.00, fuente: 'BBS LFS (ILOSTAT)' },
-      ],
+  // 1. Serie Histórica de ILOSTAT leída de la API (/api/v1/simulation/historical)
+  const [historicalData, setHistoricalData] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`${BACKEND_URL}/api/v1/simulation/historical?country=${encodeURIComponent(country)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setHistoricalData(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
     };
-    return historicalMap[country] || historicalMap.KENYA;
   }, [country]);
 
-  // Trayectoria mensual simulada del escenario seleccionado (meses 1-120 de la política)
-  // Conectada fielmente con outputs/policy_experiments_results.json e ITDTModel
-  const simulatedTrajectory = useMemo(() => {
-    const scClean = (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
-    const targets: Record<string, { inf: number; f: number; m: number }> = {
-      A: { inf: 86.13, f: 89.92, m: 82.72 },
-      BASELINE: { inf: 86.13, f: 89.92, m: 82.72 },
-      B1: { inf: 86.18, f: 89.95, m: 82.78 },
-      B2: { inf: 51.58, f: 68.51, m: 36.35 },
-      C: { inf: 85.00, f: 85.27, m: 84.75 },
-      D: { inf: 56.82, f: 57.40, m: 56.30 },
+  // Fallback con metadatos exactos de ILOSTAT tal como vienen en data/ilostat_series_historicas.csv
+  const historicalILOSTAT = useMemo(() => {
+    if (historicalData.length > 0) return historicalData;
+    const codeMap: Record<CountryCode, Array<{ year: string; anio: number; informalidad: number; mujeres: number; hombres: number; formalidad: number; fuente: string }>> = {
+      KENYA: [
+        { year: '2019', anio: 2019, informalidad: 86.49, mujeres: 90.19, hombres: 83.12, formalidad: 13.51, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22KEN%22%5D%7D&observations=1&limit=200)' },
+      ],
+      NIGERIA: [
+        { year: '2022', anio: 2022, informalidad: 93.92, mujeres: 96.58, hombres: 91.52, formalidad: 6.08, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22NGA%22%5D%7D&observations=1&limit=200)' },
+      ],
+      INDIA: [
+        { year: '2010', anio: 2010, informalidad: 88.29, mujeres: 91.49, hombres: 87.18, formalidad: 11.71, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+        { year: '2012', anio: 2012, informalidad: 87.18, mujeres: 90.11, hombres: 86.20, formalidad: 12.82, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+        { year: '2018', anio: 2018, informalidad: 88.61, mujeres: 89.93, hombres: 88.25, formalidad: 11.39, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+        { year: '2019', anio: 2019, informalidad: 88.91, mujeres: 90.86, hombres: 88.28, formalidad: 11.09, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+        { year: '2020', anio: 2020, informalidad: 90.26, mujeres: 92.35, hombres: 89.53, formalidad: 9.74, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+        { year: '2021', anio: 2021, informalidad: 89.11, mujeres: 91.59, hombres: 88.21, formalidad: 10.89, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+        { year: '2022', anio: 2022, informalidad: 89.03, mujeres: 91.32, hombres: 88.18, formalidad: 10.97, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22IND%22%5D%7D&observations=1&limit=200)' },
+      ],
+      BANGLADESH: [
+        { year: '2010', anio: 2010, informalidad: 87.81, mujeres: 92.26, hombres: 85.91, formalidad: 12.19, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22BGD%22%5D%7D&observations=1&limit=200)' },
+        { year: '2013', anio: 2013, informalidad: 89.42, mujeres: 93.73, hombres: 87.67, formalidad: 10.58, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22BGD%22%5D%7D&observations=1&limit=200)' },
+        { year: '2017', anio: 2017, informalidad: 94.70, mujeres: 96.57, hombres: 93.88, formalidad: 5.30, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22BGD%22%5D%7D&observations=1&limit=200)' },
+        { year: '2022', anio: 2022, informalidad: 82.00, mujeres: 93.88, hombres: 78.44, formalidad: 18.00, fuente: 'ILOSTAT SDMX / DBnomics (https://api.db.nomics.world/v22/series/ILO/EMP_NIFL_SEX_RT?dimensions=%7B%22ref_area%22%3A%5B%22BGD%22%5D%7D&observations=1&limit=200)' },
+      ],
     };
-    const tVal = targets[scenario] || targets[scClean] || targets.A;
-    const baseInf = baseInformality;
-    const baseFem = country === 'KENYA' ? 90.19 : country === 'NIGERIA' ? 96.39 : country === 'INDIA' ? 91.93 : 95.77;
-    const baseMasc = country === 'KENYA' ? 83.13 : country === 'NIGERIA' ? 89.92 : country === 'INDIA' ? 86.76 : 78.08;
+    return codeMap[country] || codeMap.KENYA;
+  }, [historicalData, country]);
 
-    const points = [];
-    for (let m = 0; m <= 120; m += 6) {
-      const prog = m / 120.0;
-      const inf = Number((baseInf + prog * (tVal.inf - baseInf)).toFixed(2));
-      const fem = Number((baseFem + prog * (tVal.f - baseFem)).toFixed(2));
-      const masc = Number((baseMasc + prog * (tVal.m - baseMasc)).toFixed(2));
-      const form = Number((100 - inf).toFixed(2));
-      points.push({
-        mes: m,
-        periodo: `Mes ${m}`,
-        informalidad: inf,
-        mujeres: fem,
-        hombres: masc,
-        formalidad: form,
-        tipo: 'Simulación ITDT (meses 1-120 de la política)',
-      });
+  // 2. Trayectoria mensual simulada del modelo (meses 1 a 120 de la política)
+  // Leída directamente de la API (/api/v1/simulation/trajectories) con su banda de IC al 95%
+  const [apiTrajectory, setApiTrajectory] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const scClean = (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+    fetch(`${BACKEND_URL}/api/v1/simulation/trajectories?country=${encodeURIComponent(country)}&scenario=${encodeURIComponent(scClean)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data && Array.isArray(data.simulation) && data.simulation.length > 0) {
+          setApiTrajectory(data.simulation);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [country, scenario]);
+
+  const simulatedTrajectory = useMemo(() => {
+    if (apiTrajectory.length > 0) return apiTrajectory;
+    const scClean = (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A';
+    const cClean = (country || 'KENYA').toUpperCase();
+    const cData = (trayectoriasData as any)[cClean] || (trayectoriasData as any)['KENYA'];
+    const scData = cData?.[scClean] || cData?.['A'] || [];
+    return scData.map((item: any) => ({
+      mes: item.month,
+      periodo: `Mes ${item.month}`,
+      informalidad: item.informality_total,
+      informalidad_ci_low: item.informality_total_ci?.[0] ?? item.informality_total,
+      informalidad_ci_high: item.informality_total_ci?.[1] ?? item.informality_total,
+      mujeres: item.informality_female,
+      mujeres_ci_low: item.informality_female_ci?.[0] ?? item.informality_female,
+      mujeres_ci_high: item.informality_female_ci?.[1] ?? item.informality_female,
+      hombres: item.informality_male,
+      hombres_ci_low: item.informality_male_ci?.[0] ?? item.informality_male,
+      hombres_ci_high: item.informality_male_ci?.[1] ?? item.informality_male,
+      brecha: item.gender_gap,
+      formalidad: Number((100 - item.informality_total).toFixed(2)),
+      formal_firms_ratio: item.formal_firms_ratio ?? 0.05,
+      annual_exit_rate: item.annual_exit_rate ?? 0.0,
+      recaudacion: item.fiscal_revenue ?? 0.0,
+      gini: item.gini_index ?? 0.288,
+      tipo: 'Simulación ITDT (meses 1-120 de la política)',
+    }));
+  }, [apiTrajectory, country, scenario]);
+
+  // Exponer para verificación de Playwright
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__dashboardTrajectory = simulatedTrajectory;
+      (window as any).__itdtDebug = {
+        ...((window as any).__itdtDebug || {}),
+        country,
+        scenario: (scenario || 'A').toUpperCase().replace('SCENARIO_', '').split('_')[0] || 'A',
+        trajectoryPointsCount: simulatedTrajectory.length,
+        trajectoryPoints: simulatedTrajectory,
+      };
     }
-    return points;
-  }, [baseInformality, scenario, country]);
+  }, [simulatedTrajectory, country, scenario]);
 
-  // 2. Bar Chart: Baseline vs Current Policy Intervention Comparison
+  // 3. Bar Chart: Baseline vs Current Policy Intervention Comparison
   const comparisonData = useMemo(() => {
-    const baseFormal = (100 - baseInformality) * 0.9;
-    const currentFormal = (100 - currentInf) * 0.92;
+    const baseFormal = Number((100 - baseInformality).toFixed(2));
+    const currentFormal = Number((100 - currentInf).toFixed(2));
     const baseKey = t('baselineLabel', language);
     const interventionKey = t('interventionLabel', language);
+
+    // Cifras base del Escenario A leídas directamente del modelo ITDT
+    const cClean = (country || 'KENYA').toUpperCase();
+    const cData = (trayectoriasData as any)[cClean] || (trayectoriasData as any)['KENYA'];
+    const aData = cData?.['A'] || [];
+    const aLast = aData.length > 0 ? aData[aData.length - 1] : null;
+    const baseRev = aLast ? Number(aLast.fiscal_revenue.toFixed(1)) : 1381.1;
+    const baseGap = aLast ? Number(aLast.gender_gap.toFixed(2)) : 7.20;
+
+    const currentRev = Number((metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue ?? baseRev).toFixed(1));
+    const currentGap = Number((metrics?.genderGap ?? baseGap).toFixed(2));
 
     return [
       {
         indicador: t('informalityRate', language) + ' (%)',
-        [baseKey]: Number(baseInformality.toFixed(1)),
-        [interventionKey]: Number(currentInf.toFixed(1)),
+        [baseKey]: Number(baseInformality.toFixed(2)),
+        [interventionKey]: Number(currentInf.toFixed(2)),
       },
       {
         indicador: (language === 'en' ? 'Formal Employment (%)' : 'Empleo Formal (%)'),
-        [baseKey]: Number(baseFormal.toFixed(1)),
-        [interventionKey]: Number(currentFormal.toFixed(1)),
+        [baseKey]: baseFormal,
+        [interventionKey]: currentFormal,
       },
       {
         indicador: (language === 'en' ? 'Fiscal Revenue (Model Units)' : 'Recaudación Fiscal (Unidades Modelo)'),
-        [baseKey]: 0,
-        [interventionKey]: Number((metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenueMillionUSD ?? 0).toFixed(1)),
+        [baseKey]: baseRev,
+        [interventionKey]: currentRev,
       },
       {
         indicador: (language === 'en' ? 'Gender Gap (pp)' : 'Brecha de Género (pp)'),
-        [baseKey]: 1.63,
-        [interventionKey]: Number((metrics?.genderGap ?? 1.63).toFixed(2)),
+        [baseKey]: baseGap,
+        [interventionKey]: currentGap,
       },
     ];
-  }, [baseInformality, currentInf, metrics, language]);
+  }, [baseInformality, currentInf, metrics, country, language]);
 
   // 3. Sector Distribution Composition Data
   const sectorCompositionData = useMemo(() => {
@@ -659,20 +716,39 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="w-full h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   {evolutionTab === 'sim' ? (
-                    <LineChart data={simulatedTrajectory} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <LineChart data={simulatedTrajectory} margin={{ top: 10, right: 20, left: 10, bottom: 25 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#e2e8f0' : '#1e293b'} opacity={0.6} />
-                      <XAxis dataKey="periodo" stroke="#64748b" tick={{ fontSize: 10, fill: '#64748b' }} />
+                      <XAxis 
+                        dataKey="periodo" 
+                        stroke="#64748b" 
+                        tick={{ fontSize: 10, fill: '#64748b' }} 
+                        label={{ 
+                          value: language === 'en' ? 'Policy month' : 'Mes de la política', 
+                          position: 'insideBottom', 
+                          offset: -10,
+                          fill: '#64748b',
+                          fontSize: 11
+                        }}
+                      />
                       <YAxis stroke="#64748b" tick={{ fontSize: 11, fill: '#64748b' }} unit="%" domain={[0, 100]} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingTop: '10px' }} />
+                      <Legend wrapperStyle={{ fontSize: '11px', fontFamily: 'monospace', paddingTop: '15px' }} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="informalidad_ci_high" 
+                        stroke="none" 
+                        fill="#f59e0b" 
+                        fillOpacity={0.15} 
+                        name="IC 95% Informalidad" 
+                      />
                       <Line 
                         type="monotone" 
                         dataKey="informalidad" 
                         name={t('informalLabel', language) + ' Total %'} 
                         stroke="#f59e0b" 
                         strokeWidth={2.5} 
-                        dot={{ r: 3, fill: '#f59e0b' }} 
-                        activeDot={{ r: 6, stroke: '#ffffff' }} 
+                        dot={false} 
+                        activeDot={{ r: 5, stroke: '#ffffff' }} 
                       />
                       <Line 
                         type="monotone" 
@@ -680,8 +756,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         name={t('formalLabel', language) + ' %'} 
                         stroke="#00f0ff" 
                         strokeWidth={2.5} 
-                        dot={{ r: 3, fill: '#00f0ff' }} 
-                        activeDot={{ r: 6, stroke: '#ffffff' }} 
+                        dot={false} 
+                        activeDot={{ r: 5, stroke: '#ffffff' }} 
                       />
                       <Line 
                         type="monotone" 
@@ -690,7 +766,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         stroke="#ec4899" 
                         strokeWidth={1.8} 
                         strokeDasharray="4 4"
-                        dot={{ r: 2, fill: '#ec4899' }} 
+                        dot={false} 
                       />
                       <Line 
                         type="monotone" 
@@ -699,7 +775,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         stroke="#38bdf8" 
                         strokeWidth={1.8} 
                         strokeDasharray="4 4"
-                        dot={{ r: 2, fill: '#38bdf8' }} 
+                        dot={false} 
                       />
                     </LineChart>
                   ) : (

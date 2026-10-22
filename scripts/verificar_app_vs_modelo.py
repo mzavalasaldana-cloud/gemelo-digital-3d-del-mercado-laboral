@@ -3,9 +3,10 @@
 scripts/verificar_app_vs_modelo.py
 
 Verifica automáticamente que los indicadores expuestos por la API FastAPI
-(mes 120 de la política para Kenia en escenarios A, B1, B2, C, D)
-coincidan con outputs/policy_experiments_results.json (media de réplicas de meses 109-120).
-Diferencia máxima tolerada: 0.5 p.p.
+para los 4 países × 5 escenarios y los meses 1, 12, 60 y 120 (80 puntos de prueba)
+coincidan con outputs/trayectorias_mensuales.json con una tolerancia máxima de 0.50 p.p.
+para: informalidad total, mujeres, hombres y brecha.
+
 Genera el reporte oficial en outputs/verificacion_app_vs_modelo.md.
 """
 
@@ -15,31 +16,39 @@ import json
 import time
 import urllib.request
 import urllib.error
-import numpy as np
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
-RESULTS_JSON_PATH = os.path.join(OUTPUTS_DIR, "policy_experiments_results.json")
+TRAJECTORIES_JSON_PATH = os.path.join(OUTPUTS_DIR, "trayectorias_mensuales.json")
 REPORT_MD_PATH = os.path.join(OUTPUTS_DIR, "verificacion_app_vs_modelo.md")
 API_HOST = "http://127.0.0.1:8000"
 
+COUNTRIES = ["KENYA", "NIGERIA", "INDIA", "BANGLADESH"]
+SCENARIOS = ["A", "B1", "B2", "C", "D"]
+MONTHS = [1, 12, 60, 120]
+TOLERANCE = 0.50  # p.p.
 
-def query_api_metrics(country: str, scenario: str, month: int = 120) -> dict:
+
+def query_api_metrics(country: str, scenario: str, month: int) -> dict:
     url = f"{API_HOST}/api/v1/simulation/metrics?country={country}&scenario={scenario}&month={month}"
-    req = urllib.request.Request(url, headers={"User-Agent": "VerificationScript/1.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "VerificationScript/2.0"})
     with urllib.request.urlopen(req, timeout=10) as response:
         if response.status != 200:
             raise RuntimeError(f"HTTP Error {response.status} querying {url}")
         return json.loads(response.read().decode("utf-8"))
 
 
-def run_verification():
-    print(f"[*] Iniciando verificación de App vs Modelo...")
-    print(f"[*] Verificando disponibilidad del backend en {API_HOST}...")
+def run_verification() -> bool:
+    print(f"=== VERIFICACIÓN AUTOMÁTICA AMPLIADA: APP VS MODELO (80 PUNTOS) ===")
+    print(f"[*] Comprobando disponibilidad del backend en {API_HOST}...")
 
-    # 1. Probar conectividad con el backend
     backend_online = False
-    for attempt in range(5):
+    for attempt in range(6):
         try:
             with urllib.request.urlopen(f"{API_HOST}/docs", timeout=3) as resp:
                 if resp.status == 200:
@@ -50,159 +59,139 @@ def run_verification():
             time.sleep(1)
 
     if not backend_online:
-        print("[-] ERROR CRÍTICO: Backend FastAPI no responde en http://127.0.0.1:8000.")
+        print(f"[-] ERROR CRÍTICO: Backend FastAPI no responde en {API_HOST}.")
         print("[-] Debe levantar el backend antes de ejecutar esta verificación.")
-        sys.exit(1)
+        return False
 
-    # 2. Cargar outputs oficiales
-    if not os.path.exists(RESULTS_JSON_PATH):
-        print(f"[-] ERROR: Archivo no encontrado: {RESULTS_JSON_PATH}")
-        sys.exit(1)
+    if not os.path.exists(TRAJECTORIES_JSON_PATH):
+        print(f"[-] ERROR: No se encontró el archivo {TRAJECTORIES_JSON_PATH}")
+        return False
 
-    with open(RESULTS_JSON_PATH, "r", encoding="utf-8") as f:
-        official_data = json.load(f)
-
-    kenya_official = official_data.get("KENYA", {})
-    scenarios = ["A", "B1", "B2", "C", "D"]
-
-    report_lines = [
-        "# Verificación Automática: Aplicación Web vs Modelo Calibrado ITDT",
-        "",
-        f"- **Fecha y hora de ejecución:** {time.strftime('%Y-%m-%d %H:%M:%S')}",
-        "- **País evaluado:** Kenia (KEN)",
-        "- **Horizonte de evaluación:** Mes 120 de la política (promedio final de réplicas en meses 109–120)",
-        "- **Fuente econométrica:** `outputs/policy_experiments_results.json` (media de 40 réplicas por escenario)",
-        "- **Punto de conexión API:** `http://127.0.0.1:8000/api/v1/simulation/metrics`",
-        "- **Tolerancia máxima:** 0.50 puntos porcentuales (p.p.)",
-        "",
-        "## 1. Tabla de Comparación: Tasa de Informalidad (%)",
-        "",
-        "| Escenario | Etiqueta | Oficial Modelo (%) | Respuesta API (%) | Diferencia (p.p.) | Tolerancia | Estado |",
-        "|:---|:---|:---:|:---:|:---:|:---:|:---:|",
-    ]
-
-    scenario_labels = {
-        "A": "Status Quo (Inercial)",
-        "B1": "GovTech Moderado",
-        "B2": "GovTech Intensivo (Sanciones 3×)",
-        "C": "Red de Cuidados (−60% cuidado infantil)",
-        "D": "Paquete Integrado (B2 + C + Subsidio DCC)",
-    }
+    with open(TRAJECTORIES_JSON_PATH, "r", encoding="utf-8") as f:
+        traj_data = json.load(f)
 
     all_passed = True
-    results_summary = []
+    total_comparisons = len(COUNTRIES) * len(SCENARIOS) * len(MONTHS)
+    print(f"[*] Evaluando {total_comparisons} combinaciones (4 países × 5 escenarios × 4 meses: 1, 12, 60, 120)...")
+    print(f"[*] Tolerancia permitida: ≤ {TOLERANCE:.2f} p.p.\n")
 
-    for sc in scenarios:
-        reps = kenya_official.get(sc, [])
-        if not reps:
-            print(f"[-] ERROR: No hay réplicas oficiales para escenario {sc}")
-            sys.exit(1)
+    report_lines = [
+        "# Reporte Oficial de Verificación Automática Ampliada: App vs Modelo ITDT",
+        "",
+        f"- **Fecha y hora de ejecución:** {time.strftime('%Y-%m-%d %H:%M:%S')}",
+        f"- **Puntos evaluados:** {total_comparisons} combinaciones (4 países × 5 escenarios × meses 1, 12, 60 y 120)",
+        f"- **Fuente econométrica:** `outputs/trayectorias_mensuales.json` (40 réplicas por mes)",
+        f"- **Punto de conexión API:** `{API_HOST}/api/v1/simulation/metrics`",
+        f"- **Tolerancia máxima:** {TOLERANCE:.2f} p.p.",
+        "",
+        "## Tabla Completa de Resultados (80 Casos)",
+        "",
+        "| # | País | Escenario | Mes | Inf. Total (JSON / API / Dif) | Mujeres (JSON / API / Dif) | Hombres (JSON / API / Dif) | Brecha (JSON / API / Dif) | Estado |",
+        "|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+    ]
 
-        # Medias oficiales de 40 réplicas
-        oficial_inf = float(np.mean([r["informality_total"] for r in reps]))
-        oficial_fem = float(np.mean([r["informality_female"] for r in reps]))
-        oficial_male = float(np.mean([r["informality_male"] for r in reps]))
-        oficial_gap = float(np.mean([r["gender_gap"] for r in reps]))
-        oficial_exit = float(np.mean([r["annual_exit_rate"] for r in reps]))
-        oficial_rev = float(np.mean([r["fiscal_revenue"] for r in reps]))
+    # Encabezado para salida por terminal
+    print(f"{'#':<3} | {'País':<10} | {'Esc':<3} | {'Mes':<3} | {'Inf. Total (JSON vs API)':<26} | {'Mujeres (JSON vs API)':<24} | {'Hombres (JSON vs API)':<24} | {'Brecha':<14} | {'Estado':<6}")
+    print("-" * 125)
 
-        # Consulta HTTP a la API en vivo
-        api_res = query_api_metrics("KENYA", sc, month=120)
-        api_inf = float(api_res["informalityRate"])
-        api_fem = float(api_res.get("informalityFemale", 0.0))
-        api_male = float(api_res.get("informalityMale", 0.0))
-        api_gap = float(api_res.get("genderGap", 0.0))
-        api_exit = float(api_res.get("annualExitRate", 0.0))
-        api_rev = float(api_res.get("fiscalRevenueModelUnits", api_res.get("fiscalRevenue", 0.0)))
-        corp_tax = float(api_res.get("corporateTaxRevenueModelUnits", api_res.get("corporateTaxRevenue", 0.0)))
-        labor_tax = float(api_res.get("laborContributionsModelUnits", api_res.get("laborContributionsRevenue", 0.0)))
+    case_num = 1
+    failures = []
 
-        diff_inf = abs(api_inf - oficial_inf)
-        diff_fem = abs(api_fem - oficial_fem)
-        diff_male = abs(api_male - oficial_male)
-        diff_gap = abs(api_gap - oficial_gap)
+    for c in COUNTRIES:
+        for sc in SCENARIOS:
+            sc_traj = traj_data.get(c, {}).get(sc, [])
+            if not sc_traj:
+                print(f"[-] ERROR: No hay datos para {c} {sc}")
+                return False
 
-        # Verificación fiscal: total == sociedades + seg_social
-        fiscal_sum_diff = abs((corp_tax + labor_tax) - api_rev)
-        fiscal_balanced = fiscal_sum_diff < 0.02
+            for m in MONTHS:
+                json_item = sc_traj[m - 1]
+                j_inf = float(json_item["informality_total"])
+                j_fem = float(json_item["informality_female"])
+                j_male = float(json_item["informality_male"])
+                j_gap = float(json_item["gender_gap"])
 
-        passed_inf = diff_inf <= 0.50
-        passed_fem = diff_fem <= 0.50
-        passed_male = diff_male <= 0.50
+                # Consulta HTTP a la API en vivo
+                try:
+                    api_res = query_api_metrics(c, sc, m)
+                except Exception as ex:
+                    print(f"[-] Error al consultar API para ({c}, {sc}, {m}): {ex}")
+                    return False
 
-        passed_scenario = passed_inf and passed_fem and passed_male and fiscal_balanced
-        if not passed_scenario:
-            all_passed = False
+                a_inf = float(api_res["informalityRate"])
+                a_fem = float(api_res.get("informalityFemale", 0.0))
+                a_male = float(api_res.get("informalityMale", 0.0))
+                a_gap = float(api_res.get("genderGap", 0.0))
 
-        status_str = "APROBADO" if passed_scenario else "RECHAZADO"
+                d_inf = abs(a_inf - j_inf)
+                d_fem = abs(a_fem - j_fem)
+                d_male = abs(a_male - j_male)
+                d_gap = abs(a_gap - j_gap)
 
-        report_lines.append(
-            f"| **{sc}** | {scenario_labels[sc]} | {oficial_inf:.2f} % | {api_inf:.2f} % | {diff_inf:+.2f} p.p. | ≤ 0.50 p.p. | **{status_str}** |"
-        )
+                passed_case = (
+                    d_inf <= TOLERANCE
+                    and d_fem <= TOLERANCE
+                    and d_male <= TOLERANCE
+                    and d_gap <= TOLERANCE
+                )
 
-        results_summary.append({
-            "scenario": sc,
-            "label": scenario_labels[sc],
-            "oficial_inf": oficial_inf,
-            "api_inf": api_inf,
-            "diff_inf": diff_inf,
-            "oficial_fem": oficial_fem,
-            "api_fem": api_fem,
-            "diff_fem": diff_fem,
-            "oficial_male": oficial_male,
-            "api_male": api_male,
-            "diff_male": diff_male,
-            "oficial_gap": oficial_gap,
-            "api_gap": api_gap,
-            "oficial_exit": oficial_exit,
-            "api_exit": api_exit,
-            "oficial_rev": oficial_rev,
-            "api_rev": api_rev,
-            "corp_tax": corp_tax,
-            "labor_tax": labor_tax,
-            "fiscal_balanced": fiscal_balanced,
-            "passed": passed_scenario,
-        })
+                if not passed_case:
+                    all_passed = False
+                    failures.append((c, sc, m, d_inf, d_fem, d_male, d_gap))
+
+                status_str = "PASS" if passed_case else "FAIL"
+
+                row_str = (
+                    f"{case_num:<3} | {c:<10} | {sc:<3} | M{m:<2} | "
+                    f"{j_inf:.2f}% vs {a_inf:.2f}% (Δ{d_inf:+.2f}) | "
+                    f"{j_fem:.2f}% vs {a_fem:.2f}% (Δ{d_fem:+.2f}) | "
+                    f"{j_male:.2f}% vs {a_male:.2f}% (Δ{d_male:+.2f}) | "
+                    f"Δ{d_gap:.2f} p.p.     | {status_str}"
+                )
+                print(row_str)
+
+                md_row = (
+                    f"| {case_num} | **{c}** | {sc} | Mes {m} | "
+                    f"{j_inf:.2f}% / {a_inf:.2f}% / **{d_inf:+.2f}** | "
+                    f"{j_fem:.2f}% / {a_fem:.2f}% / **{d_fem:+.2f}** | "
+                    f"{j_male:.2f}% / {a_male:.2f}% / **{d_male:+.2f}** | "
+                    f"{j_gap:.2f} / {a_gap:.2f} / **{d_gap:+.2f}** | "
+                    f"**{status_str}** |"
+                )
+                report_lines.append(md_row)
+                case_num += 1
 
     report_lines.extend([
         "",
-        "## 2. Detalle Completo de Indicadores Estructurales por Escenario",
+        "## Resumen de Validación",
         "",
-        "| Escenario | Métrica | Oficial Modelo | Respuesta API | Diferencia | Estado |",
-        "|:---|:---|:---:|:---:|:---:|:---:|",
-    ])
-
-    for res in results_summary:
-        sc = res["scenario"]
-        report_lines.append(f"| **{sc}** | Informalidad Total | {res['oficial_inf']:.2f} % | {res['api_inf']:.2f} % | {res['diff_inf']:.2f} p.p. | {'PASS' if res['diff_inf'] <= 0.5 else 'FAIL'} |")
-        report_lines.append(f"| **{sc}** | Informalidad Mujeres | {res['oficial_fem']:.2f} % | {res['api_fem']:.2f} % | {res['diff_fem']:.2f} p.p. | {'PASS' if res['diff_fem'] <= 0.5 else 'FAIL'} |")
-        report_lines.append(f"| **{sc}** | Informalidad Hombres | {res['oficial_male']:.2f} % | {res['api_male']:.2f} % | {res['diff_male']:.2f} p.p. | {'PASS' if res['diff_male'] <= 0.5 else 'FAIL'} |")
-        report_lines.append(f"| **{sc}** | Brecha Género (F − M) | {res['oficial_gap']:.2f} p.p. | {res['api_gap']:.2f} p.p. | {abs(res['api_gap'] - res['oficial_gap']):.2f} p.p. | PASS |")
-        report_lines.append(f"| **{sc}** | Cierre Empresas Anual | {res['oficial_exit']:.2f} % | {res['api_exit']:.2f} % | {abs(res['api_exit'] - res['oficial_exit']):.2f} p.p. | PASS |")
-        report_lines.append(f"| **{sc}** | Recaudación Total (u.m.) | {res['oficial_rev']:.2f} | {res['api_rev']:.2f} | {abs(res['api_rev'] - res['oficial_rev']):.2f} | PASS |")
-        report_lines.append(f"| **{sc}** | Cuadre Fiscal (Soc.+Seg.) | — | {res['corp_tax']:.2f} + {res['labor_tax']:.2f} = {res['corp_tax'] + res['labor_tax']:.2f} | 0.00 | {'CUADRA' if res['fiscal_balanced'] else 'NO CUADRA'} |")
-
-    report_lines.extend([
-        "",
-        "## 3. Conclusión de la Verificación",
+        f"- **Total de casos evaluados:** {total_comparisons}",
+        f"- **Casos aprobados:** {total_comparisons - len(failures)}",
+        f"- **Casos fallidos:** {len(failures)}",
+        f"- **Resultado Global:** {'APROBADO' if all_passed else 'RECHAZADO'}",
         "",
     ])
 
-    if all_passed:
-        report_lines.append("**RESULTADO GLOBAL: APROBADO.** Todos los escenarios (A, B1, B2, C, D) coinciden con los resultados oficiales de `outputs/policy_experiments_results.json` con una discrepancia máxima inferior a 0.50 p.p. y los componentes de recaudación fiscal cuadran de forma exacta (Impuesto de Sociedades + Contribuciones de Seguridad Social = Recaudación Total).")
-        print("[+] Verificación APROBADA con éxito.")
-    else:
-        report_lines.append("**RESULTADO GLOBAL: RECHAZADO.** Uno o más escenarios exceden la tolerancia de 0.50 p.p. o presentan discrepancias en el cuadre fiscal.")
-        print("[-] Verificación RECHAZADA. Revisar discrepancias.")
+    if failures:
+        report_lines.append("### Casos con discrepancias superiores a la tolerancia:")
+        for f in failures:
+            report_lines.append(f"- {f[0]} Escenario {f[1]} Mes {f[2]}: Dif Inf={f[3]:.3f}, Dif Fem={f[4]:.3f}, Dif Masc={f[5]:.3f}, Dif Gap={f[6]:.3f}")
 
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
     with open(REPORT_MD_PATH, "w", encoding="utf-8") as f:
         f.write("\n".join(report_lines) + "\n")
 
-    print(f"[+] Reporte guardado en: {REPORT_MD_PATH}")
+    print("\n" + "=" * 80)
+    if all_passed:
+        print(f"[+] ÉXITO TOTAL: Los 80 casos cumplen estrictamente la tolerancia de ≤ {TOLERANCE:.2f} p.p.")
+        print(f"[+] Reporte completo guardado en: {REPORT_MD_PATH}")
+    else:
+        print(f"[-] FALLA: {len(failures)} casos excedieron la tolerancia.")
+    print("=" * 80)
+
     return all_passed
 
 
 if __name__ == "__main__":
-    passed = run_verification()
-    sys.exit(0 if passed else 1)
+    success = run_verification()
+    sys.exit(0 if success else 1)
