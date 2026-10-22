@@ -1,0 +1,136 @@
+======================================================================
+ ITDT: REPLICACIÓN COMPLETA DESDE CERO (make all)
+======================================================================
+Limpiando directorio outputs/ previo...
+=== [ITDT: CALIB_SE (10 calibraciones independientes)] ===
+======================================================================
+ ITDT: Calibración SMM por Bisección Anidada (Sección 3.5)
+ Países: ['KENYA', 'NIGERIA', 'INDIA', 'BANGLADESH']
+ Semillas basales (S=6): [1000, 1001, 1002, 1003, 1004, 1005]
+ Conjuntos independientes de semillas para EE: 10
+======================================================================
+
+--- Ejecutando calibraciones basales en paralelo... ---
+  [KENYA] Evaluaciones: 81 | phi_0 = 3.586, gamma_0 = 0.460 | F_sim = 90.25 (obs=90.19), M_sim = 83.16 (obs=83.13), T_sim = 86.54
+  [NIGERIA] Evaluaciones: 81 | phi_0 = 11.250, gamma_0 = 0.621 | F_sim = 96.46 (obs=96.39), M_sim = 89.88 (obs=89.92), T_sim = 93.20
+  [INDIA] Evaluaciones: 81 | phi_0 = 5.859, gamma_0 = 0.442 | F_sim = 91.90 (obs=91.93), M_sim = 86.74 (obs=86.76), T_sim = 88.34
+  [BANGLADESH] Evaluaciones: 81 | phi_0 = 2.250, gamma_0 = 0.762 | F_sim = 95.82 (obs=95.77), M_sim = 78.00 (obs=78.08), T_sim = 84.15
+
+--- Ejecutando 10 recalibraciones independientes por país... ---
+
+Pipeline de calibración completado con éxito en 212.42 s.
+Estimaciones guardadas en: outputs\calibration_estimates.json
+Tabla 2 generada en outputs\table2_calibration.csv y outputs\table2_calibration.md
+Tabla 11 generada en outputs\table11_equity.csv y outputs\table11_equity.md
+Figura 4 guardada en: outputs\figure4_calibration.png
+[OK] Calibración con errores estándar finalizada en 213.10 s.
+=== [ITDT: LOCO (Tabla 3)] ===
+
+======================================================================
+ ITDT: Validación Fuera de Muestra Leave-One-Country-Out (LOCO) (Sección 3.6)
+ Rejilla gamma_0 (13 puntos): [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
+======================================================================
+Precomputando rejilla (país, gamma_0) para búsqueda acelerada...
+Rejilla completada en 38.92 s.
+
+--- Pliegue LOCO: Excluyendo Kenia (KENYA) ---
+  Entrenamiento: ['Nigeria', 'India', 'Bangladés']
+  F observada: 90.19%
+  ITDT (gamma_0=0.7): 95.73% (error = 5.54 p.p.)
+  Brecha media: 92.91% (error = 2.72 p.p.)
+  Razón media: 93.05% (error = 2.86 p.p.)
+  Regresión lineal: 91.36% (error = 1.17 p.p.)
+  ITDT sin cuidado: 82.95% (error = 7.24 p.p.)
+
+--- Pliegue LOCO: Excluyendo Nigeria (NIGERIA) ---
+  Entrenamiento: ['Kenia', 'India', 'Bangladés']
+  F observada: 96.39%
+  ITDT (gamma_0=0.5): 94.79% (error = 1.60 p.p.)
+  Brecha media: 99.89% (error = 3.50 p.p.)
+  Razón media: 100.00% (error = 3.61 p.p.)
+  Regresión lineal: 98.11% (error = 1.72 p.p.)
+  ITDT sin cuidado: 90.05% (error = 6.34 p.p.)
+
+--- Pliegue LOCO: Excluyendo India (INDIA) ---
+  Entrenamiento: ['Kenia', 'Nigeria', 'Bangladés']
+  F observada: 91.93%
+  ITDT (gamma_0=0.6): 94.74% (error = 2.81 p.p.)
+  Brecha media: 97.17% (error = 5.24 p.p.)
+  Razón media: 97.85% (error = 5.92 p.p.)
+  Regresión lineal: 106.88% (error = 14.95 p.p.)
+  ITDT sin cuidado: 86.63% (error = 5.30 p.p.)
+
+--- Pliegue LOCO: Excluyendo Bangladés (BANGLADESH) ---
+  Entrenamiento: ['Kenia', 'Nigeria', 'India']
+  F observada: 95.77%
+  ITDT (gamma_0=0.5): 88.88% (error = 6.89 p.p.)
+  Brecha media: 84.31% (error = 11.46 p.p.)
+  Razón media: 83.71% (error = 12.06 p.p.)
+  Regresión lineal: 83.60% (error = 12.17 p.p.)
+  ITDT sin cuidado: 77.94% (error = 17.83 p.p.)
+
+Tabla 3 generada en outputs\table3_loco.csv y outputs\table3_loco.md
+Documento de insumos guardado en: outputs\loco_insumos.md
+Resultados LOCO guardados en outputs\loco_results.json
+Documento de insumos guardado en: outputs\loco_insumos.md
+[OK] Validación LOCO finalizada en 38.93 s.
+=== [ITDT: BASELINES (Tabla 4)] ===
+
+======================================================================
+ ITDT: Modelos Estructurales de Referencia dentro de Muestra (Tabla 4)
+======================================================================
+  E1: agente representativo: MAE 8 momentos = 4.57 p.p. | Brecha F-M media = -0.05 p.p.
+  E2: ABM lewisiano: MAE 8 momentos = 4.55 p.p. | Brecha F-M media = -0.01 p.p.
+  E3: ITDT sin cuidado: MAE 8 momentos = 4.55 p.p. | Brecha F-M media = -0.01 p.p.
+  E4: ITDT con racionalidad perfecta: MAE 8 momentos = 1.73 p.p. | Brecha F-M media = +7.87 p.p.
+  ITDT: MAE 8 momentos = 0.05 p.p. | Brecha F-M media = +9.16 p.p.
+Tabla 4 generada en outputs\table4_baselines.csv y outputs\table4_baselines.md
+[OK] Modelos de referencia E1–E4 finalizados en 14.03 s.
+=== [ITDT: SCENARIOS (Tablas 5, 6, 7, Figuras 6 y 7)] ===
+
+--- Ejecutando experimentos de política (4 países x 5 escenarios x 40 réplicas = 800 corridas) ---
+Réplicas de política completadas en 51.88 s.
+--- Ejecutando bootstrap por conglomerados en dos etapas (B = 4000)... ---
+Figura 6 guardada en: outputs/figure6_trajectories.png
+Figura 7 guardada en: outputs/figure7_policy_effects.png
+[OK] Escenarios de política finalizados en 63.69 s.
+=== [ITDT: SWEEP (Figura 5)] ===
+
+--- Ejecutando barrido de intensidad de sanciones (1.0 a 4.0 bajo B1)... ---
+Figura 5 guardada en: outputs\figure5_sanctions_sweep.png
+[OK] Barrido de sanciones finalizado en 89.42 s.
+=== [ITDT: MECHANISM / ABLATION (Tabla 8)] ===
+
+--- Ejecutando estudio de ablación de B2 frente a A con RECALIBRACIÓN de cada variante... ---
+  Recalibrando y evaluando variante: Completo...
+  Recalibrando y evaluando variante: Sin restricción de cuidado...
+  Recalibrando y evaluando variante: Sin DCC regresivo...
+  Recalibrando y evaluando variante: Sin ambos...
+Tabla 8 generada en outputs/table8_ablation.*
+[OK] Estudio de mecanismo y ablación finalizado en 299.01 s.
+=== [ITDT: SENSITIVITY (Tabla 9)] ===
+
+--- Ejecutando análisis de sensibilidad (+-20%) y robustez CES (Tabla 9)... ---
+  Referencia base: Delta mujeres en B2 = -15.97 p.p., Delta total en D = -32.43 p.p.
+Tabla 9 generada en outputs/table9_sensitivity.*
+[OK] Análisis de sensibilidad y robustez finalizado en 542.36 s.
+=== [ITDT: COST (Tabla 10)] ===
+
+--- Ejecutando benchmarking de costo computacional (Tabla 10)... ---
+  N_W = 3 000: 0.159 s (DE = 0.002), Memoria real del proceso: 195.3 MB
+  N_W = 6 000 (configuración base): 0.232 s (DE = 0.011), Memoria real del proceso: 194.3 MB
+  N_W = 12 000: 0.365 s (DE = 0.007), Memoria real del proceso: 195.7 MB
+  N_W = 24 000: 0.646 s (DE = 0.004), Memoria real del proceso: 197.7 MB
+Tabla 10 generada en outputs/table10_cost.*
+[OK] Benchmarking de costo computacional finalizado en 4.22 s.
+
+--- Computando gradientes distributivos no calibrados (Tabla 12)... ---
+Tabla 12 generada en outputs/table12_gradients.*
+
+--- Ejecutando propagación de la incertidumbre de calibración sobre las políticas... ---
+Propagación de incertidumbre guardada en outputs\uncertainty_propagation.json y outputs\uncertainty_propagation.md
+======================================================================
+ REPLICACIÓN COMPLETA FINALIZADA CON ÉXITO
+ Tiempo total de ejecución: 1312.78 s (21 min 52 s)
+ Todos los artefactos fueron regenerados desde cero en: outputs/
+======================================================================
