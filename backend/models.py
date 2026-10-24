@@ -225,7 +225,7 @@ class CVFoldMetric(BaseModel):
 
 class CVTrainVsTestMetric(BaseModel):
     metric: str
-    Train: float
+    Train: Optional[float] = None
     Test: float
 
 
