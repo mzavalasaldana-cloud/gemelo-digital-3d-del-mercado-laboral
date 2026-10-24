@@ -164,7 +164,15 @@ def build_simulation_context_prompt(
         f"Recaudación fiscal: {f'{rev_model:.2f} unidades del modelo' if rev_model is not None else 'Sin datos reales disponibles'}\n"
         f"Tasa anual de cierre de empresas (quiebras): {f'{exit_rate:.2f}%' if exit_rate is not None else 'Sin datos reales disponibles'}\n"
         f"Fuente oficial: {citation}\n"
-        f"Regla de integridad: No existen salarios en USD ni índice de trabajo decente calculados en el modelo canónico. Si el usuario pregunta por ellos, indicar que no forman parte del artículo ni del modelo calibrado.\n"
+        f"--- IMPACTO DE POLÍTICAS EN CONTRASTES FRENTE AL STATU QUO (TABLA 6 DEL ARTÍCULO) ---\n"
+        f"- Escenario B1 (Sanciones moderadas): Informalidad total +0.11 pp, Brecha de género -0.11 pp\n"
+        f"- Escenario B2 (Sanciones 3x / GovTech Intensivo): Informalidad total -35.43 pp, Brecha de género +30.19 pp (amplía la brecha de género porque formaliza prioritariamente a hombres), Cierres de empresas +24.47 pp/año, Recaudación +494.4%\n"
+        f"- Escenario C (Cuidados -60%): Informalidad total -0.83 pp, Brecha de género -8.15 pp (reduce la brecha femenina), Recaudación +9.7%\n"
+        f"- Escenario D (Paquete Integral): Informalidad total -36.61 pp, Brecha de género -6.98 pp, Cierres +10.42 pp/año, Recaudación +276.3%\n"
+        f"--- RESULTADOS OFICIALES DEL MOTOR IA (BENCHMARKING DE MODELOS) ---\n"
+        f"- India (PLFS 2024, 163,973 observaciones): Modelo ganador HistGradientBoosting con AUC de validación cruzada 93.28% (menor Brier Score 0.0578 ante empate técnico con XGBoost 93.27% y LightGBM 93.26%)\n"
+        f"- Nigeria (NLFS 2023, 18,808 observaciones): Modelo ganador MLP Neural Net con AUC de validación cruzada 89.75% (menor Brier Score 0.0513)\n"
+        f"Regla de integridad: No existen salarios en USD ni índice de trabajo decente calculados en el modelo canónico. Si el usuario pregunta por ellos o por temas ajenos al modelo laboral, indicar que no forman parte del artículo ni del modelo calibrado.\n"
         f"--- FIN DATOS VERIFICADOS ---\n"
     )
 
