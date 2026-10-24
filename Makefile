@@ -1,4 +1,4 @@
-.PHONY: all smoke calibrate calib_se loco baselines sweep scenarios mechanism sensitivity cost clean help
+.PHONY: all smoke calibrate calib_se loco baselines sweep scenarios mechanism sensitivity cost clean ia help
 
 PYTHON ?= python
 
@@ -17,6 +17,7 @@ help:
 	@echo "  make mechanism    - Ablación de B2 frente a A con recalibración (Tabla 8)"
 	@echo "  make sensitivity  - Sensibilidad +-20%, CES y choque de demanda (Tabla 9)"
 	@echo "  make cost         - Benchmarking de costo computacional (Tabla 10)"
+	@echo "  make ia           - Entrena y evalúa los modelos de Machine Learning (outputs/motor_ia)"
 	@echo "  make all          - Regenera outputs/ desde cero y reporta el tiempo total"
 	@echo "  make clean        - Limpia outputs/ y cachés de Python"
 	@echo "======================================================================"
@@ -50,6 +51,9 @@ sensitivity:
 
 cost:
 	$(PYTHON) -m itdt.cli cost
+
+ia:
+	$(PYTHON) scripts/entrenar_motor_ia.py
 
 all:
 	$(PYTHON) -m itdt.cli all

@@ -46,3 +46,5 @@ scratch/
 pyrefly.toml
 pyrightconfig.json
 catboost_info/
+data_store/_archivado/
+outputs/capturas/_archivado/

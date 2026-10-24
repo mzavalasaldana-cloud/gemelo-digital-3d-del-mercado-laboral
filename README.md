@@ -6,9 +6,10 @@
 Prototipo interactivo de visualización 3D y simulador de políticas laborales para ilustrar transiciones hacia el empleo formal bajo directrices estadísticas de la OIT (ODS 8).
 
 > [!NOTE]
-> **Aviso Metodológico y Datos de Demostración:**
-> - Los microdatos incluidos en `data_store/` (`SINTETICO_...csv`) son **conjuntos de datos sintéticos de demostración** generados mediante distribuciones estadísticas en `backend/ml_engine.py`. **No son microdatos censales oficiales.**
-> - El modelo econométrico y el artículo científico del proyecto utilizan exclusivamente **tasas macroeconómicas agregadas de ILOSTAT** y parámetros de literatura internacional (p. ej. Addati et al., 2018), no microdatos individuales.
+> **Fuentes de Datos Oficiales, Entrada Libre y Calibración:**
+> - **ILOSTAT por API SDMX:** El modelo econométrico estructural ITDT se calibra con series macroeconómicas y agregadas oficiales de la Organización Internacional del Trabajo (OIT / ILOSTAT), obtenidas mediante la API SDMX (`scripts/fetch_ilostat_calibracion.py`), integrando tasas de informalidad laboral desglosadas por género, país y sector (`data/ilostat_calibracion.csv`, `data/ilostat_s_F.csv`).
+> - **Microdatos Oficiales Armonizados (PLFS y NLFS):** Para la validación empírica y el entrenamiento del motor de IA, se procesan microdatos reales de la *Periodic Labour Force Survey* (PLFS 2023-2024 de India, MoSPI/NSSO) y de la *Nigeria Labour Force Survey* (NLFS 2023 Q3, NBS). Siguiendo las directrices éticas y licencias de distribución censal, los microdatos brutos no se versionan en el repositorio git (excluidos en `.gitignore`) y se almacenan localmente en `data/microdatos_reales/`.
+> - **Regla Estructural de Entrada Libre de Firmas:** El modelo asume equilibrio con libre entrada (`entry_rule='free'`, documentado en [`ASSUMPTIONS.md`](ASSUMPTIONS.md)), donde la masa de firmas formales e informales se ajusta endógenamente hasta que el beneficio neto esperado de entrada compensa los costos fijos y regulatorios.
 > - La comparativa técnica detallada entre el artículo de investigación y la implementación actual de la plataforma se encuentra documentada en [`docs/DIAGNOSTICO.md`](docs/DIAGNOSTICO.md).
 
 ---
@@ -16,13 +17,13 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
 ## 🏛️ Componentes del Sistema
 
 1. **Frontend Interactivo (React 19 + Vite + Three.js / Tailwind CSS):**
-   - Visualización de enjambres 3D (2,500 partículas de trabajadores) con cinemática orbital (sector formal) y movimiento browniano en valles topográficos (sector informal).
+   - Visualización de enjambres 3D (2,500 partículas de trabajadores con atributos reales exportados de ITDT) con cinemática orbital (sector formal) y movimiento browniano en valles topográficos (sector informal).
    - Panel de control de palancas de política pública (subsidios PyME, reducción de costos de registro, capacitación y fiscalización inteligente).
-   - Módulo exploratorio de Machine Learning (EDA, validación cruzada y telemetría de demostración).
+   - Módulo exploratorio de Machine Learning (EDA, validación cruzada y telemetría de desempeño con datos reales).
 
 2. **Dashboard Ejecutivo (Streamlit):**
    - Cuadros de mando con métricas de Trabajo Decente OIT, índice de Gini y recaudación fiscal.
-   - Catálogo de datasets sintéticos y generador de informes descargables en PDF, Excel y HTML.
+   - Catálogo de datasets y fuentes oficiales de calibración, junto con generador de informes descargables en PDF, Excel y HTML.
    - Selector de temas (Modo Claro nativo y Modo Oscuro).
 
 3. **Backend de Inferencia & API (FastAPI + Python 3.12):**
@@ -65,9 +66,9 @@ Prototipo interactivo de visualización 3D y simulador de políticas laborales p
 ├── data/                     # Datos oficiales de calibración (data/ilostat_s_F.csv)
 ├── data_store/               # Almacenamiento local de datasets subidos
 ├── models_store/             # Artefactos entrenados serializados (XGBoost, LightGBM, Random Forest)
-├── outputs/                  # Tablas 2–12 y Figuras 4–7 generadas por el modelo econométrico
-├── tests/                    # Suite de 24 pruebas pytest (unitarias, integración y metamórficas)
-├── docs/                     # Diagnóstico técnico, tablas del artículo y registro de limpieza
+├── outputs/                  # Tablas 2–14, Figuras 4–7 y reportes del motor de IA (outputs/motor_ia/)
+├── tests/                    # Suite de 42 pruebas pytest (unitarias, integración, metamórficas y ML)
+├── docs/                     # Diagnóstico técnico, tablas del artículo y registro de correcciones
 ├── requirements.txt          # Requisitos fijados para la aplicación (backend + Streamlit)
 ├── requirements-itdt.txt     # Requisitos fijados para la replicación del modelo ITDT
 ├── Makefile                  # Objetivos make para replicación en Linux/macOS
@@ -146,7 +147,12 @@ streamlit run app.py
 # Dashboard disponible en: http://localhost:8501
 ```
 
-### 4. Ejecutar Replicación del Modelo
+### 4. Ejecutar Entrenamiento del Motor IA
+```bash
+make ia       # o bien: python scripts/entrenar_motor_ia.py
+```
+
+### 5. Ejecutar Replicación del Modelo
 ```bash
 make all      # o bien: python -m itdt.cli all
 ```
@@ -158,12 +164,12 @@ make all      # o bien: python -m itdt.cli all
 Este repositorio incluye la implementación canónica y el paquete de replicación computacional para el artículo científico:  
 ***ITDT: Un gemelo digital multi-agente calibrado con ILOSTAT para evaluar políticas de formalización con perspectiva de género en cuatro economías del Sur Global***.
 
-Todos los resultados, tablas (Tablas 2–12) y figuras (Figuras 4–7) se generan de forma determinista y reproducible a partir de la simulación basada en agentes implementada en `itdt/`.
+Todos los resultados, tablas (Tablas 2–14) y figuras (Figuras 4–7) se generan de forma determinista y reproducible a partir de la simulación basada en agentes implementada en `itdt/` y scripts de validación empírica.
 
 ### 📋 Prerrequisitos
 - **Python:** 3.10 o superior (recomendado: 3.12 / 3.14).
 - **Dependencias:** `pip install -r requirements-itdt.txt` (incluye `numpy`, `scipy`, `pandas`, `matplotlib`, `tabulate` y `pytest`).
-- **GNU Make:** Opcional (si no dispone de `make`, ejecute directamente `python -m itdt.cli <objetivo>`).
+- **GNU Make:** Opcional (si no dispone de `make`, ejecute directamente `python -m itdt.cli <objetivo>` o use `make.bat`).
 - **Docker:** Opcional (imagen lista para replicación en contenedores: `python:3.12.9-slim`).
 
 ---
@@ -203,7 +209,10 @@ make sensitivity
 # 10. Benchmarking de costo computacional (NW = 3k, 6k, 12k, 24k)
 make cost
 
-# 11. REPLICACIÓN COMPLETA DESDE CERO (regenera outputs/ y mide tiempo total)
+# 11. Entrenamiento y evaluación rigurosa del Motor IA (outputs/motor_ia/)
+make ia
+
+# 12. REPLICACIÓN COMPLETA DESDE CERO (regenera outputs/ y mide tiempo total)
 make all
 ```
 
@@ -221,9 +230,9 @@ docker run --rm -v "$(pwd)/outputs:/app/outputs" itdt make all
 
 #### Ejecución de la Suite de Pruebas (Pytest):
 ```bash
-python -m pytest tests/test_itdt_canonical.py tests/test_itdt.py -v
+python -m pytest tests/ -v
 ```
-Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, $\Pi_I$, $DCC$, $P_{aud}$, Metropolis) y pruebas metamórficas de simetría de género sin cuidados, monotonía de sanciones e invarianza de semilla.
+Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, $\Pi_I$, $DCC$, $P_{aud}$, Metropolis), pruebas metamórficas de simetría de género sin cuidados, monotonía de sanciones e invarianza de semilla, y validaciones del motor de Machine Learning.
 
 ---
 
@@ -241,7 +250,12 @@ Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, 
 | `make mechanism` | Ablación de B2 frente a A (cuidado y DCC) con recalibración de cada variante | `table8_ablation.*` | **Tabla 8** | ~2.5 min |
 | `make sensitivity` | Sensibilidad $\pm 20\%$ (9 parámetros), robustez CES ($\sigma \in \{0.5, 1.5\}$) y choque | `table9_sensitivity.*` | **Tabla 9** | ~3.5 min |
 | `make cost` | Costo computacional por réplica ($N_W \in \{3\,000, 6\,000, 12\,000, 24\,000\}$) | `table10_cost.*` | **Tabla 10** | ~10 s |
-| `make all` | **Pipeline integral:** regenera `outputs/` desde cero y reporta tiempo | **Todas las Tablas (2–12), Figuras (4–7) y JSONs** | **Replicación total** | ~18 min |
+| `make ia` | Validación cruzada 5 pliegues (StratifiedGroupKFold) + prueba final holdout 20% | `outputs/motor_ia/tabla_desempeno_modelos.*`<br>`outputs/motor_ia/metricas_modelos_*.json` | **Motor IA** (India y Nigeria) | ~1.5 min |
+| `make all` | **Pipeline integral:** regenera `outputs/` desde cero y reporta tiempo | **Todas las Tablas (2–14), Figuras (4–7) y JSONs** | **Replicación total** | ~18–24 min |
+
+> [!TIP]
+> - Las **Tablas 12 y 13** (Gradientes distributivos de género y validación frente a ILOSTAT) se generan mediante `python scripts/validar_gradientes_ilostat.py`.
+> - La **Tabla 14** (Robustez ante reglas de entrada de firmas: libre entrada vs. firmas fijas) se evalúa con `python scripts/robustez_reglas_entrada.py`.
 
 ---
 
