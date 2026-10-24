@@ -110,7 +110,7 @@ export const TRANSLATIONS = {
     retrainModel: '🔄 Reentrenar Modelo (Admin)',
     retraining: 'Reentrenando...',
     adminRequiredRetrain: 'Requiere permisos de Administrador (ADMIN) para reentrenar el clúster.',
-    retrainSuccess: '¡Modelo reentrenado con éxito! Convergencia lograda: ROC-AUC 0.948 | F1-Score 91.2%',
+    retrainSuccess: '¡Modelo reentrenado con éxito! Convergencia lograda y validada.',
 
     // AI Engine Tabs
     tabEDA: '📊 EDA (Análisis Exploratorio)',
@@ -459,7 +459,7 @@ export const TRANSLATIONS = {
     retrainModel: '🔄 Retrain Model (Admin)',
     retraining: 'Retraining...',
     adminRequiredRetrain: 'Administrator (ADMIN) permissions required to retrain cluster.',
-    retrainSuccess: 'Model retrained successfully! Convergence achieved: ROC-AUC 0.948 | F1-Score 91.2%',
+    retrainSuccess: 'Model retrained successfully! Convergence achieved and validated.',
 
     // AI Engine Tabs
     tabEDA: '📊 EDA (Exploratory Analysis)',

@@ -124,7 +124,7 @@ def render_user_management_view():
 
     audit_logs = [
         {"timestamp": "2026-09-21 15:18:22", "user": "Dra. Elena Rostova", "action": "Ajuste de subsidio PYME a $50 USD/mes", "ip": "192.168.1.42", "status": "SUCCESS"},
-        {"timestamp": "2026-09-21 14:45:10", "user": "Dr. Kwame Achebe", "action": "Reentrenamiento de modelo XGBoost v3.4", "ip": "10.0.4.12", "status": "SUCCESS"},
+        {"timestamp": "2026-09-21 14:45:10", "user": "Dr. Kwame Achebe", "action": "Reentrenamiento de modelo XGBoost", "ip": "10.0.4.12", "status": "SUCCESS"},
         {"timestamp": "2026-09-21 13:20:05", "user": "Carlos Mendoza", "action": "Exportación de informe ejecutivo PDF (Kenia)", "ip": "192.168.1.88", "status": "SUCCESS"},
         {"timestamp": "2026-09-21 11:05:33", "user": "Sofia Lindqvist", "action": "Auditoría de consistencia de microdatos PLFS", "ip": "172.16.0.5", "status": "SUCCESS"},
     ]

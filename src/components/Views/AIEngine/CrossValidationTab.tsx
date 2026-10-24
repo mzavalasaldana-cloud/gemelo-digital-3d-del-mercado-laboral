@@ -137,8 +137,9 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
   };
 
   const algos = [
-    { key: 'histgradientboosting', name: 'HistGradientBoosting (Campeón)', badge: 'SOTA Real' },
-    { key: 'xgboost', name: 'XGBoost v3.4', badge: 'Alta Eficiencia' },
+    { key: 'histgradientboosting', name: 'HistGradientBoosting', badge: 'Alta Eficiencia' },
+    { key: 'xgboost', name: 'XGBoost', badge: 'Gradient Boost' },
+    { key: 'lightgbm', name: 'LightGBM', badge: 'Rápido' },
     { key: 'catboost', name: 'CatBoost Classifier', badge: 'Robusto' },
     { key: 'random_forest', name: 'Random Forest 100T', badge: 'Ensemble' },
     { key: 'logistic', name: 'Regresión Logística L2', badge: 'Interpretable' },
@@ -208,7 +209,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
     { feature: 'Sexo / Género (Mujer)', importance: 4.2 },
   ];
 
-  const modelLabel = currentResult?.algorithm || activeDeployedModel?.name || 'HistGradientBoosting (Campeón SOTA)';
+  const modelLabel = currentResult?.algorithm || activeDeployedModel?.name || 'HistGradientBoosting';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -233,7 +234,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
               </span>
             </div>
             <h3 className="text-sm md:text-base font-display font-bold text-emerald-400 mt-0.5">
-              {activeDeployedModel?.name || 'XGBoost Gradient Boosted Trees v3.4'}
+              {activeDeployedModel?.name || 'HistGradientBoosting'}
             </h3>
             <p className="text-[11px] font-mono text-slate-400">
               {language === 'en' 
@@ -529,22 +530,34 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                 </ResponsiveContainer>
               </div>
 
-              <ExplainabilityCard
-                language={language}
-                theme={theme}
-                title={language === 'en' ? 'Chart Explainability: ROC-AUC Discrimination Curve' : 'Explicabilidad: Curva ROC y Capacidad de Discriminación'}
-                variableOrMetric="AUC = 0.948 (Excelente)"
-                whatItIs={language === 'en'
-                  ? 'Receiver Operating Characteristic (ROC) curve displaying true positive rate (sensitivity) vs false positive rate (1 - specificity) across all classification thresholds.'
-                  : 'Curva de Característica Operativa del Receptor (ROC) que enfrenta la tasa de verdaderos positivos (sensibilidad) contra la tasa de falsos positivos en todos los umbrales posibles.'}
-                howToRead={language === 'en'
-                  ? 'The area under the curve (AUC = 0.948) indicates a 94.8% probability that the model ranks a randomly chosen formal worker higher than an informal one.'
-                  : 'El área bajo la curva (AUC = 0.948) certifica que el clasificador distingue con un 94.8% de precisión matemática entre un contrato formal e informal.'}
-                policyImpact={language === 'en'
-                  ? 'Ensures subsidy programs only target agents genuinely on the threshold of formalization, avoiding fiscal leakage.'
-                  : 'Garantiza que la focalización de subsidios beneficie a microempresas con capacidad real de transición, evitando fugas de recursos públicos.'}
-                benchmarksOrAlerts="AUC > 0.90: Rendimiento Sobresaliente | AUC < 0.70: Rendimiento Deficiente"
-              />
+              {(() => {
+                const currentAucVal = typeof (currentResult as any)?.metrics?.rocAuc === 'number'
+                  ? (currentResult as any).metrics.rocAuc
+                  : typeof activeDeployedModel?.rocAuc === 'number'
+                  ? activeDeployedModel.rocAuc
+                  : 0.933;
+                const currentAucStr = currentAucVal.toFixed(3);
+                const currentAucPct = (currentAucVal * 100).toFixed(1);
+
+                return (
+                  <ExplainabilityCard
+                    language={language}
+                    theme={theme}
+                    title={language === 'en' ? 'Chart Explainability: ROC-AUC Discrimination Curve' : 'Explicabilidad: Curva ROC y Capacidad de Discriminación'}
+                    variableOrMetric={`AUC = ${currentAucStr} (${currentAucVal >= 0.90 ? 'Excelente' : 'Bueno'})`}
+                    whatItIs={language === 'en'
+                      ? 'Receiver Operating Characteristic (ROC) curve displaying true positive rate (sensitivity) vs false positive rate (1 - specificity) across all classification thresholds.'
+                      : 'Curva de Característica Operativa del Receptor (ROC) que enfrenta la tasa de verdaderos positivos (sensibilidad) contra la tasa de falsos positivos en todos los umbrales posibles.'}
+                    howToRead={language === 'en'
+                      ? `The area under the curve (AUC = ${currentAucStr}) indicates a ${currentAucPct}% probability that the model ranks a randomly chosen formal worker higher than an informal one.`
+                      : `El área bajo la curva (AUC = ${currentAucStr}) certifica que el clasificador distingue con un ${currentAucPct}% de precisión matemática entre un contrato formal e informal.`}
+                    policyImpact={language === 'en'
+                      ? 'Ensures subsidy programs only target agents genuinely on the threshold of formalization, avoiding fiscal leakage.'
+                      : 'Garantiza que la focalización de subsidios beneficie a microempresas con capacidad real de transición, evitando fugas de recursos públicos.'}
+                    benchmarksOrAlerts="AUC > 0.90: Rendimiento Sobresaliente | AUC < 0.70: Rendimiento Deficiente"
+                  />
+                );
+              })()}
             </div>
 
             {/* Confusion Matrix */}

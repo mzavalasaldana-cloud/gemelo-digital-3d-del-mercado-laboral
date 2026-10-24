@@ -352,7 +352,7 @@ DEMO_DATASETS: List[Dict[str, Any]] = [
         "id": "ds-plfs-india",
         "name": "SINTETICO_calibrado_PLFS_India.csv",
         "country": "INDIA",
-        "records": 48500,
+        "records": 48000,
         "variables": 14,
         "sampleType": "Datos sintéticos de demostración; no son microdatos oficiales",
         "institution": "Generador sintético calibrado (Demostración)",

@@ -36,11 +36,11 @@ def deploy_model_to_backend(model_id: str, model_data: dict) -> dict:
         "model_id": model_id,
         "name": model_data.get("name", model_id),
         "algorithm": model_data.get("id", model_id).replace("algo-", ""),
-        "f1Score": float(model_data.get("f1_score", 0.914)),
-        "rocAuc": float(model_data.get("roc_auc", 0.948)),
+        "f1Score": float(model_data.get("f1_score", 0.955)),
+        "rocAuc": float(model_data.get("roc_auc", 0.933)),
         "latencyMs": float(model_data.get("latency_ms", 1.8)),
         "interpretability": int(model_data.get("interpretability", 85)),
-        "accuracy": float(model_data.get("accuracy", 0.926)),
+        "accuracy": float(model_data.get("accuracy", 0.919)),
         "deployed_by": "Streamlit AI Studio & Model Leaderboard"
     }
     try:
@@ -334,7 +334,7 @@ def render_ai_engine_view():
         with col_roc:
             fig_roc = go.Figure()
             colors_roc = {
-                "XGBoost Classifier v3.4 (SOTA)": "#00f0ff", 
+                "XGBoost Classifier": "#00f0ff", 
                 "LightGBM Hist-Gradient Boost": "#a855f7",
                 "Random Forest Ensemble (500T)": "#10b981", 
                 "MLP Neural Net (PyTorch Emul)": "#ec4899",
@@ -426,7 +426,7 @@ def render_ai_engine_view():
         with col_h_right:
             st.markdown("#### Configuración JSON de Hiperparámetros Óptimos:")
             optimal_json = {
-                "algorithm": "XGBoost Classifier v3.4",
+                "algorithm": "XGBoost Classifier",
                 "max_depth": h_depth,
                 "learning_rate": h_lr,
                 "n_estimators": h_nest,
@@ -437,7 +437,7 @@ def render_ai_engine_view():
                 "tree_method": "hist",
                 "device": "cuda",
                 "optuna_trials": 120,
-                "objective_score": 0.948
+                "objective_score": 0.933
             }
             st.code(json.dumps(optimal_json, indent=2), language="json")
 
@@ -539,24 +539,24 @@ def render_ai_engine_view():
                     (45, "Ejecutando validación cruzada estratificada 5-Fold..."),
                     (70, "Optimizando hiperparámetros XGBoost con Bayesian Tree..."),
                     (90, "Calculando valores Shapley (SHAP TreeExplainer)..."),
-                    (100, "¡Reentrenamiento completado con éxito! ROC-AUC: 0.948 | F1: 0.912"),
+                    (100, "¡Reentrenamiento completado con éxito! ROC-AUC: 0.933 | F1: 0.955"),
                 ]
                 for pct, msg in steps:
                     time.sleep(0.35)
                     prog_bar.progress(pct, text=msg)
 
-                st.success("✓ Modelo `xgboost_prod_v3.4.pkl` serializado y desplegado exitosamente.")
+                st.success("✓ Modelo `xgboost_prod.pkl` serializado y desplegado exitosamente.")
 
         with col_log:
             st.markdown("""
             <div class="holo-card">
                 <div class="holo-metric-label">TERMINAL DE TELEMETRÍA EN VIVO</div>
                 <div style="font-size: 0.82rem; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; line-height: 1.6; max-height: 240px; overflow-y: auto;">
-                    [2026-09-28 11:25:01] [INIT] Inicializando entorno de inferencia distribuida XGBoost v3.4 en clúster GPU...<br>
+                    [2026-09-28 11:25:01] [INIT] Inicializando entorno de inferencia distribuida XGBoost en clúster GPU...<br>
                     [2026-09-28 11:25:02] [DATA] Ingestando registros censales armonizados de encuestas de hogares...<br>
                     [2026-09-28 11:25:03] [DATA] Validación sintáctica OK. Imputación MICE completada (tasa nulos: 0.8%).<br>
                     [2026-09-28 11:25:04] [SPLIT] Particionando datos: 80% Train | 20% Test con K-Fold Estratificado.<br>
-                    [2026-09-28 11:25:08] [EPOCH 50/50] Train Loss: 0.0924 | Val Loss: 0.1085 | ROC-AUC: 0.948 | F1: 0.914<br>
+                    [2026-09-28 11:25:08] [EPOCH 50/50] Train Loss: 0.0924 | Val Loss: 0.1085 | ROC-AUC: 0.933 | F1: 0.955<br>
                     [2026-09-28 11:25:23] [SHAP] Top driver validado: Aporte a Seguridad Social (Mean |SHAP| = +0.38).<br>
                     [2026-09-28 11:25:27] [AUDIT] Paridad demográfica: 0.962 (Umbral reglamentario OIT superado. SIN SESGO).<br>
                     [2026-09-28 11:25:29] [ACTIVE] Inferencia live: 215 QPS | Latencia media: 1.8 ms | GPU Mem: 34.2%

@@ -203,15 +203,15 @@ export interface CVMockResult {
 
 export const DEMO_CV_PRESET_RESULTS: Record<string, CVMockResult> = {
   xgboost: {
-    algorithm: 'XGBoost Classifier v3.4',
+    algorithm: 'XGBoost Classifier',
     kFolds: 5,
     strategy: 'K-Fold Estratificado (StratifiedKFold)',
     metricsTrainVsTest: [
-      { metric: 'Accuracy', Train: 95.8, Test: 92.6 },
+      { metric: 'Accuracy', Train: 95.8, Test: 91.9 },
       { metric: 'Precision', Train: 95.1, Test: 92.4 },
       { metric: 'Recall', Train: 93.9, Test: 90.1 },
-      { metric: 'F1-Score', Train: 94.5, Test: 91.2 },
-      { metric: 'ROC_AUC', Train: 97.6, Test: 94.8 },
+      { metric: 'F1-Score', Train: 94.5, Test: 95.5 },
+      { metric: 'ROC_AUC', Train: 97.6, Test: 93.3 },
     ],
     foldsF1: [
       { fold: 'Fold 1', f1Score: 91.1, rocAuc: 94.7, accuracy: 92.4 },
@@ -228,12 +228,12 @@ export const DEMO_CV_PRESET_RESULTS: Record<string, CVMockResult> = {
       tpPct: 92.4,
       fpPct: 8.8,
       fnPct: 7.6,
-      tnPct: 91.2,
+      tnPct: 91.8,
     },
     summary: {
-      meanF1: 91.2,
+      meanF1: 95.5,
       stdF1: 0.44,
-      meanRocAuc: 94.8,
+      meanRocAuc: 93.3,
       stdRocAuc: 0.25,
     },
   },
@@ -402,8 +402,8 @@ export const EXTENDED_COHORTS = DEMO_EXTENDED_COHORTS;
 
 // Hyperparameters & Statistical Tests Data (Demostración)
 export const OPTIMAL_HYPERPARAMS_JSON = {
-  model_id: 'xgboost-demo-opt-v3.4',
-  framework: 'XGBoost 3.4.0 (Demostración)',
+  model_id: 'xgboost-demo-opt',
+  framework: 'XGBoost (Demostración)',
   objective: 'binary:logistic',
   eval_metric: 'aucpr',
   tree_method: 'hist',
@@ -422,9 +422,9 @@ export const OPTIMAL_HYPERPARAMS_JSON = {
   },
   optimization_metrics: {
     roc_auc_baseline: 0.924,
-    roc_auc_optimized: 0.948,
-    delta_roc_auc: '+0.024 (+2.6%)',
-    f1_score_optimized: 0.912,
+    roc_auc_optimized: 0.933,
+    delta_roc_auc: '+0.009 (+1.0%)',
+    f1_score_optimized: 0.955,
     trials_evaluated: 120,
     search_strategy: 'Optuna TPE (Demostración)',
     execution_time_seconds: 4.8,
