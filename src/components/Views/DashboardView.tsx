@@ -337,7 +337,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* 4 High-Impact KPI Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div id="dashboard-kpi-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* KPI 1: Tasa de Informalidad */}
           <div className="hud-glass p-4 rounded-2xl border border-cyan-500/25 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all pointer-events-none" />
@@ -589,7 +589,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="lg:col-span-8 space-y-6">
             
             {/* Chart 1: Trayectoria de Simulación ITDT & Validación Histórica ILOSTAT */}
-            <div className="hud-glass p-5 rounded-2xl border border-cyan-500/25">
+            <div id="dashboard-sim-chart" className="hud-glass p-5 rounded-2xl border border-cyan-500/25">
               <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b pb-3 ${
                 isLight ? 'border-slate-200' : 'border-cyan-500/20'
               }`}>
