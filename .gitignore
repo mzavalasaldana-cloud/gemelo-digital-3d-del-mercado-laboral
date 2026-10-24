@@ -47,4 +47,6 @@ pyrefly.toml
 pyrightconfig.json
 catboost_info/
 data_store/_archivado/
+data_store/
+models_store/
 outputs/capturas/_archivado/

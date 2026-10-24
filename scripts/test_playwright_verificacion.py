@@ -30,8 +30,8 @@ OUTPUTS_DIR = os.path.join(BASE_DIR, "outputs")
 TRAJECTORIES_PATH = os.path.join(OUTPUTS_DIR, "trayectorias_mensuales.json")
 REPORT_PATH = os.path.join(OUTPUTS_DIR, "verificacion_playwright.md")
 
-FRONTEND_URL = "http://127.0.0.1:5173"
-BACKEND_URL = "http://127.0.0.1:8000"
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://127.0.0.1:3000")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
 
 def check_servers():
@@ -85,8 +85,9 @@ def run_tests():
 
     print("\nIniciando navegador Playwright (Chromium visible)...")
     with sync_playwright() as p:
+        headless_mode = os.environ.get("HEADLESS", "true").lower() == "true"
         browser = p.chromium.launch(
-            headless=False,
+            headless=headless_mode,
             args=[
                 "--enable-webgl",
                 "--enable-accelerated-2d-canvas",
@@ -112,7 +113,7 @@ def run_tests():
 
             url = f"{FRONTEND_URL}/?view=digital_twin_3d&country={c}&scenario={sc}&month={m}&theme=light"
             print(f"\n[*] Navegando a 3D: {c} Escenario {sc} Mes {m}...")
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
 
             # Esperar a que desaparezca cualquier indicador de carga
             try:
@@ -211,7 +212,7 @@ def run_tests():
             sc = dc["scenario"]
             url = f"{FRONTEND_URL}/?view=dashboard&country={c}&scenario={sc}&theme=light"
             print(f"\n[*] Navegando a Dashboard: {c} Escenario {sc}...")
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
             time.sleep(1.0)
 
             # Esperar a que la trayectoria esté en window.__itdtDebug o window.__dashboardTrajectory
