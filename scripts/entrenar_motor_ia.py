@@ -1,19 +1,31 @@
+# -*- coding: utf-8 -*-
 """
 Entrenamiento y Benchmarking Oficial del Motor de IA sobre Microdatos Reales
 =============================================================================
-Este script entrena y evalúa competitivamente los modelos de Machine Learning
-(Regresión Logística, Random Forest, HistGradientBoosting, XGBoost, CatBoost y MLP)
-sobre las encuestas laborales reales oficiales:
+Este script entrena y evalúa competitivamente los modelos de Machine Learning:
+  - Regresión Logística L2 (Pipeline con StandardScaler + sample_weight)
+  - Random Forest (100 Trees)
+  - HistGradientBoosting
+  - XGBoost Classifier
+  - LightGBM Classifier
+  - CatBoost Classifier
+  - MLP Neural Net (Pipeline con StandardScaler)
+
+Sobre las encuestas laborales reales oficiales:
   - India PLFS 2024 (MoSPI, 163,973 observaciones ocupadas)
   - Nigeria NLFS 2023 Q3 (NBS, 18,808 observaciones ocupadas)
 
-Garantías Metodológicas:
-1. Definición estricta de empleo informal según lineamientos de la OIT (CIET-19).
-2. Sin fuga de información (se excluyen variables determinantes del estatus informal).
-3. Partición por cluster de hogar (StratifiedGroupKFold) para evitar fuga intrahogar.
-4. Uso riguroso de factores de ponderación muestral (sample_weight) en ajuste y métricas.
-5. Métricas desagregadas por sexo (mujeres vs hombres) y Brier Score de calibración probabilística.
-6. Persistencia de artefactos exclusivamente en outputs/motor_ia/ y models_store/.
+Garantías Metodológicas y de Integridad:
+1. Partición por cluster de hogar: 20% como prueba final (GroupShuffleSplit, random_state=42).
+2. En el 80% restante: StratifiedGroupKFold completo de 5 pliegues (los 5 pliegues).
+3. Reporte de media ± DE de la validación cruzada y métricas en la prueba final.
+4. Regla del ganador: mayor AUC medio en validación cruzada; si la diferencia es <0.5 puntos
+   de AUC, gana el de menor Brier Score. Sin textos fijos ni inventados.
+5. StandardScaler en Pipeline para Regresión Logística y MLP.
+6. Uso de sample_weight en todos los modelos que lo admiten (indicado explícitamente en la tabla).
+7. Importancia de variables con permutation_importance del modelo ganador sobre la prueba final.
+8. Eliminación de sufijos de versión tipo "v3.4".
+9. Determinismo estricto (semilla 42 en todos los procesos estocásticos).
 """
 
 import os
@@ -26,10 +38,13 @@ import numpy as np
 import pandas as pd
 import joblib
 
-from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, brier_score_loss, confusion_matrix, roc_curve, precision_recall_curve
@@ -41,6 +56,13 @@ try:
 except ImportError:
     xgb = None
     HAS_XGB = False
+
+try:
+    import lightgbm as lgb
+    HAS_LGB = True
+except ImportError:
+    lgb = None
+    HAS_LGB = False
 
 try:
     import catboost as cb
@@ -74,15 +96,12 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 
 def harmonize_india_plfs(df: pd.DataFrame) -> pd.DataFrame:
     """Armoniza microdatos India PLFS 2024 (cperv1.csv)."""
-    # 1. Filtro: Ocupados de 15+ años en actividad principal
     mask = (df['Age'] >= 15) & (df['Principal_Status_Code'].isin([11, 12, 21, 31, 41, 51]))
     df_emp = df[mask].copy()
 
-    # 2. Factor de expansión (peso muestral)
     same_ns = df_emp['Ns_Count_Sector_Stratum_Substratum_Subsample'] == df_emp['Ns_Count_Sector_Stratum_Substratum']
     df_emp['sample_weight'] = np.where(same_ns, df_emp['Subsample_Multiplier'] / 100.0, df_emp['Subsample_Multiplier'] / 200.0)
 
-    # 3. Variable Objetivo OIT (Informalidad)
     is_helper = df_emp['Principal_Status_Code'] == 21
     is_self = df_emp['Principal_Status_Code'].isin([11, 12])
     is_inf_ent = df_emp['Principal_Enterprise_Type'].isin([1, 2, 3, 4, 12, 19, '01', '02', '03', '04', '12', '19'])
@@ -93,10 +112,8 @@ def harmonize_india_plfs(df: pd.DataFrame) -> pd.DataFrame:
     df_emp['es_formal'] = 1 - df_emp['es_informal']
     df_emp['ESTADO_LABORAL'] = df_emp['es_formal']
 
-    # 4. Cluster de Hogar para evitar fuga intrahogar
     df_emp['household_id'] = df_emp['FSU'].astype(str) + '_' + df_emp['Sample_Household_Number'].astype(str)
 
-    # 5. Predictoras estandarizadas (SIN LEAKAGE)
     df_emp['pais'] = 'INDIA'
     df_emp['edad'] = df_emp['Age'].astype(float)
     df_emp['sexo'] = df_emp['Sex'].astype(int)
@@ -203,13 +220,106 @@ def harmonize_nigeria_nlfs(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # -----------------------------------------------------------------------------
-# 2. Pipeline de Validación Cruzada Agrupada y Ponderada
+# 2. Configuración de Modelos y Soporte de Ponderadores
+# -----------------------------------------------------------------------------
+
+def build_model_catalog() -> Dict[str, Dict[str, Any]]:
+    """Construye el catálogo de modelos competitivos con hiperparámetros reproducibles."""
+    catalog = {}
+
+    # 1. Regresión Logística L2 con StandardScaler en Pipeline
+    catalog["Regresión Logística L2"] = {
+        "factory": lambda: Pipeline([
+            ("scaler", StandardScaler()),
+            ("clf", LogisticRegression(max_iter=500, random_state=42))
+        ]),
+        "supports_sample_weight": True,
+        "fit_kw": lambda w: {"clf__sample_weight": w},
+        "weight_note": "Sí (en paso clasificador del Pipeline)"
+    }
+
+    # 2. Random Forest
+    catalog["Random Forest (100 Trees)"] = {
+        "factory": lambda: RandomForestClassifier(n_estimators=100, max_depth=7, random_state=42, n_jobs=2),
+        "supports_sample_weight": True,
+        "fit_kw": lambda w: {"sample_weight": w},
+        "weight_note": "Sí"
+    }
+
+    # 3. HistGradientBoosting
+    catalog["HistGradientBoosting"] = {
+        "factory": lambda: HistGradientBoostingClassifier(max_iter=100, max_depth=5, random_state=42),
+        "supports_sample_weight": True,
+        "fit_kw": lambda w: {"sample_weight": w},
+        "weight_note": "Sí"
+    }
+
+    # 4. XGBoost Classifier (sin versiones arbitrarias)
+    if HAS_XGB:
+        catalog["XGBoost Classifier"] = {
+            "factory": lambda: xgb.XGBClassifier(
+                n_estimators=100, max_depth=5, learning_rate=0.08,
+                eval_metric="logloss", random_state=42, n_jobs=2
+            ),
+            "supports_sample_weight": True,
+            "fit_kw": lambda w: {"sample_weight": w},
+            "weight_note": "Sí"
+        }
+
+    # 5. LightGBM Classifier
+    if HAS_LGB:
+        catalog["LightGBM Classifier"] = {
+            "factory": lambda: lgb.LGBMClassifier(
+                n_estimators=100, max_depth=5, learning_rate=0.08,
+                random_state=42, n_jobs=2, verbose=-1
+            ),
+            "supports_sample_weight": True,
+            "fit_kw": lambda w: {"sample_weight": w},
+            "weight_note": "Sí"
+        }
+
+    # 6. CatBoost Classifier
+    if HAS_CATBOOST:
+        catalog["CatBoost Classifier"] = {
+            "factory": lambda: cb.CatBoostClassifier(
+                iterations=100, depth=5, learning_rate=0.08,
+                verbose=0, random_seed=42
+            ),
+            "supports_sample_weight": True,
+            "fit_kw": lambda w: {"sample_weight": w},
+            "weight_note": "Sí"
+        }
+
+    # 7. Red Neuronal MLP con StandardScaler en Pipeline
+    catalog["MLP Neural Net"] = {
+        "factory": lambda: Pipeline([
+            ("scaler", StandardScaler()),
+            ("clf", MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=150, random_state=42))
+        ]),
+        "supports_sample_weight": False,
+        "fit_kw": lambda w: {},
+        "weight_note": "No (limitación de scikit-learn MLPClassifier)"
+    }
+
+    return catalog
+
+
+# -----------------------------------------------------------------------------
+# 3. Pipeline de Validación Cruzada Agrupada y Ponderada (5 Pliegues) + Prueba Final
 # -----------------------------------------------------------------------------
 
 def evaluate_and_benchmark(df_h: pd.DataFrame, country_code: str) -> Dict[str, Any]:
-    """Ejecuta StratifiedGroupKFold sobre microdatos armonizados."""
-    logger.info(f"Iniciando benchmarking competitivo para {country_code} ({len(df_h):,} observaciones)...")
-    
+    """
+    Ejecuta el protocolo de validación real:
+    1. Partición 20% hogares como prueba final (GroupShuffleSplit, random_state=42).
+    2. En el 80% restante, StratifiedGroupKFold completo de 5 pliegues.
+    3. Evaluación en prueba final y selección de ganador por regla determinista:
+       - Mayor AUC medio de validación cruzada.
+       - Si la diferencia de AUC medio es < 0.5 puntos, gana el de menor Brier Score.
+    4. Permutation importance del ganador sobre la prueba final.
+    """
+    logger.info(f"[{country_code}] Iniciando protocolo de validación con {len(df_h):,} observaciones...")
+
     feature_cols = ['edad', 'es_mujer', 'anos_educacion', 'zona_rural', 'horas_semana', 'sector_actividad']
     X_raw = df_h[feature_cols].copy()
     X = pd.get_dummies(X_raw, drop_first=True)
@@ -219,217 +329,390 @@ def evaluate_and_benchmark(df_h: pd.DataFrame, country_code: str) -> Dict[str, A
     w = df_h['sample_weight'].values
     groups = df_h['household_id'].values
 
+    # 1. Partición 80% Train+Val / 20% Test Final por Cluster de Hogares
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=42)
+    train_val_idx, test_idx = next(gss.split(X, y, groups))
+
+    # Comprobación estricta de no fuga en prueba final
+    overlap_test = len(set(groups[train_val_idx]).intersection(set(groups[test_idx])))
+    if overlap_test > 0:
+        raise RuntimeError(f"Fuga detectada: {overlap_test} hogares compartidos con el conjunto de prueba final!")
+
+    X_tv, y_tv, w_tv, grp_tv = X.iloc[train_val_idx], y[train_val_idx], w[train_val_idx], groups[train_val_idx]
+    X_test, y_test, w_test = X.iloc[test_idx], y[test_idx], w[test_idx]
+
+    logger.info(f"[{country_code}] Muestra Train+Val: {len(X_tv):,} obs ({len(set(grp_tv)):,} hogares) | Test Final: {len(X_test):,} obs ({len(set(groups[test_idx])):,} hogares)")
+
+    # 2. StratifiedGroupKFold de 5 pliegues COMPLETO sobre el 80% Train+Val
     sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
-    train_idx, test_idx = next(sgkf.split(X, y, groups))
+    cv_splits = list(sgkf.split(X_tv, y_tv, grp_tv))
+    assert len(cv_splits) == 5, f"Se esperaban 5 pliegues, obtenidos {len(cv_splits)}"
 
-    X_tr, X_te = X.iloc[train_idx], X.iloc[test_idx]
-    y_tr, y_te = y[train_idx], y[test_idx]
-    w_tr, w_te = w[train_idx], w[test_idx]
+    # Verificar no fuga inter-pliegues
+    for f_idx, (f_tr, f_va) in enumerate(cv_splits):
+        f_overlap = len(set(grp_tv[f_tr]).intersection(set(grp_tv[f_va])))
+        if f_overlap > 0:
+            raise RuntimeError(f"Fuga en pliegue CV {f_idx + 1}: {f_overlap} hogares compartidos!")
 
-    # Comprobación de no-fuga
-    overlap = len(set(groups[train_idx]).intersection(set(groups[test_idx])))
-    if overlap > 0:
-        raise RuntimeError(f"Fuga detectada: {overlap} hogares compartidos entre train y test!")
+    catalog = build_model_catalog()
+    models_benchmark = {}
+    fitted_test_models = {}
 
-    models_config = {
-        "Regresión Logística L2": (LogisticRegression(max_iter=500, random_state=42), False),
-        "Random Forest (100 Trees)": (RandomForestClassifier(n_estimators=100, max_depth=7, random_state=42, n_jobs=2), True),
-        "HistGradientBoosting": (HistGradientBoostingClassifier(max_iter=100, max_depth=5, random_state=42), True),
-        "XGBoost Classifier v3.4": (xgb.XGBClassifier(n_estimators=100, max_depth=5, learning_rate=0.08, eval_metric='logloss', random_state=42, n_jobs=2) if HAS_XGB else None, True),
-        "CatBoost Classifier": (cb.CatBoostClassifier(iterations=100, depth=5, learning_rate=0.08, verbose=0, random_seed=42) if HAS_CATBOOST else None, True),
-        "MLP Neural Net": (MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=150, random_state=42), False),
-    }
+    for name, cfg in catalog.items():
+        logger.info(f"[{country_code}] Entrenando y evaluando en 5 pliegues CV: {name}...")
 
-    results = {}
-    fitted_models = {}
-    best_f1 = -1.0
-    champion_name = ""
-    champion_model = None
+        # Métricas por pliegue
+        fold_accs, fold_precs, fold_recs, fold_f1s, fold_aucs, fold_briers = [], [], [], [], [], []
+        fold_w_f1s, fold_w_aucs = [], []
+        fold_m_f1s, fold_m_aucs = [], []
 
-    for name, (clf, supports_weight) in models_config.items():
-        if clf is None:
-            continue
-        
-        logger.info(f"Entrenando modelo: {name}...")
-        t0 = time.perf_counter()
-        if supports_weight:
-            clf.fit(X_tr, y_tr, sample_weight=w_tr)
-        else:
-            clf.fit(X_tr, y_tr)
-        fit_time_sec = time.perf_counter() - t0
+        cv_t0 = time.perf_counter()
+        for f_idx, (f_tr_idx, f_va_idx) in enumerate(cv_splits):
+            f_X_tr, f_y_tr, f_w_tr = X_tv.iloc[f_tr_idx], y_tv[f_tr_idx], w_tv[f_tr_idx]
+            f_X_va, f_y_va, f_w_va = X_tv.iloc[f_va_idx], y_tv[f_va_idx], w_tv[f_va_idx]
 
-        # Latencia real de inferencia
+            fold_model = cfg["factory"]()
+            fit_kwargs = cfg["fit_kw"](f_w_tr)
+            fold_model.fit(f_X_tr, f_y_tr, **fit_kwargs)
+
+            f_preds = fold_model.predict(f_X_va)
+            if hasattr(fold_model, "predict_proba"):
+                f_probs = fold_model.predict_proba(f_X_va)[:, 1]
+            else:
+                f_probs = f_preds
+
+            f_acc = accuracy_score(f_y_va, f_preds, sample_weight=f_w_va) * 100.0
+            f_prec = precision_score(f_y_va, f_preds, sample_weight=f_w_va, zero_division=0) * 100.0
+            f_rec = recall_score(f_y_va, f_preds, sample_weight=f_w_va, zero_division=0) * 100.0
+            f_f1 = f1_score(f_y_va, f_preds, sample_weight=f_w_va, zero_division=0) * 100.0
+            f_auc = roc_auc_score(f_y_va, f_probs, sample_weight=f_w_va) * 100.0
+            f_brier = brier_score_loss(f_y_va, f_probs, sample_weight=f_w_va)
+
+            fold_accs.append(f_acc)
+            fold_precs.append(f_prec)
+            fold_recs.append(f_rec)
+            fold_f1s.append(f_f1)
+            fold_aucs.append(f_auc)
+            fold_briers.append(f_brier)
+
+            # Desagregación por sexo en validación
+            is_w = f_X_va['es_mujer'] == 1
+            if is_w.sum() > 0:
+                fold_w_f1s.append(f1_score(f_y_va[is_w], f_preds[is_w], sample_weight=f_w_va[is_w], zero_division=0) * 100.0)
+                fold_w_aucs.append(roc_auc_score(f_y_va[is_w], f_probs[is_w], sample_weight=f_w_va[is_w]) * 100.0)
+            
+            is_m = ~is_w
+            if is_m.sum() > 0:
+                fold_m_f1s.append(f1_score(f_y_va[is_m], f_preds[is_m], sample_weight=f_w_va[is_m], zero_division=0) * 100.0)
+                fold_m_aucs.append(roc_auc_score(f_y_va[is_m], f_probs[is_m], sample_weight=f_w_va[is_m]) * 100.0)
+
+        cv_duration = time.perf_counter() - cv_t0
+
+        # Ajuste del modelo sobre el 80% Train+Val y evaluación en la prueba final del 20%
+        final_test_model = cfg["factory"]()
+        fit_kw_tv = cfg["fit_kw"](w_tv)
+        t_fit0 = time.perf_counter()
+        final_test_model.fit(X_tv, y_tv, **fit_kw_tv)
+        fit_time_sec = time.perf_counter() - t_fit0
+
         t_inf0 = time.perf_counter()
-        preds = clf.predict(X_te)
-        inf_time_ms = (time.perf_counter() - t_inf0) * 1000.0 / len(X_te)
+        test_preds = final_test_model.predict(X_test)
+        latency_ms = (time.perf_counter() - t_inf0) * 1000.0 / len(X_test)
 
-        if hasattr(clf, "predict_proba"):
-            probs = clf.predict_proba(X_te)[:, 1]
+        if hasattr(final_test_model, "predict_proba"):
+            test_probs = final_test_model.predict_proba(X_test)[:, 1]
         else:
-            probs = preds
+            test_probs = test_preds
 
-        # Métricas ponderadas
-        acc = float(accuracy_score(y_te, preds, sample_weight=w_te) * 100.0)
-        prec = float(precision_score(y_te, preds, sample_weight=w_te, zero_division=0) * 100.0)
-        rec = float(recall_score(y_te, preds, sample_weight=w_te, zero_division=0) * 100.0)
-        f1 = float(f1_score(y_te, preds, sample_weight=w_te, zero_division=0) * 100.0)
-        auc_val = float(roc_auc_score(y_te, probs, sample_weight=w_te) * 100.0)
-        brier = float(brier_score_loss(y_te, probs, sample_weight=w_te))
+        te_acc = float(accuracy_score(y_test, test_preds, sample_weight=w_test) * 100.0)
+        te_prec = float(precision_score(y_test, test_preds, sample_weight=w_test, zero_division=0) * 100.0)
+        te_rec = float(recall_score(y_test, test_preds, sample_weight=w_test, zero_division=0) * 100.0)
+        te_f1 = float(f1_score(y_test, test_preds, sample_weight=w_test, zero_division=0) * 100.0)
+        te_auc = float(roc_auc_score(y_test, test_probs, sample_weight=w_test) * 100.0)
+        te_brier = float(brier_score_loss(y_test, test_probs, sample_weight=w_test))
 
-        # Métricas desagregadas por sexo
-        is_woman = X_te['es_mujer'] == 1
-        f1_women = float(f1_score(y_te[is_woman], preds[is_woman], sample_weight=w_te[is_woman], zero_division=0) * 100.0)
-        auc_women = float(roc_auc_score(y_te[is_woman], probs[is_woman], sample_weight=w_te[is_woman]) * 100.0)
+        # Desagregado por sexo en prueba final
+        is_w_te = X_test['es_mujer'] == 1
+        te_w_f1 = float(f1_score(y_test[is_w_te], test_preds[is_w_te], sample_weight=w_test[is_w_te], zero_division=0) * 100.0)
+        te_w_auc = float(roc_auc_score(y_test[is_w_te], test_probs[is_w_te], sample_weight=w_test[is_w_te]) * 100.0)
 
-        is_man = ~is_woman
-        f1_men = float(f1_score(y_te[is_man], preds[is_man], sample_weight=w_te[is_man], zero_division=0) * 100.0)
-        auc_men = float(roc_auc_score(y_te[is_man], probs[is_man], sample_weight=w_te[is_man]) * 100.0)
+        is_m_te = ~is_w_te
+        te_m_f1 = float(f1_score(y_test[is_m_te], test_preds[is_m_te], sample_weight=w_test[is_m_te], zero_division=0) * 100.0)
+        te_m_auc = float(roc_auc_score(y_test[is_m_te], test_probs[is_m_te], sample_weight=w_test[is_m_te]) * 100.0)
 
-        cm = confusion_matrix(y_te, preds, sample_weight=w_te)
-        fpr, tpr, _ = roc_curve(y_te, probs, sample_weight=w_te)
-        pr_prec, pr_rec, _ = precision_recall_curve(y_te, probs, sample_weight=w_te)
+        cm = confusion_matrix(y_test, test_preds, sample_weight=w_test)
+        fpr, tpr, _ = roc_curve(y_test, test_probs, sample_weight=w_test)
+        pr_p, pr_r, _ = precision_recall_curve(y_test, test_probs, sample_weight=w_test)
 
-        results[name] = {
+        # Consolidar métricas completas
+        models_benchmark[name] = {
             "name": name,
-            "accuracy": round(acc, 2),
-            "precision": round(prec, 2),
-            "recall": round(rec, 2),
-            "f1_score": round(f1, 2),
-            "roc_auc": round(auc_val, 2),
-            "brier_score": round(brier, 4),
-            "latency_ms_per_obs": round(inf_time_ms, 5),
+            "supports_sample_weight": cfg["supports_sample_weight"],
+            "sample_weight_note": cfg["weight_note"],
+            # 1. Validación Cruzada (media ± DE de los 5 pliegues)
+            "cv_metrics": {
+                "roc_auc_mean": round(float(np.mean(fold_aucs)), 2),
+                "roc_auc_std": round(float(np.std(fold_aucs)), 2),
+                "f1_score_mean": round(float(np.mean(fold_f1s)), 2),
+                "f1_score_std": round(float(np.std(fold_f1s)), 2),
+                "brier_score_mean": round(float(np.mean(fold_briers)), 4),
+                "brier_score_std": round(float(np.std(fold_briers)), 4),
+                "accuracy_mean": round(float(np.mean(fold_accs)), 2),
+                "accuracy_std": round(float(np.std(fold_accs)), 2),
+                "precision_mean": round(float(np.mean(fold_precs)), 2),
+                "precision_std": round(float(np.std(fold_precs)), 2),
+                "recall_mean": round(float(np.mean(fold_recs)), 2),
+                "recall_std": round(float(np.std(fold_recs)), 2),
+                "women_f1_mean": round(float(np.mean(fold_w_f1s)), 2),
+                "women_auc_mean": round(float(np.mean(fold_w_aucs)), 2),
+                "men_f1_mean": round(float(np.mean(fold_m_f1s)), 2),
+                "men_auc_mean": round(float(np.mean(fold_m_aucs)), 2),
+            },
+            # 2. Prueba Final (20% holdout)
+            "test_metrics": {
+                "accuracy": round(te_acc, 2),
+                "precision": round(te_prec, 2),
+                "recall": round(te_rec, 2),
+                "f1_score": round(te_f1, 2),
+                "roc_auc": round(te_auc, 2),
+                "brier_score": round(te_brier, 4),
+                "latency_ms_per_obs": round(latency_ms, 5),
+                "training_time_sec": round(fit_time_sec, 2),
+                "metrics_women": {"f1_score": round(te_w_f1, 2), "roc_auc": round(te_w_auc, 2)},
+                "metrics_men": {"f1_score": round(te_m_f1, 2), "roc_auc": round(te_m_auc, 2)},
+                "confusion_matrix": cm.tolist(),
+                "roc_curve": {"fpr": fpr[::max(1, len(fpr)//50)].tolist(), "tpr": tpr[::max(1, len(tpr)//50)].tolist()},
+            },
+            # Campos retrocompatibles con la API del frontend
+            "accuracy": round(te_acc, 2),
+            "precision": round(te_prec, 2),
+            "recall": round(te_rec, 2),
+            "f1_score": round(te_f1, 2),
+            "roc_auc": round(te_auc, 2),
+            "brier_score": round(te_brier, 4),
+            "latency_ms_per_obs": round(latency_ms, 5),
             "training_time_sec": round(fit_time_sec, 2),
-            "metrics_women": {"f1_score": round(f1_women, 2), "roc_auc": round(auc_women, 2)},
-            "metrics_men": {"f1_score": round(f1_men, 2), "roc_auc": round(auc_men, 2)},
+            "metrics_women": {"f1_score": round(te_w_f1, 2), "roc_auc": round(te_w_auc, 2)},
+            "metrics_men": {"f1_score": round(te_m_f1, 2), "roc_auc": round(te_m_auc, 2)},
             "confusion_matrix": cm.tolist(),
             "roc_curve": {"fpr": fpr[::max(1, len(fpr)//50)].tolist(), "tpr": tpr[::max(1, len(tpr)//50)].tolist()},
         }
-        fitted_models[name] = clf
+        fitted_test_models[name] = final_test_model
 
-        if f1 > best_f1:
-            best_f1 = f1
-            champion_name = name
-            champion_model = clf
+    # 4. REGLA DEL GANADOR DETERMINISTA:
+    # Mayor AUC medio de la validación cruzada; si la diferencia es < 0.5 puntos, gana el de menor Brier.
+    max_cv_auc = max(m["cv_metrics"]["roc_auc_mean"] for m in models_benchmark.values())
+    candidates = [
+        name for name, m in models_benchmark.items()
+        if (max_cv_auc - m["cv_metrics"]["roc_auc_mean"]) < 0.50
+    ]
 
-    # Importancia de características del campeón o de Random Forest / XGBoost
-    feature_importances = {}
-    imp_model = champion_model if hasattr(champion_model, "feature_importances_") else fitted_models.get("XGBoost Classifier v3.4")
-    if imp_model is None or not hasattr(imp_model, "feature_importances_"):
-        imp_model = fitted_models.get("Random Forest (100 Trees)")
+    if len(candidates) > 1:
+        # Entre los modelos dentro del margen de 0.5 puntos de AUC, desempatar por menor Brier Score medio en CV
+        winner_name = min(candidates, key=lambda n: models_benchmark[n]["cv_metrics"]["brier_score_mean"])
+        winner_reason = f"Menor Brier Score ({models_benchmark[winner_name]['cv_metrics']['brier_score_mean']:.4f}) por empate técnico en AUC CV (<0.50 p.p. respecto al máximo {max_cv_auc:.2f}%)"
+    else:
+        winner_name = candidates[0]
+        winner_reason = f"Mayor AUC-ROC medio en validación cruzada ({models_benchmark[winner_name]['cv_metrics']['roc_auc_mean']:.2f}%)"
+
+    logger.info(f"[{country_code}] Modelo ganador seleccionado según regla: {winner_name} ({winner_reason})")
+
+    # 5. Permutation Importance del modelo ganador sobre la PRUEBA FINAL
+    winner_test_model = fitted_test_models[winner_name]
+    logger.info(f"[{country_code}] Calculando permutation_importance del ganador ({winner_name}) en prueba final...")
     
-    if imp_model is not None and hasattr(imp_model, "feature_importances_"):
-        imps = imp_model.feature_importances_
-        tot = sum(imps) or 1.0
-        feature_importances = {
-            feature_names[i]: round(float(imps[i] / tot * 100.0), 2)
-            for i in range(len(feature_names))
+    perm_sample_weight = w_test if catalog[winner_name]["supports_sample_weight"] else None
+    perm = permutation_importance(
+        winner_test_model, X_test, y_test,
+        n_repeats=5, random_state=42,
+        sample_weight=perm_sample_weight,
+        n_jobs=2
+    )
+
+    perm_raw = {}
+    pos_imps = np.maximum(0, perm.importances_mean)
+    tot_pos = np.sum(pos_imps) or 1.0
+    normalized_importances = {}
+
+    for idx, f_name in enumerate(feature_names):
+        perm_raw[f_name] = {
+            "mean": round(float(perm.importances_mean[idx]), 5),
+            "std": round(float(perm.importances_std[idx]), 5),
         }
+        normalized_importances[f_name] = round(float(pos_imps[idx] / tot_pos * 100.0), 2)
 
-    # Entrenar modelo campeón sobre todos los datos con pesos y guardar
-    logger.info(f"Re-entrenando modelo campeón ({champion_name}) sobre el 100% de datos con sample_weight...")
-    if hasattr(champion_model, "fit"):
-        final_champion = joblib.load(joblib.dump(champion_model, os.path.join(MODELS_DIR, f"temp_{country_code}.joblib"))[0])
-        os.remove(os.path.join(MODELS_DIR, f"temp_{country_code}.joblib"))
-        if models_config[champion_name][1]:
-            final_champion.fit(X, y, sample_weight=w)
-        else:
-            final_champion.fit(X, y)
-        
-        champion_path = os.path.join(MODELS_DIR, f"model_champion_{country_code.lower()}.joblib")
-        joblib.dump({
-            "country": country_code,
-            "champion_algorithm": champion_name,
-            "model": final_champion,
-            "feature_names": feature_names,
-            "metrics": results[champion_name],
-            "feature_importances": feature_importances,
-            "trained_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
-            "total_observations": len(df_h),
-            "unweighted_informal_count": int((y == 1).sum()),
-            "unweighted_formal_count": int((y == 0).sum()),
-            "weighted_informality_rate": round(float((y * w).sum() / w.sum() * 100.0), 2),
-        }, champion_path)
-        logger.info(f"Modelo campeón guardado en: {champion_path}")
+    # Ordenar características por importancia
+    normalized_importances = dict(sorted(normalized_importances.items(), key=lambda x: x[1], reverse=True))
 
-    return {
+    # 6. Re-entrenar modelo campeón sobre el 100% de datos con sample_weight para inferencia en producción
+    logger.info(f"[{country_code}] Serializando modelo campeón ({winner_name}) sobre el 100% de datos...")
+    prod_model = catalog[winner_name]["factory"]()
+    fit_kw_prod = catalog[winner_name]["fit_kw"](w)
+    prod_model.fit(X, y, **fit_kw_prod)
+
+    model_dump_data = {
         "country": country_code,
-        "champion_name": champion_name,
-        "champion_metrics": results[champion_name],
-        "models_benchmark": results,
-        "feature_importances": feature_importances,
+        "champion_algorithm": winner_name,
+        "selection_rule": winner_reason,
+        "model": prod_model,
+        "feature_names": feature_names,
+        "metrics": models_benchmark[winner_name],
+        "feature_importances": normalized_importances,
+        "permutation_importance_details": perm_raw,
+        "trained_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         "total_observations": len(df_h),
+        "unweighted_informal_count": int((y == 1).sum()),
+        "unweighted_formal_count": int((y == 0).sum()),
         "weighted_informality_rate": round(float((y * w).sum() / w.sum() * 100.0), 2),
     }
 
+    champion_path = os.path.join(MODELS_DIR, f"model_champion_{country_code.lower()}.joblib")
+    joblib.dump(model_dump_data, champion_path)
+    logger.info(f"[{country_code}] Modelo campeón persistido en {champion_path}")
+
+    # Estructura del JSON de resultados
+    payload = {
+        "country": country_code,
+        "champion_name": winner_name,
+        "champion_rule": winner_reason,
+        "champion_metrics": models_benchmark[winner_name],
+        "models_benchmark": models_benchmark,
+        "feature_importances": normalized_importances,
+        "permutation_importance_details": perm_raw,
+        "total_observations": len(df_h),
+        "train_val_observations": len(X_tv),
+        "test_observations": len(X_test),
+        "weighted_informality_rate": round(float((y * w).sum() / w.sum() * 100.0), 2),
+    }
+
+    json_path = os.path.join(OUTPUTS_DIR, f"metricas_modelos_{country_code.lower()}.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+    logger.info(f"[{country_code}] Métricas completas guardadas en {json_path}")
+
+    return payload
+
+
+# -----------------------------------------------------------------------------
+# 4. Generación de Tablas Oficiales de Rendimiento (CSV y Markdown)
+# -----------------------------------------------------------------------------
+
+def generate_comparison_tables(india_res: Dict[str, Any], nigeria_res: Dict[str, Any]):
+    """Genera tabla_desempeno_modelos.csv y .md con media ± DE en CV y prueba final."""
+    csv_rows = []
+    
+    country_tuples = [
+        ("India (PLFS 2024)", india_res),
+        ("Nigeria (NLFS 2023 Q3)", nigeria_res),
+    ]
+
+    for country_label, res in country_tuples:
+        winner = res["champion_name"]
+        for mod_name, mod_data in res["models_benchmark"].items():
+            cv = mod_data["cv_metrics"]
+            te = mod_data["test_metrics"]
+            
+            is_winner = (mod_name == winner)
+            winner_col = f"Sí ({res['champion_rule']})" if is_winner else "No"
+
+            csv_rows.append({
+                "País": country_label,
+                "Modelo": mod_name,
+                "Acepta sample_weight": mod_data["sample_weight_note"],
+                "AUC-ROC CV (media ± DE)": f"{cv['roc_auc_mean']:.2f} ± {cv['roc_auc_std']:.2f}",
+                "AUC-ROC Test (%)": te["roc_auc"],
+                "F1-Score CV (media ± DE)": f"{cv['f1_score_mean']:.2f} ± {cv['f1_score_std']:.2f}",
+                "F1-Score Test (%)": te["f1_score"],
+                "Accuracy CV (media ± DE)": f"{cv['accuracy_mean']:.2f} ± {cv['accuracy_std']:.2f}",
+                "Accuracy Test (%)": te["accuracy"],
+                "Precision CV (media ± DE)": f"{cv['precision_mean']:.2f} ± {cv['precision_std']:.2f}",
+                "Precision Test (%)": te["precision"],
+                "Recall CV (media ± DE)": f"{cv['recall_mean']:.2f} ± {cv['recall_std']:.2f}",
+                "Recall Test (%)": te["recall"],
+                "Brier Score CV (media ± DE)": f"{cv['brier_score_mean']:.4f} ± {cv['brier_score_std']:.4f}",
+                "Brier Score Test": te["brier_score"],
+                "F1 Mujeres Test (%)": te["metrics_women"]["f1_score"],
+                "AUC Mujeres Test (%)": te["metrics_women"]["roc_auc"],
+                "F1 Hombres Test (%)": te["metrics_men"]["f1_score"],
+                "AUC Hombres Test (%)": te["metrics_men"]["roc_auc"],
+                "Latencia Test (ms)": te["latency_ms_per_obs"],
+                "Ganador": winner_col
+            })
+
+    df_table = pd.DataFrame(csv_rows)
+    csv_path = os.path.join(OUTPUTS_DIR, "tabla_desempeno_modelos.csv")
+    df_table.to_csv(csv_path, index=False, encoding="utf-8")
+    logger.info(f"Tabla de desempeño guardada en CSV: {csv_path}")
+
+    # Generar versión Markdown
+    md_lines = [
+        "# Tabla Oficial de Benchmarking y Validación de Modelos de IA",
+        "**Fecha de generación:** " + time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+        "**Metodología:** Partición 20% hogares en prueba final (GroupShuffleSplit, random_state=42) y 5-Fold StratifiedGroupKFold sobre el 80% restante.",
+        "**Regla de Selección del Ganador:** Mayor AUC-ROC medio en validación cruzada; si la diferencia es <0.50 puntos, desempata por menor Brier Score.",
+        "",
+        df_table.to_markdown(index=False),
+        "",
+        "### Notas Técnicas Metodológicas:",
+        "- **sample_weight:** Todos los modelos basados en árboles y la Regresión Logística (mediante paso en Pipeline) fueron ajustados y evaluados utilizando ponderadores de diseño muestral oficial.",
+        "- **MLPClassifier:** No admite `sample_weight` en la implementación oficial de scikit-learn; se entrenó con ponderación uniforme tras estandarización con `StandardScaler`.",
+        "- **Sin Fuga Intrahogar:** Las particiones respetaron estrictamente la agrupación familiar (`household_id`).",
+        "- **Importancia de Características:** Calculada mediante `permutation_importance` (5 permutaciones por variable) del modelo ganador exclusivamente sobre la prueba final independiente."
+    ]
+
+    md_path = os.path.join(OUTPUTS_DIR, "tabla_desempeno_modelos.md")
+    with open(md_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(md_lines))
+    logger.info(f"Tabla de desempeño guardada en Markdown: {md_path}")
+
+
+# -----------------------------------------------------------------------------
+# 5. Función Principal
+# -----------------------------------------------------------------------------
+
+def find_microdata_file(country: str, pattern: str) -> str:
+    """Busca recursivamente archivos de microdatos ignorando carpetas archivadas."""
+    country_dir = os.path.join(MICRODATA_DIR, country.lower())
+    for root, dirs, files in os.walk(country_dir):
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d != "_archivado"]
+        for f in files:
+            if pattern.lower() in f.lower():
+                return os.path.join(root, f)
+    raise FileNotFoundError(f"No se encontró archivo con patrón '{pattern}' en {country_dir}")
+
 
 def main():
-    logger.info("=== ENTRENAMIENTO DEL MOTOR DE IA SOBRE MICRODATOS REALES ===")
-    
-    # 1. Cargar y Armonizar India PLFS 2024
-    india_path = os.path.join(MICRODATA_DIR, "india", "plfs_2024", "cperv1.csv")
-    if not os.path.exists(india_path):
-        logger.error(f"Archivo no encontrado: {india_path}")
-        return
-    logger.info(f"Cargando {india_path}...")
-    df_india_raw = pd.read_csv(india_path)
-    df_india = harmonize_india_plfs(df_india_raw)
-    del df_india_raw  # liberar memoria
-    
+    logger.info("================================================================================")
+    logger.info(" EJECUTANDO ENTRENAMIENTO Y BENCHMARKING DE MODELOS DE MACHINE LEARNING (OIT)  ")
+    logger.info("================================================================================")
+
+    # 1. Cargar India PLFS 2024
+    india_csv = find_microdata_file("india", "cperv1.csv")
+    logger.info(f"Cargando {india_csv}...")
+    df_raw_in = pd.read_csv(india_csv, low_memory=False)
+    df_india = harmonize_india_plfs(df_raw_in)
+    del df_raw_in
+
+    # 2. Cargar Nigeria NLFS 2023 Q3
+    nigeria_sav = find_microdata_file("nigeria", "NLFS_2023Q3_INDIVIDUAL.sav")
+    logger.info(f"Cargando {nigeria_sav}...")
+    df_raw_ng, _ = pyreadstat.read_sav(nigeria_sav, encoding="latin1")
+    df_nigeria = harmonize_nigeria_nlfs(df_raw_ng)
+    del df_raw_ng
+
+    # 3. Ejecutar benchmarking para India y Nigeria
     res_india = evaluate_and_benchmark(df_india, "INDIA")
-    with open(os.path.join(OUTPUTS_DIR, "metricas_modelos_india.json"), "w", encoding="utf-8") as f:
-        json.dump(res_india, f, indent=2, ensure_ascii=False)
-
-    # 2. Cargar y Armonizar Nigeria NLFS 2023 Q3
-    nigeria_path = os.path.join(MICRODATA_DIR, "nigeria", "nlfs_2023q3", "NLFS_2023Q3_INDIVIDUAL.sav")
-    if not os.path.exists(nigeria_path):
-        logger.error(f"Archivo no encontrado: {nigeria_path}")
-        return
-    logger.info(f"Cargando {nigeria_path}...")
-    df_nigeria_raw, _ = pyreadstat.read_sav(nigeria_path, encoding="latin1")
-    df_nigeria = harmonize_nigeria_nlfs(df_nigeria_raw)
-    del df_nigeria_raw  # liberar memoria
-
     res_nigeria = evaluate_and_benchmark(df_nigeria, "NIGERIA")
-    with open(os.path.join(OUTPUTS_DIR, "metricas_modelos_nigeria.json"), "w", encoding="utf-8") as f:
-        json.dump(res_nigeria, f, indent=2, ensure_ascii=False)
 
-    # 3. Generar Tablas Oficiales en outputs/motor_ia/
-    records = []
-    for c_code, res in [("India (PLFS 2024)", res_india), ("Nigeria (NLFS 2023 Q3)", res_nigeria)]:
-        for m_name, m_data in res["models_benchmark"].items():
-            is_champ = " (Campeón)" if m_name == res["champion_name"] else ""
-            records.append({
-                "País": c_code,
-                "Modelo": m_name + is_champ,
-                "AUC-ROC (%)": m_data["roc_auc"],
-                "F1-Score (%)": m_data["f1_score"],
-                "Accuracy (%)": m_data["accuracy"],
-                "Precision (%)": m_data["precision"],
-                "Recall (%)": m_data["recall"],
-                "Brier Score": m_data["brier_score"],
-                "F1 Mujeres (%)": m_data["metrics_women"]["f1_score"],
-                "AUC Mujeres (%)": m_data["metrics_women"]["roc_auc"],
-                "F1 Hombres (%)": m_data["metrics_men"]["f1_score"],
-                "AUC Hombres (%)": m_data["metrics_men"]["roc_auc"],
-                "Latencia (ms)": m_data["latency_ms_per_obs"],
-            })
-    
-    df_table = pd.DataFrame(records)
-    csv_out = os.path.join(OUTPUTS_DIR, "tabla_desempeno_modelos.csv")
-    md_out = os.path.join(OUTPUTS_DIR, "tabla_desempeno_modelos.md")
-    df_table.to_csv(csv_out, index=False)
-    
-    md_content = "# Tabla de Desempeño Comparativo: Modelos de Inteligencia Artificial sobre Microdatos Reales\n\n"
-    md_content += "**Fecha de Entrenamiento:** " + time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()) + "\n"
-    md_content += "**Metodología:** StratifiedGroupKFold (5 Folds por hogar) con ponderadores de encuesta oficiales OIT.\n\n"
-    md_content += df_table.to_markdown(index=False)
-    md_content += "\n\n*Nota Metodológica:* Se garantiza ausencia de fuga de información excluyendo variables directas del objetivo laboral. Los factores de expansión se utilizan tanto en ajuste como en métricas de evaluación.\n"
-    
-    with open(md_out, "w", encoding="utf-8") as f:
-        f.write(md_content)
+    # 4. Generar tablas consolidadas
+    generate_comparison_tables(res_india, res_nigeria)
 
-    logger.info(f"Tablas y métricas guardadas exitosamente en:\n  - {csv_out}\n  - {md_out}")
-    print("\n" + md_content)
+    logger.info("================================================================================")
+    logger.info(" ENTRENAMIENTO Y VALIDACIÓN COMPLETADOS EXITOSAMENTE                           ")
+    logger.info(f" Ganador India:   {res_india['champion_name']} ({res_india['champion_rule']})")
+    logger.info(f" Ganador Nigeria: {res_nigeria['champion_name']} ({res_nigeria['champion_rule']})")
+    logger.info("================================================================================")
+
 
 if __name__ == "__main__":
     main()

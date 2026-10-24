@@ -20,6 +20,8 @@ from sklearn.metrics import (
     auc,
     precision_recall_curve,
 )
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
@@ -30,6 +32,13 @@ try:
 except ImportError:
     xgb = None
     HAS_XGBOOST = False
+
+try:
+    import lightgbm as lgb
+    HAS_LIGHTGBM = True
+except ImportError:
+    lgb = None
+    HAS_LIGHTGBM = False
 
 try:
     import catboost as cb
@@ -674,6 +683,16 @@ def run_stratified_cv(
                 random_seed=42 + fold_idx
             )
             model.fit(X_train, y_train, sample_weight=w_train)
+        elif "lightgbm" in algo_clean and HAS_LIGHTGBM and lgb is not None:
+            model = lgb.LGBMClassifier(
+                n_estimators=100,
+                max_depth=5,
+                learning_rate=0.08,
+                random_state=42 + fold_idx,
+                n_jobs=2,
+                verbose=-1
+            )
+            model.fit(X_train, y_train, sample_weight=w_train)
         elif "random_forest" in algo_clean:
             model = RandomForestClassifier(
                 n_estimators=100,
@@ -683,10 +702,16 @@ def run_stratified_cv(
             )
             model.fit(X_train, y_train, sample_weight=w_train)
         elif "logistic" in algo_clean:
-            model = LogisticRegression(max_iter=500, random_state=42 + fold_idx)
-            model.fit(X_train, y_train, sample_weight=w_train)
+            model = Pipeline([
+                ("scaler", StandardScaler()),
+                ("clf", LogisticRegression(max_iter=500, random_state=42 + fold_idx))
+            ])
+            model.fit(X_train, y_train, clf__sample_weight=w_train)
         elif "mlp" in algo_clean:
-            model = MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=150, random_state=42 + fold_idx)
+            model = Pipeline([
+                ("scaler", StandardScaler()),
+                ("clf", MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=150, random_state=42 + fold_idx))
+            ])
             model.fit(X_train, y_train)
         else:
             model = HistGradientBoostingClassifier(
@@ -816,8 +841,8 @@ def run_cross_validation_models(df: pd.DataFrame) -> Dict[str, Any]:
     # Si no existiera el archivo de métricas, ejecutar StratifiedGroupKFold en vivo
     cv_res = run_stratified_cv(df, n_folds=5, target_col="es_informal", algorithm="xgboost")
     return {
-        "models_benchmark": {"XGBoost Classifier v3.4": cv_res["summary"]},
-        "champion_name": "XGBoost Classifier v3.4",
+        "models_benchmark": {"XGBoost Classifier": cv_res["summary"]},
+        "champion_name": "XGBoost Classifier",
         "champion_metrics": cv_res["summary"],
         "feature_importance": cv_res.get("feature_importances", {}),
         "features_list": list(cv_res.get("feature_importances", {}).keys()),
