@@ -70,20 +70,8 @@ export const uploadDatasetFile = async (file: File): Promise<DatasetUploadRespon
 
     return await res.json();
   } catch (error: any) {
-    console.warn('[API Datasets] Backend no disponible o error:', error.message);
-    // Graceful offline mock response
-    return {
-      status: 'success',
-      message: `Dataset "${file.name}" cargado en memoria exitosamente (Modo offline / desarrollo).`,
-      dataset: {
-        id: `ds-${Date.now().toString().slice(-6)}`,
-        filename: file.name,
-        records_count: 15420,
-        features_list: ['ESTADO_LABORAL', 'INGRESO_NETO_DIA', 'CAPITAL_HUMANO', 'EDUCACION_ANIOS'],
-        is_active: true,
-        created_at: new Date().toISOString(),
-      }
-    };
+    console.error('[API Datasets] Backend no disponible o error:', error.message);
+    throw new Error(error.message || 'Error de conexión con el backend al subir dataset');
   }
 };
 

@@ -65,9 +65,9 @@ def render_ai_engine_view():
     policy_params = st.session_state.get("policy_params", {})
     role = st.session_state.get("role", "ADMIN")
 
-    df = load_real_country_microdata(country_code)
+    real_data = load_real_country_microdata(country_code)
 
-    if df is None or len(df) == 0:
+    if real_data is None:
         st.markdown(f"""
         <div style="background: rgba(11, 18, 32, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(245, 158, 11, 0.4);
                     border-radius: 16px; padding: 32px; margin-top: 20px; text-align: center;">
@@ -75,8 +75,8 @@ def render_ai_engine_view():
             <h2 style="color: #f8fafc; margin-bottom: 8px;">Sin microdatos reales cargados</h2>
             <p style="color: #94a3b8; max-width: 620px; margin: 0 auto 16px auto; font-size: 0.95rem; line-height: 1.6;">
                 El sistema opera bajo el principio estricto de integridad científica: está prohibido el uso de datos sintéticos o inventados. 
-                Para habilitar el entrenamiento de modelos de Machine Learning (XGBoost, LightGBM, Random Forest), el análisis exploratorio (EDA) 
-                y las proyecciones de cohortes para <b>{country_code}</b>, coloque los microdatos oficiales de la encuesta laboral en:
+                Para habilitar el entrenamiento de modelos de Machine Learning (XGBoost, HistGradientBoosting, Random Forest, CatBoost), el análisis exploratorio (EDA) 
+                y las métricas de validación cruzada para <b>{country_code}</b>, coloque los microdatos oficiales de la encuesta laboral en:
             </p>
             <code style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(0, 240, 255, 0.3); padding: 8px 16px; border-radius: 8px; color: #00f0ff; font-size: 0.9rem;">
                 data/microdatos_reales/{country_code.lower()}/
@@ -88,16 +88,21 @@ def render_ai_engine_view():
         """, unsafe_allow_html=True)
         return
 
+    df, filename, country_name = real_data
+    if df is None or len(df) == 0:
+        st.warning(f"Microdatos vacíos para {country_code}.")
+        return
+
     cv_res = run_cross_validation_models(df)
     eda_res = compute_eda_summary(df)
 
-    # Initialize Active Deployed Model in Session State if not present
+    champ_name = cv_res.get("champion_name", "HistGradientBoosting (Campeón)")
     if "deployed_model_id" not in st.session_state:
-        st.session_state["deployed_model_id"] = "algo-xgboost"
-        st.session_state["deployed_model_name"] = "XGBoost Classifier v3.4 (SOTA)"
-        st.session_state["deployed_at"] = "2026-09-28 11:20:00 UTC"
+        st.session_state["deployed_model_id"] = f"algo-{champ_name.lower().replace(' ', '-')}"
+        st.session_state["deployed_model_name"] = champ_name
+        st.session_state["deployed_at"] = time.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    models_data = cv_res["models_benchmark"]
+    models_data = cv_res.get("models_benchmark", {})
 
     # Header with Live Champion Model indicator
     st.markdown(f"""
@@ -150,14 +155,15 @@ def render_ai_engine_view():
 
         st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
-        var_options = {
-            "ingreso_usd_dia": "Ingreso Diario (USD/día)",
-            "capital_humano": "Índice de Capital Humano (0-100)",
+        available_vars = {
             "anos_educacion": "Años de Educación Formal",
-            "anos_experiencia": "Años de Experiencia Laboral",
-            "tamano_empresa": "Tamaño de la Empresa (Empleados)",
-            "gasto_capacitacion_usd": "Inversión en Capacitación (USD)",
+            "horas_semana": "Horas Semanales Trabajadas",
+            "edad": "Edad del Trabajador (Años)",
+            "ingreso_laboral": "Ingreso Laboral Reportado",
         }
+        var_options = {k: v for k, v in available_vars.items() if k in df.columns}
+        if not var_options:
+            var_options = {"edad": "Edad del Trabajador (Años)"}
         selected_var = st.selectbox("Seleccionar Variable para Histograma de Densidad:", options=list(var_options.keys()), format_func=lambda k: var_options[k])
 
         col_eda1, col_eda2 = st.columns(2)
@@ -238,13 +244,13 @@ def render_ai_engine_view():
             table_rows.append({
                 "Estado en Producción": status_badge,
                 "Algoritmo": m_name,
-                "ROC-AUC": f"{m_stats['roc_auc']:.3f}",
-                "F1-Score": f"{m_stats['f1_score']:.3f}",
-                "Precisión": f"{m_stats['precision']:.3f}",
-                "Recall (Sensibilidad)": f"{m_stats['recall']:.3f}",
-                "Exactitud": f"{m_stats['accuracy']:.3f}",
-                "Latencia Inferencia": f"{m_stats['latency_ms']} ms",
-                "Interpretabilidad": f"{m_stats['interpretability']}/100",
+                "ROC-AUC": f"{m_stats.get('roc_auc', 0.0):.2f}%",
+                "F1-Score": f"{m_stats.get('f1_score', 0.0):.2f}%",
+                "Precisión": f"{m_stats.get('precision', 0.0):.2f}%",
+                "Recall (Sensibilidad)": f"{m_stats.get('recall', 0.0):.2f}%",
+                "Exactitud": f"{m_stats.get('accuracy', 0.0):.2f}%",
+                "Latencia Inferencia": f"{m_stats.get('latency_ms_per_obs', m_stats.get('latency_ms', 0.001)):.4f} ms",
+                "Brier Score": f"{m_stats.get('brier_score', 0.05):.4f}",
             })
         st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
         render_explainability_card(
@@ -461,23 +467,25 @@ def render_ai_engine_view():
         render_section_header("Proyecciones de Transición por Cohortes Sociodemográficas", icon="👥", badge="Monte Carlo 10 Años")
 
         cohorts = compute_cohort_projections(policy_params, country_code)
-        df_c = pd.DataFrame(cohorts)
+        if not cohorts:
+            st.info("ℹ️ Sin microdatos longitudinales de panel en disco. Las transiciones de cohortes sociodemográficas requieren encuestas de panel de seguimiento repetido a los mismos individuos para garantizar la integridad científica.")
+        else:
+            df_c = pd.DataFrame(cohorts)
+            fig_cohort = go.Figure()
+            fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["base_prob"], name="Línea Base (Año 0)", marker_color="#64748b"))
+            fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["prob_1y"], name="Proyección Año 1", marker_color="#3b82f6"))
+            fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["prob_3y"], name="Proyección Año 3", marker_color="#00f0ff"))
+            fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["prob_5y"], name="Proyección Año 5", marker_color="#10b981"))
 
-        fig_cohort = go.Figure()
-        fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["base_prob"], name="Línea Base (Año 0)", marker_color="#64748b"))
-        fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["prob_1y"], name="Proyección Año 1", marker_color="#3b82f6"))
-        fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["prob_3y"], name="Proyección Año 3", marker_color="#00f0ff"))
-        fig_cohort.add_trace(go.Bar(x=df_c["cohort"], y=df_c["prob_5y"], name="Proyección Año 5", marker_color="#10b981"))
-
-        fig_cohort.update_layout(
-            barmode="group",
-            title=dict(text="Probabilidad Acumulada de Transición Formal por Cohorte (%)"),
-            yaxis=dict(title="Probabilidad de Formalización (%)"),
-            margin=dict(l=20, r=20, t=35, b=50),
-            height=300,
-        )
-        apply_chart_theme(fig_cohort)
-        st.plotly_chart(fig_cohort, use_container_width=True)
+            fig_cohort.update_layout(
+                barmode="group",
+                title=dict(text="Probabilidad Acumulada de Transición Formal por Cohorte (%)"),
+                yaxis=dict(title="Probabilidad de Formalización (%)"),
+                margin=dict(l=20, r=20, t=35, b=50),
+                height=300,
+            )
+            apply_chart_theme(fig_cohort)
+            st.plotly_chart(fig_cohort, use_container_width=True)
         render_explainability_card(
             title="Explicabilidad: Proyecciones Longitudinales por Cohorte Sociodemográfica",
             what_it_is="Simula la velocidad y probabilidad acumulada de transición del sector informal al formal para subgrupos de población vulnerables en un horizonte de 5 años.",

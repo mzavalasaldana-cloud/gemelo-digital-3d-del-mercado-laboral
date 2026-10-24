@@ -10,7 +10,6 @@ import {
   Legend
 } from 'recharts';
 import { 
-  EXTENDED_COHORTS, 
   ExtendedCohortData 
 } from '../../../data/aiEngineMockData';
 import { 
@@ -26,7 +25,8 @@ import {
   TrendingUp,
   Award,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import { playHoloClick, playCrystallizeSound } from '../../../utils/audioSynth';
 import { fetchCohortProjectionsApi } from '../../../services/api';
@@ -44,34 +44,23 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
   language = 'es',
   theme = 'dark',
 }) => {
-  const [cohortsList, setCohortsList] = useState<ExtendedCohortData[]>(EXTENDED_COHORTS);
-  const [selectedCohortId, setSelectedCohortId] = useState<string>(EXTENDED_COHORTS[0].id);
+  const [cohortsList, setCohortsList] = useState<ExtendedCohortData[]>([]);
+  const [selectedCohortId, setSelectedCohortId] = useState<string>('');
   const [hasRunCohort, setHasRunCohort] = useState<boolean>(false);
   const [isGeneratingCohort, setIsGeneratingCohort] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isLight = theme === 'light';
-  const currentCohort = cohortsList.find((c) => c.id === selectedCohortId) || cohortsList[0] || EXTENDED_COHORTS[0];
+  const currentCohort = cohortsList.find((c) => c.id === selectedCohortId) || cohortsList[0] || null;
 
-  const cohortLabel = currentCohort.label || (currentCohort as any).name || 'Cohorte Sociodemográfica';
-  const populationShare = currentCohort.populationShare ?? (currentCohort as any).sampleSize ?? 24.8;
-  const baseProb = currentCohort.probability ?? (currentCohort as any).baseInformality ?? 68.5;
-  const projectedProb = (currentCohort as any).projectedInformality ?? Math.max(12, Math.round(baseProb * 0.55));
-  const estimatedMonths = currentCohort.estimatedMonths ?? 14;
+  const cohortLabel = currentCohort ? (currentCohort.label || (currentCohort as any).name || 'Cohorte Sociodemográfica') : '';
+  const populationShare = currentCohort?.populationShare ?? (currentCohort as any)?.sampleSize ?? null;
+  const baseProb = currentCohort?.probability ?? (currentCohort as any)?.baseInformality ?? null;
+  const projectedProb = (currentCohort as any)?.projectedInformality ?? null;
+  const estimatedMonths = currentCohort?.estimatedMonths ?? null;
 
-  const trajectoryData = (currentCohort as any).timeProjection || [
-    { year: '2024 (T0)', formalRate: Math.round(100 - baseProb), informalRate: Math.round(baseProb) },
-    { year: '2026 (T+2)', formalRate: Math.round(100 - baseProb + (baseProb - projectedProb) * 0.35), informalRate: Math.round(baseProb - (baseProb - projectedProb) * 0.35) },
-    { year: '2028 (T+4)', formalRate: Math.round(100 - baseProb + (baseProb - projectedProb) * 0.65), informalRate: Math.round(baseProb - (baseProb - projectedProb) * 0.65) },
-    { year: '2031 (T+7)', formalRate: Math.round(100 - baseProb + (baseProb - projectedProb) * 0.85), informalRate: Math.round(baseProb - (baseProb - projectedProb) * 0.85) },
-    { year: '2034 (T+10)', formalRate: Math.round(100 - projectedProb), informalRate: Math.round(projectedProb) },
-  ];
-
-  const driversList = currentCohort.topDrivers || [
-    { feature: 'Capacitación en Habilidades y Formalización', importance: 88, shapValue: '+0.34' },
-    { feature: 'Subsidio a Mipymes y Reducción de Tasas', importance: 74, shapValue: '+0.27' },
-    { feature: 'Incentivos Fiscales de Ventanilla Única', importance: 62, shapValue: '+0.21' },
-  ];
+  const trajectoryData = (currentCohort as any)?.timeProjection || [];
+  const driversList = currentCohort?.topDrivers || [];
 
   const handleRunProjection = async () => {
     setIsGeneratingCohort(true);
@@ -79,8 +68,12 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
     playHoloClick(950);
     try {
       const res = await fetchCohortProjectionsApi(INITIAL_POLICY_STATE);
-      if (res && res.cohorts) {
+      if (res && res.cohorts && res.cohorts.length > 0) {
         setCohortsList(res.cohorts);
+        setSelectedCohortId(res.cohorts[0].id);
+      } else {
+        setCohortsList([]);
+        setSelectedCohortId('');
       }
       setHasRunCohort(true);
       playCrystallizeSound();
@@ -95,6 +88,8 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
     playHoloClick(700);
     setErrorMsg(null);
     setHasRunCohort(false);
+    setCohortsList([]);
+    setSelectedCohortId('');
   };
 
   return (
@@ -121,23 +116,24 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Selector de Cohorte */}
-          <div className="flex items-center gap-1.5 text-xs font-mono">
-            <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>{t('selectedCohort', language)}:</span>
-            <select
-              value={selectedCohortId}
-              onChange={(e) => setSelectedCohortId(e.target.value)}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-mono cursor-pointer outline-none ${
-                isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-slate-900 border-slate-700 text-cyan-300'
-              }`}
-            >
-              {cohortsList.map((c: any) => (
-                <option key={c.id} value={c.id}>
-                  {c.label || c.name} ({c.populationShare || c.sampleSize || 20}%)
-                </option>
-              ))}
-            </select>
-          </div>
+          {cohortsList.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs font-mono">
+              <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>{t('selectedCohort', language)}:</span>
+              <select
+                value={selectedCohortId}
+                onChange={(e) => setSelectedCohortId(e.target.value)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-mono cursor-pointer outline-none ${
+                  isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-slate-900 border-slate-700 text-cyan-300'
+                }`}
+              >
+                {cohortsList.map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label || c.name} ({c.populationShare || c.sampleSize || 20}%)
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <button
             onClick={handleRunProjection}
@@ -229,8 +225,39 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
         </div>
       )}
 
-      {/* 4. DESPLIEGUE DE RESULTADOS */}
-      {hasRunCohort && !isGeneratingCohort && (
+      {/* 4. SIN RESULTADOS CUANDO NO HAY COHORTES DE PANEL */}
+      {hasRunCohort && !isGeneratingCohort && cohortsList.length === 0 && (
+        <div className={`p-10 rounded-2xl border text-center flex flex-col items-center justify-center space-y-4 my-2 font-mono ${
+          isLight ? 'border-amber-300 bg-amber-50/50 text-amber-900' : 'border-amber-500/30 bg-amber-950/20 text-amber-200'
+        }`}>
+          <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500">
+            <Info className="w-6 h-6" />
+          </div>
+          <div className="space-y-2 max-w-lg">
+            <h4 className="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              Sin resultados de proyecciones longitudinales de cohortes
+            </h4>
+            <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed">
+              Las transiciones temporales de cohortes requieren microdatos de panel longitudinal (seguimiento en olas sucesivas a los mismos individuos en el tiempo). Las encuestas oficiales actualmente cargadas (India PLFS 2024 y Nigeria NLFS 2023 Q3) son de corte transversal (cross-sectional).
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-500">
+              Conforme a la regla de integridad de datos reales, no se generan transiciones simuladas ni datos sintéticos.
+            </p>
+          </div>
+          <button
+            onClick={handleResetCohort}
+            className={`px-4 py-1.5 rounded-lg border text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+              isLight ? 'bg-white border-amber-300 text-amber-900 hover:bg-amber-100' : 'bg-slate-900 border-amber-500/40 text-amber-300 hover:bg-slate-800'
+            }`}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Restablecer</span>
+          </button>
+        </div>
+      )}
+
+      {/* 5. DESPLIEGUE DE RESULTADOS CUANDO HAY DATOS */}
+      {hasRunCohort && !isGeneratingCohort && cohortsList.length > 0 && currentCohort && (
         <>
           {/* Header de Resultados */}
           <div className={`flex items-center justify-between pb-1 border-b ${
@@ -260,18 +287,22 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('baselineInformalityCohort', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{baseProb}%</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {baseProb !== null ? `${baseProb}%` : 'Sin datos'}
+                </span>
                 <span className="text-xs text-amber-500 font-mono">T=0 (2024)</span>
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                {populationShare}% {language === 'en' ? 'population share' : 'participación en población'}
+                {populationShare !== null ? `${populationShare}% ` : ''}{language === 'en' ? 'population share' : 'participación en población'}
               </p>
             </div>
 
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('projectedInformalityCohort', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl font-display font-bold text-emerald-500">{projectedProb}%</span>
+                <span className="text-2xl font-display font-bold text-emerald-500">
+                  {projectedProb !== null ? `${projectedProb}%` : 'Sin datos'}
+                </span>
                 <span className="text-xs text-emerald-500 font-mono">2034</span>
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -283,7 +314,7 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('expectedTransition', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className={`text-2xl font-display font-bold ${isLight ? 'text-sky-700' : 'text-cyan-300'}`}>
-                  -{(baseProb - projectedProb).toFixed(1)}%
+                  {baseProb !== null && projectedProb !== null ? `- ${(baseProb - projectedProb).toFixed(1)}%` : 'Sin datos'}
                 </span>
                 <span className="text-xs text-emerald-500 font-mono">Formalized</span>
               </div>
@@ -295,7 +326,9 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Tiempo de Transición</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{estimatedMonths} m</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {estimatedMonths !== null ? `${estimatedMonths} m` : 'Sin datos'}
+                </span>
                 <span className="text-xs text-indigo-500 font-mono">Estimado</span>
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>

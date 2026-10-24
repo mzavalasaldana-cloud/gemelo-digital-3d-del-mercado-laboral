@@ -45,3 +45,4 @@ scratch/
 .vscode/
 pyrefly.toml
 pyrightconfig.json
+catboost_info/

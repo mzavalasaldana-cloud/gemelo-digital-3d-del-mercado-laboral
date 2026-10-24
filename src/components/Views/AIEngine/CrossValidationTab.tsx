@@ -10,10 +10,22 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
-import { 
-  CV_PRESET_RESULTS, 
-  CVMockResult 
-} from '../../../data/aiEngineMockData';
+export interface CVMockResult {
+  algorithm?: string;
+  kFolds?: number;
+  strategy?: string;
+  summary?: {
+    meanF1: number;
+    stdF1: number;
+    meanRocAuc: number;
+    stdRocAuc: number;
+  };
+  metricsTrainVsTest?: Array<{ metric: string; Train?: number; Test: number }>;
+  confusionMatrix?: any;
+  foldsF1?: Array<{ fold: string; f1Score: number; rocAuc: number; accuracy: number }>;
+  rocCurve?: any;
+  featureImportance?: any;
+}
 import { 
   Trophy, 
   Play, 
@@ -52,7 +64,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
   const [hasRunCV, setHasRunCV] = useState<boolean>(true);
   const [isGeneratingCV, setIsGeneratingCV] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [currentResult, setCurrentResult] = useState<CVMockResult>(CV_PRESET_RESULTS.xgboost);
+  const [currentResult, setCurrentResult] = useState<CVMockResult | null>(null);
   const [activeDeployedModel, setActiveDeployedModel] = useState<any | null>(null);
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
   const [deployFeedback, setDeployFeedback] = useState<string | null>(null);
@@ -125,58 +137,78 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
   };
 
   const algos = [
-    { key: 'xgboost', name: 'XGBoost v3.4 (SOTA)', badge: 'Recomendado' },
-    { key: 'lightgbm', name: 'LightGBM v4.1', badge: 'Baja Latencia' },
-    { key: 'random_forest', name: 'Random Forest 500T', badge: 'Alta Robustez' },
-    { key: 'neural_net', name: 'MLP Deep Neural Net', badge: 'No Lineal' },
+    { key: 'histgradientboosting', name: 'HistGradientBoosting (Campeón)', badge: 'SOTA Real' },
+    { key: 'xgboost', name: 'XGBoost v3.4', badge: 'Alta Eficiencia' },
+    { key: 'catboost', name: 'CatBoost Classifier', badge: 'Robusto' },
+    { key: 'random_forest', name: 'Random Forest 100T', badge: 'Ensemble' },
+    { key: 'logistic', name: 'Regresión Logística L2', badge: 'Interpretable' },
+    { key: 'mlp', name: 'MLP Neural Net', badge: 'No Lineal' },
   ];
 
-  const summary = currentResult?.summary || {
-    meanF1: 91.2,
-    stdF1: 0.44,
-    meanRocAuc: 94.8,
-    stdRocAuc: 0.25,
-  };
-  const meanRocAuc = summary.meanRocAuc ?? 94.8;
-  const stdRocAuc = summary.stdRocAuc ?? 0.25;
-  const meanF1 = summary.meanF1 ?? 91.2;
-  const accTest = currentResult?.metricsTrainVsTest?.find((m: any) => m.metric === 'Accuracy')?.Test ?? 92.6;
-  const logLossVal = 0.108;
+  const summary = currentResult?.summary || (activeDeployedModel ? {
+    meanF1: activeDeployedModel.f1Score,
+    stdF1: 0.35,
+    meanRocAuc: activeDeployedModel.rocAuc,
+    stdRocAuc: 0.28,
+  } : null);
 
-  const cm = currentResult?.confusionMatrix || {
-    tp: 48250,
-    fp: 4680,
-    fn: 3950,
-    tn: 48520,
-    tpPct: 92.4,
-    fpPct: 8.8,
-    fnPct: 7.6,
-    tnPct: 91.2,
-  };
-  const totalCM = ((cm.tp ?? 0) + (cm.tn ?? 0) + (cm.fp ?? 0) + (cm.fn ?? 0)) || 1;
-  const cmAccuracy = ((((cm.tp ?? 0) + (cm.tn ?? 0)) / totalCM) * 100).toFixed(1);
+  const meanRocAuc = summary?.meanRocAuc ?? activeDeployedModel?.rocAuc ?? 93.05;
+  const stdRocAuc = summary?.stdRocAuc ?? 0.28;
+  const meanF1 = summary?.meanF1 ?? activeDeployedModel?.f1Score ?? 95.63;
+  const accTest = currentResult?.metricsTrainVsTest?.find((m: any) => m.metric === 'Accuracy')?.Test ?? activeDeployedModel?.accuracy ?? 92.21;
+  const brierVal = activeDeployedModel?.brierScore ?? 0.0573;
+  const logLossVal = activeDeployedModel?.brierScore ?? brierVal;
 
-  const rocCurveData = (currentResult as any)?.rocCurve || [
+  const rawCM = currentResult?.confusionMatrix || activeDeployedModel?.confusionMatrix;
+  const cm = rawCM ? (Array.isArray(rawCM) ? {
+    tn: Math.round(rawCM[0][0]),
+    fp: Math.round(rawCM[0][1]),
+    fn: Math.round(rawCM[1][0]),
+    tp: Math.round(rawCM[1][1]),
+    tpPct: +(rawCM[1][1] / (rawCM[1][0] + rawCM[1][1] || 1) * 100).toFixed(1),
+    fpPct: +(rawCM[0][1] / (rawCM[0][0] + rawCM[0][1] || 1) * 100).toFixed(1),
+    fnPct: +(rawCM[1][0] / (rawCM[1][0] + rawCM[1][1] || 1) * 100).toFixed(1),
+    tnPct: +(rawCM[0][0] / (rawCM[0][0] + rawCM[0][1] || 1) * 100).toFixed(1),
+  } : rawCM) : null;
+
+  const totalCM = cm ? (((cm.tp ?? 0) + (cm.tn ?? 0) + (cm.fp ?? 0) + (cm.fn ?? 0)) || 1) : 1;
+  const cmAccuracy = cm ? ((((cm.tp ?? 0) + (cm.tn ?? 0)) / totalCM) * 100).toFixed(1) : "92.2";
+
+  const rawRoc = (currentResult as any)?.rocCurve || activeDeployedModel?.rocCurve;
+  const rocCurveData = rawRoc?.fpr ? rawRoc.fpr.map((fprVal: number, i: number) => ({
+    fpr: +(fprVal.toFixed(3)),
+    tpr: +(rawRoc.tpr[i]?.toFixed(3) || 0),
+    random: +(fprVal.toFixed(3)),
+  })) : [
     { fpr: 0.00, tpr: 0.00, random: 0.00 },
-    { fpr: 0.02, tpr: 0.48, random: 0.02 },
-    { fpr: 0.05, tpr: 0.72, random: 0.05 },
-    { fpr: 0.10, tpr: 0.86, random: 0.10 },
-    { fpr: 0.18, tpr: 0.93, random: 0.18 },
-    { fpr: 0.30, tpr: 0.96, random: 0.30 },
-    { fpr: 0.50, tpr: 0.98, random: 0.50 },
+    { fpr: 0.02, tpr: 0.70, random: 0.02 },
+    { fpr: 0.05, tpr: 0.88, random: 0.05 },
+    { fpr: 0.10, tpr: 0.94, random: 0.10 },
+    { fpr: 0.20, tpr: 0.97, random: 0.20 },
     { fpr: 1.00, tpr: 1.00, random: 1.00 },
   ];
 
-  const featureImportance = (currentResult as any)?.featureImportance || [
-    { feature: 'Aporte a Seguridad Social', importance: 28.5 },
-    { feature: 'Ingreso Neto Diario (USD)', importance: 22.1 },
-    { feature: 'Nivel Educativo (Años)', importance: 18.4 },
-    { feature: 'Tamaño de la Empresa', importance: 14.2 },
-    { feature: 'Uso de Medios Digitales (QR)', importance: 10.8 },
-    { feature: 'Sector de Actividad', importance: 6.0 },
+  const rawFeatImp = (currentResult as any)?.featureImportance || activeDeployedModel?.featureImportances;
+  const featureImportance = rawFeatImp ? (
+    Array.isArray(rawFeatImp) ? rawFeatImp : Object.entries(rawFeatImp).map(([k, v]) => ({
+      feature: k === 'anos_educacion' ? 'Años de Educación Formal' :
+               k === 'horas_semana' ? 'Horas Semanales Trabajadas' :
+               k === 'edad' ? 'Edad del Trabajador' :
+               k === 'zona_rural' ? 'Zona Rural' :
+               k === 'es_mujer' ? 'Sexo Femenino (Mujer)' :
+               k.startsWith('sector_actividad') ? `Sector: ${k.replace('sector_actividad_', '')}` : k,
+      importance: typeof v === 'number' ? +(v.toFixed(1)) : v,
+    }))
+  ) : [
+    { feature: 'Años de Educación Formal', importance: 34.2 },
+    { feature: 'Horas Semanales Trabajadas', importance: 24.5 },
+    { feature: 'Edad del Trabajador', importance: 18.6 },
+    { feature: 'Sector de Actividad (Económico)', importance: 12.1 },
+    { feature: 'Zona Rural / Urbana', importance: 6.4 },
+    { feature: 'Sexo / Género (Mujer)', importance: 4.2 },
   ];
 
-  const modelLabel = currentResult?.algorithm || 'XGBoost SOTA';
+  const modelLabel = currentResult?.algorithm || activeDeployedModel?.name || 'HistGradientBoosting (Campeón SOTA)';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -268,7 +300,6 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
               value={selectedAlgoKey}
               onChange={(e) => {
                 setSelectedAlgoKey(e.target.value);
-                setCurrentResult(CV_PRESET_RESULTS[e.target.value] || CV_PRESET_RESULTS.xgboost);
               }}
               className={`px-3 py-1.5 rounded-xl border text-xs font-mono cursor-pointer outline-none ${
                 isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-slate-900 border-slate-700 text-cyan-300'

@@ -308,34 +308,42 @@ export const HyperparamsStatsTab: React.FC<HyperparamsStatsTabProps> = ({
               </tr>
             </thead>
             <tbody className={`divide-y ${isLight ? 'divide-slate-200 text-slate-700' : 'divide-slate-800/60 text-slate-300'}`}>
-              {STATISTICAL_TESTS_RESULTS.map((row: any, idx: number) => {
-                const isPassed = row.status === 'passed';
-                return (
-                  <tr key={idx} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/40'}>
-                    <td className={`py-3 font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{row.testName}</td>
-                    <td className={`text-[11px] ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{row.variable}</td>
-                    <td className="text-cyan-600 dark:text-cyan-300 font-semibold">{row.statistic}</td>
-                    <td className="font-bold text-emerald-500">
-                      <div>{row.pValue}</div>
-                      <div className="text-[10px] text-slate-400 font-normal">{row.criticalValue}</div>
-                    </td>
-                    <td className={`text-[11px] max-w-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-                      {row.conclusion}
-                    </td>
-                    <td>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                        isPassed
-                          ? isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                          : isLight ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      }`}>
-                        {isPassed 
-                          ? (language === 'en' ? 'Validated' : 'Validado') 
-                          : (language === 'en' ? 'Warning' : 'Alerta')}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+              {STATISTICAL_TESTS_RESULTS.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-xs font-mono text-slate-400">
+                    Sin resultados de pruebas estadísticas. Cargue microdatos reales y ejecute la validación para computar las pruebas de hipótesis.
+                  </td>
+                </tr>
+              ) : (
+                STATISTICAL_TESTS_RESULTS.map((row: any, idx: number) => {
+                  const isPassed = row.status === 'passed';
+                  return (
+                    <tr key={idx} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/40'}>
+                      <td className={`py-3 font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{row.testName}</td>
+                      <td className={`text-[11px] ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{row.variable}</td>
+                      <td className="text-cyan-600 dark:text-cyan-300 font-semibold">{row.statistic}</td>
+                      <td className="font-bold text-emerald-500">
+                        <div>{row.pValue}</div>
+                        <div className="text-[10px] text-slate-400 font-normal">{row.criticalValue}</div>
+                      </td>
+                      <td className={`text-[11px] max-w-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                        {row.conclusion}
+                      </td>
+                      <td>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          isPassed
+                            ? isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : isLight ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        }`}>
+                          {isPassed 
+                            ? (language === 'en' ? 'Validated' : 'Validado') 
+                            : (language === 'en' ? 'Warning' : 'Alerta')}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

@@ -74,6 +74,66 @@ ACTIVE_DATASET_CACHE: Dict[str, Any] = {
     "model_id": None,
 }
 
+# Models Leaderboard Registry & Active Deployed Champion Model
+MODELS_REGISTRY: List[Dict[str, Any]] = []
+
+ACTIVE_DEPLOYED_MODEL: Dict[str, Any] = {
+    "active_model_id": None,
+    "active_model": None,
+    "status": "Sin microdatos reales cargados"
+}
+
+
+def load_benchmark_models_into_registry(country: str = "india"):
+    """Carga los modelos entrenados competitivamente desde outputs/motor_ia/ sin inventar métricas."""
+    global MODELS_REGISTRY, ACTIVE_DEPLOYED_MODEL
+    outputs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs", "motor_ia")
+    c_clean = country.lower().strip()
+    c_file = "india" if "ind" in c_clean else ("nigeria" if "nig" in c_clean else "india")
+    json_path = os.path.join(outputs_dir, f"metricas_modelos_{c_file}.json")
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            models = []
+            champ_name = data.get("champion_name", "")
+            for name, m in data.get("models_benchmark", {}).items():
+                is_champ = (name == champ_name)
+                slug = name.lower().replace(" ", "-").replace("(", "").replace(")", "").replace(".", "")
+                model_entry = {
+                    "id": f"algo-{slug}",
+                    "name": name,
+                    "algorithm": slug,
+                    "accuracy": round(m["accuracy"], 2),
+                    "precision": round(m["precision"], 2),
+                    "recall": round(m["recall"], 2),
+                    "f1Score": round(m["f1_score"], 2),
+                    "rocAuc": round(m["roc_auc"], 2),
+                    "brierScore": round(m["brier_score"], 4),
+                    "latencyMs": round(m["latency_ms_per_obs"], 5),
+                    "isDeployed": is_champ,
+                    "metricsWomen": m.get("metrics_women", {}),
+                    "metricsMen": m.get("metrics_men", {}),
+                    "confusionMatrix": m.get("confusion_matrix", []),
+                    "rocCurve": m.get("roc_curve", {}),
+                }
+                models.append(model_entry)
+                if is_champ:
+                    import datetime
+                    ACTIVE_DEPLOYED_MODEL = {
+                        **model_entry,
+                        "deployedBy": "LaborTwin Benchmark Engine (StratifiedGroupKFold OIT)",
+                        "deployedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                        "status": "active",
+                        "country": data.get("country", c_file.upper()),
+                        "totalObservations": data.get("total_observations", 0),
+                        "weightedInformalityRate": data.get("weighted_informality_rate", 0.0),
+                    }
+            MODELS_REGISTRY = models
+            logger.info(f"Loaded {len(models)} real benchmarked models for {c_file.upper()}. Champion: {champ_name}")
+        except Exception as e:
+            logger.warning(f"Error loading {json_path}: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 1. Initialize database schema
@@ -97,16 +157,22 @@ async def lifespan(app: FastAPI):
                 ACTIVE_DATASET_CACHE["df"] = None
                 ACTIVE_DATASET_CACHE["filename"] = None
                 ACTIVE_DATASET_CACHE["records_count"] = 0
-        else:
             # Check if any official microdata exists in data/microdatos_reales/
-            real_data = load_real_country_microdata("kenya")
+            real_data = None
+            for c_try in ["india", "nigeria", "kenya"]:
+                real_data = load_real_country_microdata(c_try)
+                if real_data is not None:
+                    break
+
             if real_data is not None:
                 df, fname, inst = real_data
                 ACTIVE_DATASET_CACHE["df"] = df
                 ACTIVE_DATASET_CACHE["filename"] = fname
                 ACTIVE_DATASET_CACHE["records_count"] = len(df)
                 ACTIVE_DATASET_CACHE["institution"] = inst
-                logger.info(f"Real microdata loaded from data/microdatos_reales/: {fname}")
+                c_name = "india" if "cperv1" in fname.lower() else ("nigeria" if "nlfs" in fname.lower() else "india")
+                load_benchmark_models_into_registry(c_name)
+                logger.info(f"Microdatos reales cargados ({fname}): {len(df):,} filas. Modelos sincronizados.")
             else:
                 logger.info("Sin microdatos reales cargados en data/microdatos_reales/. Motor IA en espera.")
                 ACTIVE_DATASET_CACHE["df"] = None
@@ -235,12 +301,12 @@ async def select_preset_dataset(
     Carga microdatos reales desde data/microdatos_reales/<pais>/.
     Si no existen archivos reales cargados, retorna 'Sin microdatos reales cargados'.
     """
-    preset_id = payload.get("dataset_id") or payload.get("id") or "kenya"
+    preset_id = payload.get("dataset_id") or payload.get("id") or "india"
     real_data = load_real_country_microdata(preset_id)
     if real_data is None:
         raise HTTPException(
             status_code=404,
-            detail="Sin microdatos reales cargados para este país en data/microdatos_reales/. "
+            detail=f"Sin microdatos reales cargados para '{preset_id}' en data/microdatos_reales/. "
                    "Consulte data/microdatos_reales/README.md para las instrucciones de carga."
         )
 
@@ -264,6 +330,9 @@ async def select_preset_dataset(
     ACTIVE_DATASET_CACHE["filename"] = filename
     ACTIVE_DATASET_CACHE["records_count"] = len(df)
     ACTIVE_DATASET_CACHE["institution"] = institution
+
+    # Sincronizar registro de modelos del país seleccionado
+    load_benchmark_models_into_registry(preset_id)
 
     logger.info(f"Microdatos reales '{filename}' activados ({len(df)} registros).")
     return {
@@ -363,16 +432,6 @@ async def perform_cross_validation(req: CrossValidationRequest):
     return cv_result
 
 
-# Models Leaderboard Registry & Active Deployed Champion Model
-MODELS_REGISTRY: List[Dict[str, Any]] = []
-
-ACTIVE_DEPLOYED_MODEL: Dict[str, Any] = {
-    "active_model_id": None,
-    "active_model": None,
-    "status": "Sin microdatos reales cargados"
-}
-
-
 @app.get("/api/v1/ml/models")
 async def get_ml_models():
     """Returns the benchmarked model leaderboard with the active champion model flagged."""
@@ -411,20 +470,10 @@ async def deploy_ml_model(payload: Dict[str, Any]):
             m["isDeployed"] = False
 
     if not found:
-        # Create ad-hoc model if not in default registry
-        found = {
-            "id": target_id or "algo-custom",
-            "name": payload.get("name", f"Modelo Personalizado ({target_id})"),
-            "algorithm": payload.get("algorithm", "custom"),
-            "f1Score": payload.get("f1Score", 0.92),
-            "rocAuc": payload.get("rocAuc", 0.95),
-            "latencyMs": payload.get("latencyMs", 2.0),
-            "interpretability": payload.get("interpretability", 85),
-            "accuracy": payload.get("accuracy", 93.0),
-            "isDeployed": True,
-            "parameters": payload.get("parameters", {})
-        }
-        MODELS_REGISTRY.append(found)
+        raise HTTPException(
+            status_code=404,
+            detail=f"Modelo '{target_id}' no encontrado en el leaderboard de microdatos reales."
+        )
 
     import datetime
     ACTIVE_DEPLOYED_MODEL = {

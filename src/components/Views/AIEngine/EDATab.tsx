@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -9,14 +9,6 @@ import {
   CartesianGrid, 
   Legend
 } from 'recharts';
-import { 
-  EDA_KPIS, 
-  EDA_HISTOGRAMS, 
-  CORRELATION_VARIABLES, 
-  CORRELATION_MATRIX, 
-  BOXPLOT_METRICS, 
-  HIGH_CORRELATIONS_TABLE 
-} from '../../../data/aiEngineMockData';
 import { 
   Play, 
   CheckCircle2, 
@@ -51,11 +43,28 @@ export const EDATab: React.FC<EDATabProps> = ({
   const [hasRunEDA, setHasRunEDA] = useState<boolean>(false);
   const [isGeneratingEDA, setIsGeneratingEDA] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedVarKey, setSelectedVarKey] = useState<string>('salary');
+  const [selectedVarKey, setSelectedVarKey] = useState<string>('hours');
   const [hoveredCorr, setHoveredCorr] = useState<{ a: string; b: string; val: number } | null>(null);
   const [edaResult, setEdaResult] = useState<EDAApiResponse | null>(null);
 
   const isLight = theme === 'light';
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRealEDA = async () => {
+      try {
+        const data = await fetchEDAAnalytics();
+        if (isMounted && data && (data as any).has_data !== false) {
+          setEdaResult(data);
+          setHasRunEDA(true);
+        }
+      } catch (err) {
+        // Backend offline o sin dataset
+      }
+    };
+    fetchRealEDA();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleRunEDA = async () => {
     setIsGeneratingEDA(true);
@@ -80,24 +89,24 @@ export const EDATab: React.FC<EDATabProps> = ({
     setHasRunEDA(false);
   };
 
-  const rawKpis: any = edaResult?.kpis || EDA_KPIS;
+  const rawKpis: any = edaResult?.kpis;
   const currentKPIs = {
-    completeness: rawKpis?.completeness ?? rawKpis?.dataQuality ?? 98.4,
-    missingRate: rawKpis?.missingRate ?? rawKpis?.nullPercentage ?? 0.8,
-    totalRows: rawKpis?.totalRows ?? rawKpis?.totalRecords ?? 48500,
-    totalCols: rawKpis?.totalCols ?? rawKpis?.totalVariables ?? 14,
-    imputedRows: rawKpis?.imputedRows ?? Math.round((rawKpis?.totalRecords ?? rawKpis?.totalRows ?? 48500) * 0.08),
-    numericCols: rawKpis?.numericCols ?? 9,
-    categoricalCols: rawKpis?.categoricalCols ?? 5,
+    completeness: rawKpis?.completeness ?? rawKpis?.dataQuality ?? 100.0,
+    missingRate: rawKpis?.missingRate ?? rawKpis?.nullPercentage ?? 0.0,
+    totalRows: rawKpis?.totalRows ?? rawKpis?.totalRecords ?? 0,
+    totalCols: rawKpis?.totalCols ?? rawKpis?.totalVariables ?? 0,
+    imputedRows: rawKpis?.imputedRows ?? 0,
+    numericCols: rawKpis?.numericCols ?? 0,
+    categoricalCols: rawKpis?.categoricalCols ?? 0,
   };
-  const currentHistograms = edaResult?.histograms || EDA_HISTOGRAMS;
-  const currentCorrVarsRaw = edaResult?.correlationVariables || CORRELATION_VARIABLES;
+  const currentHistograms = edaResult?.histograms || {};
+  const currentCorrVarsRaw = edaResult?.correlationVariables || [];
   const normalizedCorrVars = currentCorrVarsRaw.map((v: any, i: number) => 
     typeof v === 'string' ? { key: `var-${i}`, label: v } : { key: v.key || `var-${i}`, label: v.label || v.name || `Var ${i}` }
   );
-  const currentCorrMatrix = edaResult?.correlationMatrix || CORRELATION_MATRIX;
-  const currentHighCorrs = edaResult?.highCorrelations || HIGH_CORRELATIONS_TABLE;
-  const currentBoxplotsRaw = edaResult?.boxplots || BOXPLOT_METRICS;
+  const currentCorrMatrix = edaResult?.correlationMatrix || [];
+  const currentHighCorrs = edaResult?.highCorrelations || [];
+  const currentBoxplotsRaw = edaResult?.boxplots || [];
   const normalizedBoxplots = currentBoxplotsRaw.map((bp: any) => ({
     variable: bp.variable || bp.group || 'Variable',
     unit: bp.unit || 'USD/Horas',

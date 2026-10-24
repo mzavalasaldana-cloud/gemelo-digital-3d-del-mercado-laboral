@@ -10,7 +10,8 @@ import {
   StructuralFirm, 
   ScenarioPreset,
   PolicyParameters,
-  AppTheme
+  AppTheme,
+  StructuralMetrics
 } from '../../types';
 import { COUNTRY_PROFILES } from '../../data/mockData';
 import { playHoloClick } from '../../utils/audioSynth';

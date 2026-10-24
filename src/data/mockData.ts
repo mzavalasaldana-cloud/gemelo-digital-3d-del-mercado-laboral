@@ -6,7 +6,8 @@ import {
   SimulationRun, 
   DatasetEntry, 
   UserAccount,
-  PolicyParameters
+  PolicyParameters,
+  ScenarioPreset
 } from '../types';
 import trayectoriasData from './trayectorias_mensuales.json';
 import ilostatCalibracionFuentes from './ilostat_calibracion_fuentes.json';
@@ -107,8 +108,6 @@ export const INITIAL_POLICY_STATE: PolicyParameters = {
   socialProtectionTax: 12, // 12% tax/contribution
   smartInspectionCoverage: 20, // 20% inspection
 };
-
-import trayectoriasData from './trayectorias_mensuales.json';
 
 // GENERADOR DINÁMICO DE EMPRESAS SEGÚN LA PROPORCIÓN REAL DE FIRMAS FORMALES DE ITDTModel
 export function getModelFirms(
