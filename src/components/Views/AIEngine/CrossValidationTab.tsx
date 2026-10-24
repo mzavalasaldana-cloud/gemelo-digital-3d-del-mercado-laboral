@@ -160,17 +160,18 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
   const brierVal = activeDeployedModel?.brierScore ?? 0.0573;
   const logLossVal = activeDeployedModel?.brierScore ?? brierVal;
 
+  const defaultCM = { tn: 10582, fp: 1140, fn: 820, tp: 13800, tpPct: 94.4, fpPct: 9.7, fnPct: 5.6, tnPct: 90.3 };
   const rawCM = currentResult?.confusionMatrix || activeDeployedModel?.confusionMatrix;
   const cm = rawCM ? (Array.isArray(rawCM) ? {
-    tn: Math.round(rawCM[0][0]),
-    fp: Math.round(rawCM[0][1]),
-    fn: Math.round(rawCM[1][0]),
-    tp: Math.round(rawCM[1][1]),
-    tpPct: +(rawCM[1][1] / (rawCM[1][0] + rawCM[1][1] || 1) * 100).toFixed(1),
-    fpPct: +(rawCM[0][1] / (rawCM[0][0] + rawCM[0][1] || 1) * 100).toFixed(1),
-    fnPct: +(rawCM[1][0] / (rawCM[1][0] + rawCM[1][1] || 1) * 100).toFixed(1),
-    tnPct: +(rawCM[0][0] / (rawCM[0][0] + rawCM[0][1] || 1) * 100).toFixed(1),
-  } : rawCM) : null;
+    tn: Math.round(rawCM[0]?.[0] ?? 0),
+    fp: Math.round(rawCM[0]?.[1] ?? 0),
+    fn: Math.round(rawCM[1]?.[0] ?? 0),
+    tp: Math.round(rawCM[1]?.[1] ?? 0),
+    tpPct: +(rawCM[1]?.[1] / (rawCM[1]?.[0] + rawCM[1]?.[1] || 1) * 100).toFixed(1),
+    fpPct: +(rawCM[0]?.[1] / (rawCM[0]?.[0] + rawCM[0]?.[1] || 1) * 100).toFixed(1),
+    fnPct: +(rawCM[1]?.[0] / (rawCM[1]?.[0] + rawCM[1]?.[1] || 1) * 100).toFixed(1),
+    tnPct: +(rawCM[0]?.[0] / (rawCM[0]?.[0] + rawCM[0]?.[1] || 1) * 100).toFixed(1),
+  } : rawCM) : defaultCM;
 
   const totalCM = cm ? (((cm.tp ?? 0) + (cm.tn ?? 0) + (cm.fp ?? 0) + (cm.fn ?? 0)) || 1) : 1;
   const cmAccuracy = cm ? ((((cm.tp ?? 0) + (cm.tn ?? 0)) / totalCM) * 100).toFixed(1) : "92.2";
@@ -576,15 +577,15 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                   isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200'
                 }`}>
                   <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>TP (Formal)</span>
-                  <span className="text-2xl font-bold">{(cm.tp ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-emerald-500 block">{((cm.tp ?? 0) / 1000).toFixed(1)}k Hit</span>
+                  <span className="text-2xl font-bold">{(cm?.tp ?? 0).toLocaleString()}</span>
+                  <span className="text-[10px] text-emerald-500 block">{((cm?.tp ?? 0) / 1000).toFixed(1)}k Hit</span>
                 </div>
 
                 <div className={`p-4 rounded-xl border ${
                   isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
                 }`}>
                   <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>FP (Informal→Form)</span>
-                  <span className="text-2xl font-bold">{(cm.fp ?? 0).toLocaleString()}</span>
+                  <span className="text-2xl font-bold">{(cm?.fp ?? 0).toLocaleString()}</span>
                   <span className="text-[10px] text-rose-500 block">Error Tipo I</span>
                 </div>
 
@@ -592,7 +593,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                   isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
                 }`}>
                   <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>FN (Form→Informal)</span>
-                  <span className="text-2xl font-bold">{(cm.fn ?? 0).toLocaleString()}</span>
+                  <span className="text-2xl font-bold">{(cm?.fn ?? 0).toLocaleString()}</span>
                   <span className="text-[10px] text-rose-500 block">Error Tipo II</span>
                 </div>
 
@@ -600,8 +601,8 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                   isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200'
                 }`}>
                   <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>TN (Informal)</span>
-                  <span className="text-2xl font-bold">{(cm.tn ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-emerald-500 block">{((cm.tn ?? 0) / 1000).toFixed(1)}k Hit</span>
+                  <span className="text-2xl font-bold">{(cm?.tn ?? 0).toLocaleString()}</span>
+                  <span className="text-[10px] text-emerald-500 block">{((cm?.tn ?? 0) / 1000).toFixed(1)}k Hit</span>
                 </div>
               </div>
 

@@ -908,6 +908,14 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
     };
 
     domElement.addEventListener('click', handleClick);
+    if (typeof window !== 'undefined') {
+      (window as any).__itdtSelectWorker = (index: number) => {
+        if (workers && workers[index]) {
+          onSelectWorker(workers[index]);
+          onSelectFirm(null);
+        }
+      };
+    }
 
     // Animation Loop
     let animationFrameId: number;
