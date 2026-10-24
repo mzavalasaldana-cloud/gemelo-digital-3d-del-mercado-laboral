@@ -171,7 +171,7 @@ def render_digital_twin_3d_view():
                         opacity=0.88,
                     ),
                     text=sub.apply(
-                        lambda r: f"<b>Agente:</b> {r['code']}<br><b>Sector:</b> {r['display_sector']}<br><b>Capital Humano:</b> {r['human_capital']}/100<br><b>Ingreso Relativo:</b> {r.get('human_capital', 70) / 10.0:.1f} u.m.<br><b>Prob. Formalización:</b> {r['formalization_prob']}%",
+                        lambda r: f"<b>Agente:</b> {r.get('code', '')}<br><b>Sector:</b> {r.get('display_sector', r.get('sector', '').title())}<br><b>Capital Humano:</b> {r.get('human_capital', 50)}/100<br><b>Ingreso Relativo:</b> {r.get('human_capital', 70) / 10.0:.1f} u.m.<br><b>Prob. Formalización:</b> {r.get('formalization_prob', int(r.get('current_progress', 0.0) * 100))}%",
                         axis=1
                     ),
                     hoverinfo="text",
@@ -282,18 +282,18 @@ def render_digital_twin_3d_view():
         st.markdown(f"""
         <div class="holo-card" style="border-left: 4px solid {status_color}; font-size: 0.85rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <b style="color: #f8fafc; font-size: 1.05rem;">{selected_worker['code']}</b>
-                <span class="glow-badge badge-cyan">{selected_worker['display_sector']}</span>
+                <b style="color: #f8fafc; font-size: 1.05rem;">{selected_worker.get('code', '')}</b>
+                <span class="glow-badge badge-cyan">{selected_worker.get('display_sector', selected_worker.get('sector', '').title())}</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; color: #cbd5e1;">
-                <div><b>Edad:</b> {selected_worker['age']} años</div>
-                <div><b>Género:</b> {selected_worker['gender']}</div>
-                <div><b>Educación:</b> {selected_worker['education']}</div>
-                <div><b>Subsector:</b> {selected_worker['subsector']}</div>
-                <div><b>Capital Humano:</b> <span style="color:#00f0ff;">{selected_worker['human_capital']}/100</span></div>
+                <div><b>Edad:</b> {selected_worker.get('age', 30)} años</div>
+                <div><b>Género:</b> {selected_worker.get('gender', 'N/D')}</div>
+                <div><b>Educación:</b> {selected_worker.get('education', 'Media')}</div>
+                <div><b>Subsector:</b> {selected_worker.get('subsector', 'Manufactura')}</div>
+                <div><b>Capital Humano:</b> <span style="color:#00f0ff;">{selected_worker.get('human_capital', 50)}/100</span></div>
                 <div><b>Ingreso Relativo:</b> <span style="color:#10b981;">{selected_worker.get('human_capital', 70) / 10.0:.1f} u.m.</span></div>
-                <div><b>Tolerancia Riesgo:</b> {selected_worker['risk_tolerance']}%</div>
-                <div><b>Prob. Formalización:</b> <span style="color:#f59e0b;">{selected_worker['formalization_prob']}%</span></div>
+                <div><b>Tolerancia Riesgo:</b> {selected_worker.get('risk_tolerance', 50)}%</div>
+                <div><b>Prob. Formalización:</b> <span style="color:#f59e0b;">{selected_worker.get('formalization_prob', int(selected_worker.get('current_progress', 0.0) * 100))}%</span></div>
             </div>
             <div style="margin-top: 8px; font-size: 0.75rem; color: #94a3b8;">
                 <b>Progreso de Transición:</b> {int(selected_worker.get('current_progress', 0)*100)}% (Mes previsto: {selected_worker.get('formalization_month', 'N/A')})
