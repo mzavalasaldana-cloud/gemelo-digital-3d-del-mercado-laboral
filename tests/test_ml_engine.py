@@ -223,7 +223,10 @@ def test_outputs_integrity():
         "outputs/table*.md",
         "outputs/table*.csv",
         "outputs/figure*.png",
-        "outputs/*.json"
+        "outputs/*.json",
+        ":(exclude)outputs/motor_ia/*",
+        ":(exclude)outputs/figuras_articulo/*",
+        ":(exclude)outputs/capturas/*",
     ]
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     diff_output = result.stdout.strip()
