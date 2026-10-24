@@ -31,7 +31,6 @@ export interface WorkerAgent {
   orbitSpeed: number;
   orbitAngle: number;
   subSector: string;
-  formalizationProb: number;
   inTransition?: boolean;
   formalizationMonth: number;
   currentProgress?: number;

@@ -139,7 +139,7 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
               </div>
             </div>
 
-            {/* Alfabetización Digital & Probabilidad de Formalización */}
+            {/* Alfabetización Digital & Estado Real del Trabajador en el Mes */}
             <div className="p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-slate-400 block">Alfabetización Digital (K_dig):</span>
@@ -148,9 +148,15 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-cyan-400 block">Transición ITDT:</span>
-                <span className="text-sm font-bold text-cyan-300">
-                  {worker.formalizationProb}%
+                <span className="text-[10px] text-slate-400 block">Estado en el Mes:</span>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded border inline-block ${
+                    worker.sector === 'formal'
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  }`}
+                >
+                  {worker.sector === 'formal' ? 'Formal' : 'Informal'}
                 </span>
               </div>
             </div>
