@@ -1,0 +1,69 @@
+{
+  "web": {
+    "views_tested": [
+      "01_dashboard",
+      "02_gemelo_digital_3d",
+      "03_motor_ia_eda",
+      "04_motor_ia_cv",
+      "05_motor_ia_modelos",
+      "06_motor_ia_cohortes",
+      "07_motor_ia_telemetria",
+      "08_datasets_reports",
+      "09_matriz_oit",
+      "10_asistente_ia",
+      "11_roles_crud",
+      "12_admin_view",
+      "13_idioma_en",
+      "14_modo_claro",
+      "15_modo_oscuro"
+    ],
+    "console_errors": {
+      "01_dashboard": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "04_motor_ia_cv": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "08_datasets_reports": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "failed_requests": {},
+    "worker_cards": [
+      {
+        "worker_index": 0,
+        "title": "Trabajador Boid #F-1000",
+        "attributes_valid": true,
+        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #F-1000\nEstado Laboral ITDT:\nFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nRural\nNivel Educativo:\nPrimaria / Básica\nProductividad Relativa (h_i):\n0.633\nHoras de Cuidado Semanales (H_care,i):\n9.8 hrs/sem\nAlfabetizació"
+      },
+      {
+        "worker_index": 500,
+        "title": "Trabajador Boid #INF-2162",
+        "attributes_valid": true,
+        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #INF-2162\nEstado Laboral ITDT:\nINFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nRural\nNivel Educativo:\nSecundaria / Intermedia\nProductividad Relativa (h_i):\n0.263\nHoras de Cuidado Semanales (H_care,i):\n11.3 hrs/sem\nAl"
+      },
+      {
+        "worker_index": 1500,
+        "title": "Trabajador Boid #INF-3162",
+        "attributes_valid": true,
+        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #INF-3162\nEstado Laboral ITDT:\nINFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nUrbana\nNivel Educativo:\nSecundaria / Intermedia\nProductividad Relativa (h_i):\n0.903\nHoras de Cuidado Semanales (H_care,i):\n6.0 hrs/sem\nAl"
+      }
+    ],
+    "copilot_ui_test": {
+      "question": "¿Cuál es la tasa de informalidad de Kenia en el escenario D en el mes 120?",
+      "has_expected_rate": false,
+      "response_snippet": "entados se derivan exclusivamente de la Tabla 6 del artículo y los parámetros de calibración del modelo multiagente. No existen salarios en USD ni índices de trabajo decente calculados en el modelo canónico, por lo que cualquier referencia a dichas métricas queda fuera del alcance de este análisis.*"
+    }
+  },
+  "streamlit": {
+    "views_tested": [
+      "streamlit_01_dashboard",
+      "streamlit_02_gemelo_3d",
+      "streamlit_03_motor_ia",
+      "streamlit_04_datasets",
+      "streamlit_05_oit",
+      "streamlit_06_copiloto"
+    ],
+    "errors": []
+  }
+}
