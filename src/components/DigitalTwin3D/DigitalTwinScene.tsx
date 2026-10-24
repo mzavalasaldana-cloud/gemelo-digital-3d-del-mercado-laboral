@@ -15,7 +15,7 @@ import {
 } from '../../types';
 import { COUNTRY_PROFILES } from '../../data/mockData';
 import { playHoloClick } from '../../utils/audioSynth';
-import trayectoriasData from '../../data/trayectorias_mensuales.json';
+import trayectoriasData from '@/outputs/trayectorias_mensuales.json';
 
 interface DigitalTwinSceneProps {
   country: CountryCode;
@@ -1088,12 +1088,13 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
             // Dynamic color migration:
             // Light Mode: Terracotta / Rust -> Deep Cobalt / Navy Blue
             // Dark Mode: Amber / Vermilion -> Neon Cyan / Deep Sky
+            const isHighProd = (w.productivityH ?? 1.0) >= 1.0;
             const baseWarm = isLightMode
-              ? (w.incomeUSDDay > 12 ? colorInformalTerracotta : colorInformalRust)
-              : (w.incomeUSDDay > 12 ? colorAmber : colorVermilion);
+              ? (isHighProd ? colorInformalTerracotta : colorInformalRust)
+              : (isHighProd ? colorAmber : colorVermilion);
             const baseCool = isLightMode
-              ? (w.incomeUSDDay > 25 ? colorFormalCobalt : colorFormalNavy)
-              : (w.incomeUSDDay > 25 ? colorNeonCyan : colorDeepSky);
+              ? (isHighProd ? colorFormalCobalt : colorFormalNavy)
+              : (isHighProd ? colorNeonCyan : colorDeepSky);
             colorDummy.copy(baseWarm).lerp(baseCool, p);
 
             // Connect laser fiber line when particle formalizes (p > 0.45)
@@ -1111,7 +1112,7 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
             colorDummy.copy(colorWhite);
           }
 
-          const scale = (0.7 + (w.humanCapital / 100) * 0.9) * (selectedWorker?.id === w.id ? 1.9 : 1);
+          const scale = (0.7 + Math.min(1.0, (w.productivityH ?? 1.0) * 0.5) * 0.9) * (selectedWorker?.id === w.id ? 1.9 : 1);
 
           dummy.position.set(w.x, w.y, w.z);
           dummy.scale.set(scale, scale, scale);

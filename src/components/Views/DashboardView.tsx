@@ -11,7 +11,7 @@ import {
 } from '../../types';
 import { COUNTRY_PROFILES, INITIAL_POLICY_STATE } from '../../data/mockData';
 import { BACKEND_URL } from '../../services/api';
-import trayectoriasData from '../../data/trayectorias_mensuales.json';
+import trayectoriasData from '@/outputs/trayectorias_mensuales.json';
 import { 
   ResponsiveContainer, 
   LineChart, 

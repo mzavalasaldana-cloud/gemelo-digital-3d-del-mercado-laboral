@@ -5,9 +5,6 @@ import {
   User, 
   Building2, 
   TrendingUp, 
-  DollarSign, 
-  Award, 
-  HeartHandshake, 
   Crosshair, 
   CheckCircle2, 
   AlertTriangle,
@@ -73,52 +70,55 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
           </div>
         </div>
 
-        {/* Worker Micro-Data Card */}
+        {/* Worker Micro-Data Card (Atributos Reales del Modelo ITDT) */}
         {worker && (
           <div className="space-y-3 font-mono-hud text-xs">
             {/* Status & Sector */}
             <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span className="text-slate-400 text-[11px]">Estado Laboral:</span>
+              <span className="text-slate-400 text-[11px]">Estado Laboral ITDT:</span>
               <span
                 className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 ${
                   worker.sector === 'formal'
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                    : worker.sector === 'informal'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-slate-700/40 text-slate-300'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                 }`}
               >
                 {worker.sector === 'formal' && <CheckCircle2 className="w-3 h-3 text-cyan-400" />}
                 {worker.sector === 'informal' && <AlertTriangle className="w-3 h-3 text-amber-400" />}
-                {worker.sector.toUpperCase()}
+                {worker.sector === 'formal' ? 'FORMAL' : 'INFORMAL'}
               </span>
             </div>
 
-            {/* Demographics & Education */}
+            {/* Sexo, Educación y Zona */}
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                <span className="text-slate-400 block text-[10px]">Demografía:</span>
-                <span className="font-semibold text-slate-200">{worker.gender}, {worker.age} años</span>
+                <span className="text-slate-400 block text-[10px]">Sexo (OIT):</span>
+                <span className="font-semibold text-slate-200">{worker.gender}</span>
               </div>
               <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                <span className="text-slate-400 block text-[10px]">Educación:</span>
-                <span className="font-semibold text-indigo-300">{worker.education}</span>
+                <span className="text-slate-400 block text-[10px]">Zona Geográfica:</span>
+                <span className="font-semibold text-slate-200">{worker.ruralZone}</span>
               </div>
             </div>
 
-            {/* Human Capital & Social Capital */}
+            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px]">
+              <span className="text-slate-400 block text-[10px]">Nivel Educativo:</span>
+              <span className="font-semibold text-indigo-300">{worker.education}</span>
+            </div>
+
+            {/* Productividad Econométrica h_i y Cuidado Semanal H_care */}
             <div className="space-y-2">
               <div>
                 <div className="flex justify-between text-[11px] text-slate-300 mb-0.5">
                   <span className="flex items-center gap-1">
-                    <Award className="w-3 h-3 text-cyan-400" /> Capital Humano (Habilidades):
+                    <TrendingUp className="w-3 h-3 text-cyan-400" /> Productividad Relativa (h_i):
                   </span>
-                  <span className="font-bold text-cyan-300">{worker.humanCapital}/100</span>
+                  <span className="font-bold text-cyan-300">{worker.productivityH.toFixed(3)}</span>
                 </div>
                 <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-cyan-400 h-full rounded-full glow-cyan"
-                    style={{ width: `${worker.humanCapital}%` }}
+                    style={{ width: `${Math.min(100, Math.max(10, (worker.productivityH / 2.0) * 100))}%` }}
                   />
                 </div>
               </div>
@@ -126,44 +126,31 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
               <div>
                 <div className="flex justify-between text-[11px] text-slate-300 mb-0.5">
                   <span className="flex items-center gap-1">
-                    <HeartHandshake className="w-3 h-3 text-amber-400" /> Capital Social (Red de Confianza):
+                    <Layers className="w-3 h-3 text-amber-400" /> Horas de Cuidado Semanales (H_care,i):
                   </span>
-                  <span className="font-bold text-amber-300">{worker.socialCapital}/100</span>
+                  <span className="font-bold text-amber-300">{worker.careHours.toFixed(1)} hrs/sem</span>
                 </div>
                 <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-amber-400 h-full rounded-full glow-amber"
-                    style={{ width: `${worker.socialCapital}%` }}
+                    style={{ width: `${Math.min(100, (worker.careHours / 48) * 100)}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Preferences */}
-            <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] space-y-1">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Tolerancia al Riesgo:</span>
-                <span className="text-slate-200 font-semibold">{worker.riskTolerance}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Preferencia por Flexibilidad horaria:</span>
-                <span className="text-slate-200 font-semibold">{worker.flexibilityPref}%</span>
-              </div>
-            </div>
-
-            {/* Income & AI Formalization Prob */}
+            {/* Alfabetización Digital & Probabilidad de Formalización */}
             <div className="p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 block">Ingreso Estimado:</span>
-                <span className="text-sm font-bold text-emerald-400 flex items-center">
-                  <DollarSign className="w-3.5 h-3.5 mr-0.5" />
-                  ${worker.incomeUSDDay.toFixed(1)} /día
+                <span className="text-[10px] text-slate-400 block">Alfabetización Digital (K_dig):</span>
+                <span className="text-sm font-bold text-emerald-400">
+                  {(worker.digitalLit * 100).toFixed(1)}%
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-cyan-400 block">Predicción Formalización:</span>
+                <span className="text-[10px] text-cyan-400 block">Transición ITDT:</span>
                 <span className="text-sm font-bold text-cyan-300">
-                  {worker.formalizationProb}% (a 3 años)
+                  {worker.formalizationProb}%
                 </span>
               </div>
             </div>

@@ -9,7 +9,7 @@ import {
   PolicyParameters,
   ScenarioPreset
 } from '../types';
-import trayectoriasData from './trayectorias_mensuales.json';
+import trayectoriasData from '@/outputs/trayectorias_mensuales.json';
 import ilostatCalibracionFuentes from './ilostat_calibracion_fuentes.json';
 
 export interface CountryProfile {

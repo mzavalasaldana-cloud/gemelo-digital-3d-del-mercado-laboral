@@ -19,7 +19,8 @@ import {
   getModelFirms, 
   DEMO_USERS
 } from './data/mockData';
-import trayectoriasData from './data/trayectorias_mensuales.json';
+import trayectoriasData from '@/outputs/trayectorias_mensuales.json';
+import muestraTrabajadores from './data/muestra_trabajadores.json';
 import { TopNavigationBar } from './components/HUD/TopNavigationBar';
 import { DashboardView } from './components/Views/DashboardView';
 const DigitalTwin3DView = React.lazy(() => 
@@ -46,7 +47,7 @@ import {
   BACKEND_URL
 } from './services/api';
 
-// Helper: Generate Worker Particles Population (2,500 boids with formalization schedules)
+// Helper: Generate Worker Particles Population (2,500 boids with formalization schedules from ITDT real sample)
 export function createWorkersPopulation(
   countryCode: CountryCode, 
   informalityRate: number,
@@ -61,19 +62,16 @@ export function createWorkersPopulation(
 
   const numFormal = Math.round(totalWorkers * formalRatio);
   const numInformal = totalWorkers - numFormal;
-  const numUnemployed = 0;
 
-  const educations: WorkerAgent['education'][] = ['Primaria', 'Secundaria', 'Técnica', 'Universitaria'];
-  const genders: WorkerAgent['gender'][] = ['Femenino', 'Masculino', 'No binario'];
+  const sampleLen = (muestraTrabajadores as any[]).length || 2500;
 
   // Formal workers (Anchored from month 0)
   for (let i = 0; i < numFormal; i++) {
     const hostFirm = formalFirms[i % formalFirms.length] || firmList[0];
-    const orbitRadius = 1.4 + Math.random() * 2.6;
-    const orbitSpeed = 0.012 + Math.random() * 0.016;
-    const orbitAngle = Math.random() * Math.PI * 2;
-    const humanCapital = Math.floor(65 + Math.random() * 35);
-    const income = Number((24 + (humanCapital / 100) * 32 + Math.random() * 8).toFixed(1));
+    const profile = (muestraTrabajadores as any[])[i % sampleLen];
+    const orbitRadius = 1.4 + ((i % 10) / 10) * 2.6;
+    const orbitSpeed = 0.012 + ((i % 8) / 8) * 0.016;
+    const orbitAngle = ((i * 137.5) * Math.PI) / 180;
 
     newWorkers.push({
       id: `w-formal-${i}`,
@@ -86,32 +84,32 @@ export function createWorkersPopulation(
       vx: 0,
       vz: 0,
       sector: 'formal',
-      humanCapital,
-      incomeUSDDay: income,
-      socialCapital: Math.floor(40 + Math.random() * 50),
-      riskTolerance: Math.floor(20 + Math.random() * 40),
-      flexibilityPref: Math.floor(20 + Math.random() * 50),
+      gender: profile.sexo as 'Femenino' | 'Masculino',
+      education: profile.educacion,
+      ruralZone: profile.zona as 'Rural' | 'Urbana',
+      productivityH: profile.productividad_h,
+      careHours: profile.horas_cuidado,
+      digitalLit: profile.alfabetizacion_digital,
       firmId: hostFirm?.id ?? null,
       orbitRadius,
       orbitSpeed,
       orbitAngle,
-      age: 22 + Math.floor(Math.random() * 40),
-      gender: genders[i % 3],
-      education: educations[Math.min(3, Math.floor(humanCapital / 28))],
       subSector: hostFirm?.sectorCategory ?? 'Manufactura',
       formalizationProb: 95,
-      formalizationMonth: 0, // already formal at baseline
+      formalizationMonth: 0,
       currentProgress: 1.0,
     });
   }
 
-  // Informal workers (with distributed formalization months)
+  // Informal workers (with distributed formalization months based on productivity)
   for (let i = 0; i < numInformal; i++) {
-    const x = (Math.random() - 0.5) * 36;
-    const z = 2 + (Math.random() - 0.2) * 22;
-    const humanCapital = Math.floor(20 + Math.random() * 55);
-    const income = Number((4.5 + (humanCapital / 100) * 14 + Math.random() * 4).toFixed(1));
-    const baseMonth = Math.round(18 + (100 - humanCapital) * 1.1 + (Math.random() - 0.5) * 16);
+    const workerIndex = numFormal + i;
+    const profile = (muestraTrabajadores as any[])[workerIndex % sampleLen];
+    const angle = ((i * 137.5) * Math.PI) / 180;
+    const dist = 3 + Math.sqrt(i / (numInformal || 1)) * 16;
+    const x = Math.cos(angle) * dist;
+    const z = Math.sin(angle) * dist;
+    const baseMonth = Math.round(12 + (2.0 - Math.min(2.0, profile.productividad_h)) * 45);
 
     newWorkers.push({
       id: `w-informal-${i}`,
@@ -121,60 +119,22 @@ export function createWorkersPopulation(
       z,
       baseX: x,
       baseZ: z,
-      vx: (Math.random() - 0.5) * 0.04,
-      vz: (Math.random() - 0.5) * 0.04,
+      vx: ((i % 7) - 3) * 0.008,
+      vz: ((i % 5) - 2) * 0.008,
       sector: 'informal',
-      humanCapital,
-      incomeUSDDay: income,
-      socialCapital: Math.floor(60 + Math.random() * 40),
-      riskTolerance: Math.floor(50 + Math.random() * 50),
-      flexibilityPref: Math.floor(60 + Math.random() * 40),
+      gender: profile.sexo as 'Femenino' | 'Masculino',
+      education: profile.educacion,
+      ruralZone: profile.zona as 'Rural' | 'Urbana',
+      productivityH: profile.productividad_h,
+      careHours: profile.horas_cuidado,
+      digitalLit: profile.alfabetizacion_digital,
       firmId: null,
       orbitRadius: 0,
       orbitSpeed: 0,
       orbitAngle: 0,
-      age: 18 + Math.floor(Math.random() * 48),
-      gender: genders[i % 3],
-      education: educations[Math.min(2, Math.floor(humanCapital / 35))],
-      subSector: 'Comercio Ambulante / Taller',
-      formalizationProb: Math.floor(15 + (humanCapital / 100) * 45),
+      subSector: profile.zona === 'Rural' ? 'Agricultura Familiar' : 'Comercio Ambulante / Taller',
+      formalizationProb: Math.round(Math.min(88, profile.productividad_h * 42)),
       formalizationMonth: baseMonth,
-      currentProgress: 0.0,
-      informalX: x,
-      informalZ: z,
-    });
-  }
-
-  // Unemployed workers
-  for (let i = 0; i < numUnemployed; i++) {
-    const x = (Math.random() - 0.5) * 40;
-    const z = (Math.random() - 0.5) * 40;
-    newWorkers.push({
-      id: `w-unemp-${i}`,
-      code: `U-${3000 + i}`,
-      x,
-      y: 0.2,
-      z,
-      baseX: x,
-      baseZ: z,
-      vx: (Math.random() - 0.5) * 0.015,
-      vz: (Math.random() - 0.5) * 0.015,
-      sector: 'unemployed',
-      humanCapital: Math.floor(15 + Math.random() * 40),
-      incomeUSDDay: 1.2,
-      socialCapital: Math.floor(30 + Math.random() * 40),
-      riskTolerance: Math.floor(30 + Math.random() * 40),
-      flexibilityPref: 50,
-      firmId: null,
-      orbitRadius: 0,
-      orbitSpeed: 0,
-      orbitAngle: 0,
-      age: 18 + Math.floor(Math.random() * 45),
-      gender: genders[i % 3],
-      education: educations[0],
-      subSector: 'Búsqueda Activa',
-      formalizationProb: 12,
-      formalizationMonth: 999,
       currentProgress: 0.0,
       informalX: x,
       informalZ: z,

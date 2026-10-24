@@ -20,23 +20,21 @@ export interface WorkerAgent {
   vx: number;
   vz: number;
   sector: WorkerSector;
-  humanCapital: number; // 0-100 (size)
-  incomeUSDDay: number; // income (brightness)
-  socialCapital: number; // 0-100
-  riskTolerance: number; // 0-100
-  flexibilityPref: number; // 0-100
+  gender: 'Femenino' | 'Masculino';
+  education: string;
+  ruralZone: 'Rural' | 'Urbana';
+  productivityH: number;
+  careHours: number;
+  digitalLit: number;
   firmId: string | null;
   orbitRadius: number;
   orbitSpeed: number;
   orbitAngle: number;
-  age: number;
-  gender: 'Femenino' | 'Masculino' | 'No binario';
-  education: 'Primaria' | 'Secundaria' | 'Técnica' | 'Universitaria';
   subSector: string;
-  formalizationProb: number; // 0-100%
+  formalizationProb: number;
   inTransition?: boolean;
-  formalizationMonth: number; // Month (0-120) when this worker transitions
-  currentProgress?: number; // 0 (informal) to 1 (formal)
+  formalizationMonth: number;
+  currentProgress?: number;
   informalX?: number;
   informalZ?: number;
 }
