@@ -251,7 +251,7 @@ Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, 
 | `make sensitivity` | Sensibilidad $\pm 20\%$ (9 parámetros), robustez CES ($\sigma \in \{0.5, 1.5\}$) y choque | `table9_sensitivity.*` | **Tabla 9** | ~3.5 min |
 | `make cost` | Costo computacional por réplica ($N_W \in \{3\,000, 6\,000, 12\,000, 24\,000\}$) | `table10_cost.*` | **Tabla 10** | ~10 s |
 | `make ia` | Validación cruzada 5 pliegues (StratifiedGroupKFold) + prueba final holdout 20% | `outputs/motor_ia/tabla_desempeno_modelos.*`<br>`outputs/motor_ia/metricas_modelos_*.json` | **Motor IA** (India y Nigeria) | ~1.5 min |
-| `make all` | **Pipeline integral:** regenera `outputs/` desde cero y reporta tiempo | **Todas las Tablas (2–14), Figuras (4–7) y JSONs** | **Replicación total** | ~18–24 min |
+| `make all` | **Pipeline integral:** regenera `outputs/` desde cero y reporta tiempo | **Todas las Tablas (2–14), Figuras (4–7) y JSONs** | **Replicación total** | aprox. 52 min de CPU (medido el 22/10/2026, Windows, Python 3.12) |
 
 > [!TIP]
 > - Las **Tablas 12 y 13** (Gradientes distributivos de género y validación frente a ILOSTAT) se generan mediante `python scripts/validar_gradientes_ilostat.py`.
