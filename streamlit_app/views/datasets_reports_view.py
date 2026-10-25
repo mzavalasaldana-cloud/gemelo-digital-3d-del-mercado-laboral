@@ -6,7 +6,7 @@ import streamlit as st
 import json
 
 from streamlit_app.data.mock_data import PRELOADED_DATASETS, COUNTRY_PROFILES
-from backend.ml_engine import generate_synthetic_microdata
+from backend.ml_engine import load_real_country_microdata
 from streamlit_app.simulation_engine import calculate_structural_metrics
 from streamlit_app.utils.report_generator import (
     generate_pdf_report,
@@ -98,16 +98,19 @@ def render_datasets_reports_view():
 
         # Microdata Sample Profiler & Table
         render_section_header("Explorador y Perfilador de Microdatos Activos", icon="🔍", badge="500 Registros Muestra")
-        df_sample = generate_synthetic_microdata(num_records=500, seed=123)
-
-        st.dataframe(
-            df_sample,
-            use_container_width=True,
-            hide_index=True,
-            height=280
-        )
-
-        st.caption(f"Mostrando 500 registros armonizados del mercado laboral para {profile['name']}.")
+        microdata_res = load_real_country_microdata(country_code)
+        if microdata_res is not None:
+            df_sample, fname, cname = microdata_res
+            df_display = df_sample.head(500)
+            st.dataframe(
+                df_display,
+                use_container_width=True,
+                hide_index=True,
+                height=280
+            )
+            st.caption(f"Mostrando {len(df_display)} registros armonizados reales ({fname}) para {cname}.")
+        else:
+            st.info(f"Sin microdatos reales a nivel de microregistro cargados para {profile['name']}. Seleccione INDIA para explorar la encuesta PLFS (cperv1.csv) o cargue un archivo.")
         render_explainability_card(
             title="Explicabilidad: Estructura de Variables de Microdatos Armonizados",
             what_it_is="Esquema estandarizado de variables a nivel individual derivado de encuestas nacionales de hogares (edad, salario diario, sector, tamaño de empresa y contribución a seguridad social).",

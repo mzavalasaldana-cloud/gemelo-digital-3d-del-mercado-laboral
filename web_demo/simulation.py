@@ -774,8 +774,8 @@ def update_worker_positions_for_month(
             w_copy["current_progress"] = 1.0
             w_copy["display_sector"] = "Formal"
         else:
-            drift_x = math.sin(month * 0.1 + w["human_capital"]) * 0.4
-            drift_z = math.cos(month * 0.1 + w["human_capital"]) * 0.4
+            drift_x = math.sin(month * 0.1 + w.get("productivity", 1.0)) * 0.4
+            drift_z = math.cos(month * 0.1 + w.get("productivity", 1.0)) * 0.4
             w_copy["x"] = w.get("informal_x", w["x"]) + drift_x
             w_copy["z"] = w.get("informal_z", w["z"]) + drift_z
             w_copy["y"] = 0.5
