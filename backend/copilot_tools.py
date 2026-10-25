@@ -96,6 +96,22 @@ def load_table6_changes_runtime() -> str:
         return f"Error leyendo outputs/table6_changes.csv: {e}"
 
 
+def get_table6_scenario_data(scenario: str = "B2") -> Optional[Dict[str, str]]:
+    """Lee outputs/table6_changes.csv y retorna un diccionario con las columnas para el escenario indicado."""
+    p = OUTPUTS_DIR / "table6_changes.csv"
+    if not p.exists():
+        return None
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get("Escenario", "").strip().upper() == scenario.strip().upper():
+                    return row
+        return None
+    except Exception:
+        return None
+
+
 def load_table5_levels_runtime() -> str:
     """Lee outputs/table5_levels.csv en tiempo de ejecución."""
     p = OUTPUTS_DIR / "table5_levels.csv"

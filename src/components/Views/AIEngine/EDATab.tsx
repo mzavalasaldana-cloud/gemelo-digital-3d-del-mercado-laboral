@@ -91,13 +91,13 @@ export const EDATab: React.FC<EDATabProps> = ({
 
   const rawKpis: any = edaResult?.kpis;
   const currentKPIs = {
-    completeness: rawKpis?.completeness ?? rawKpis?.dataQuality ?? 100.0,
-    missingRate: rawKpis?.missingRate ?? rawKpis?.nullPercentage ?? 0.0,
-    totalRows: rawKpis?.totalRows ?? rawKpis?.totalRecords ?? 0,
-    totalCols: rawKpis?.totalCols ?? rawKpis?.totalVariables ?? 0,
-    imputedRows: rawKpis?.imputedRows ?? 0,
-    numericCols: rawKpis?.numericCols ?? 0,
-    categoricalCols: rawKpis?.categoricalCols ?? 0,
+    completeness: rawKpis?.completeness ?? rawKpis?.dataQuality ?? null,
+    missingRate: rawKpis?.missingRate ?? rawKpis?.nullPercentage ?? null,
+    totalRows: rawKpis?.totalRows ?? rawKpis?.totalRecords ?? null,
+    totalCols: rawKpis?.totalCols ?? rawKpis?.totalVariables ?? null,
+    imputedRows: rawKpis?.imputedRows ?? null,
+    numericCols: rawKpis?.numericCols ?? null,
+    categoricalCols: rawKpis?.categoricalCols ?? null,
   };
   const currentHistograms = edaResult?.histograms || {};
   const currentCorrVarsRaw = edaResult?.correlationVariables || [];
@@ -316,11 +316,16 @@ export const EDATab: React.FC<EDATabProps> = ({
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{currentKPIs.completeness}%</span>
-                <span className="text-xs text-emerald-500 font-mono">{t('highCompleteness', language)}</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {currentKPIs.completeness !== null ? `${currentKPIs.completeness}%` : 'Sin datos'}
+                </span>
+                {currentKPIs.completeness !== null && (
+                  <span className="text-xs text-emerald-500 font-mono">{t('highCompleteness', language)}</span>
+                )}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                {currentKPIs.missingRate}% {language === 'en' ? 'null / empty rate' : 'tasa de nulos'}
+                {currentKPIs.missingRate !== null ? `${currentKPIs.missingRate}% ` : 'Sin datos '}
+                {language === 'en' ? 'null / empty rate' : 'tasa de nulos'}
               </p>
             </div>
 
@@ -330,11 +335,16 @@ export const EDATab: React.FC<EDATabProps> = ({
                 <Database className="w-4 h-4 text-cyan-500" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{(currentKPIs.totalRows ?? 0).toLocaleString()}</span>
-                <span className={`text-xs font-mono ${isLight ? 'text-sky-700' : 'text-cyan-400'}`}>Harmonized</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {currentKPIs.totalRows !== null ? currentKPIs.totalRows.toLocaleString() : 'Sin datos'}
+                </span>
+                {currentKPIs.totalRows !== null && (
+                  <span className={`text-xs font-mono ${isLight ? 'text-sky-700' : 'text-cyan-400'}`}>Harmonized</span>
+                )}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                {currentKPIs.totalCols} {language === 'en' ? 'analyzed variables' : 'variables analizadas'}
+                {currentKPIs.totalCols !== null ? `${currentKPIs.totalCols} ` : 'Sin datos '}
+                {language === 'en' ? 'analyzed variables' : 'variables analizadas'}
               </p>
             </div>
 
@@ -344,7 +354,9 @@ export const EDATab: React.FC<EDATabProps> = ({
                 <Sparkles className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-indigo-700' : 'text-indigo-300'}`}>{(currentKPIs.imputedRows ?? 0).toLocaleString()}</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-indigo-700' : 'text-indigo-300'}`}>
+                  {currentKPIs.imputedRows !== null ? currentKPIs.imputedRows.toLocaleString() : 'Sin datos'}
+                </span>
                 <span className="text-xs text-indigo-500 font-mono">Mediana/Moda (Demostración)</span>
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -358,11 +370,16 @@ export const EDATab: React.FC<EDATabProps> = ({
                 <Table2 className="w-4 h-4 text-cyan-500" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{currentKPIs.numericCols}</span>
-                <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>/ {currentKPIs.totalCols}</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {currentKPIs.numericCols !== null ? currentKPIs.numericCols : 'Sin datos'}
+                </span>
+                {currentKPIs.totalCols !== null && (
+                  <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>/ {currentKPIs.totalCols}</span>
+                )}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                {currentKPIs.categoricalCols} {language === 'en' ? 'one-hot encoded categorical' : 'categóricas codificadas'}
+                {currentKPIs.categoricalCols !== null ? `${currentKPIs.categoricalCols} ` : 'Sin datos '}
+                {language === 'en' ? 'one-hot encoded categorical' : 'categóricas codificadas'}
               </p>
             </div>
           </div>

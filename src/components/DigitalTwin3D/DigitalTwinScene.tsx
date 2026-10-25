@@ -1005,7 +1005,7 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
           if (currentMonth > 0 && scData.length >= currentMonth) {
             currentInf = scData[currentMonth - 1].informality_total;
           } else {
-            currentInf = COUNTRY_PROFILES[country]?.baseInformalityRate ?? 86.49;
+            currentInf = COUNTRY_PROFILES[country]?.baseInformalityRate ?? COUNTRY_PROFILES['KENYA']?.baseInformalityRate ?? 0;
           }
         }
 

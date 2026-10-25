@@ -443,8 +443,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className={`mt-3 text-[11px] font-mono flex justify-between border-t pt-2 ${
               isLight ? 'border-slate-200 text-slate-600' : 'border-slate-800 text-slate-400'
             }`}>
-              <span>{language === 'en' ? 'Female' : 'Mujeres'}: {(metrics?.informalityFemale ?? 87.3).toFixed(1)}%</span>
-              <span className="text-slate-400">{language === 'en' ? 'Male' : 'Hombres'}: {(metrics?.informalityMale ?? 85.6).toFixed(1)}%</span>
+              <span>{language === 'en' ? 'Female' : 'Mujeres'}: {metrics?.informalityFemale != null ? `${metrics.informalityFemale.toFixed(1)}%` : 'Sin datos'}</span>
+              <span className="text-slate-400">{language === 'en' ? 'Male' : 'Hombres'}: {metrics?.informalityMale != null ? `${metrics.informalityMale.toFixed(1)}%` : 'Sin datos'}</span>
             </div>
           </div>
         </div>

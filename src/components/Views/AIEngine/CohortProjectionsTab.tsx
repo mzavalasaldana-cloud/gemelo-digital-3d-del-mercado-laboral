@@ -126,11 +126,14 @@ export const CohortProjectionsTab: React.FC<CohortProjectionsTabProps> = ({
                   isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-slate-900 border-slate-700 text-cyan-300'
                 }`}
               >
-                {cohortsList.map((c: any) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label || c.name} ({c.populationShare || c.sampleSize || 20}%)
-                  </option>
-                ))}
+                {cohortsList.map((c: any) => {
+                  const share = c.populationShare ?? c.sampleSize;
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {c.label || c.name} {share != null ? `(${share}%)` : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}

@@ -25,15 +25,17 @@ from .copilot_tools import (
     load_table5_levels_runtime,
     load_ml_benchmarks_runtime,
     get_runtime_trajectory_point,
+    get_table6_scenario_data,
 )
 
 logger = logging.getLogger("labortwin.copilot")
 
 def get_langflow_config():
     """Obtiene la configuración activa de Langflow en tiempo de ejecución."""
-    if backend_env.exists():
-        load_dotenv(backend_env, override=False)
-    load_dotenv(override=False)
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        if backend_env.exists():
+            load_dotenv(backend_env)
+        load_dotenv()
     
     raw_base_url = os.getenv("LANGFLOW_BASE_URL")
     base_url = raw_base_url.strip().rstrip("/") if raw_base_url and raw_base_url.strip() else ""
@@ -262,10 +264,12 @@ def generate_econometric_copilot_response(user_query: str, metrics: Dict[str, An
 
     # Preguntas sobre brecha de género en B2
     if "b2" in ql and ("brecha" in ql or "género" in ql or "genero" in ql):
+        row_b2 = get_table6_scenario_data("B2")
+        gap_change = row_b2.get("Brecha (p.p.)", "N/D") if row_b2 else "N/D"
         return (
-            "En el Escenario B2 (GovTech intensivo / Sanciones 3×), la brecha de género en informalidad cambia en "
-            "+30.19 puntos porcentuales frente al statu quo (según outputs/table6_changes.csv). "
-            "Esto ocurre porque la mayor fiscalización formaliza prioritariamente a trabajadores masculinos con mayor capital humano."
+            f"En el Escenario B2 (GovTech intensivo / Sanciones 3×), la brecha de género en informalidad cambia en "
+            f"{gap_change} puntos porcentuales frente al statu quo (según outputs/table6_changes.csv). "
+            f"Esto ocurre porque la mayor fiscalización formaliza prioritariamente a trabajadores masculinos con mayor capital humano."
         )
 
     # Preguntas sobre informalidad en un mes específico
