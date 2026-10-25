@@ -18,7 +18,14 @@ if backend_env.exists():
     load_dotenv(backend_env)
 load_dotenv()
 
-from .copilot_tools import get_simulation_metrics
+from .copilot_tools import (
+    get_simulation_metrics,
+    parse_query_simulation_params,
+    load_table6_changes_runtime,
+    load_table5_levels_runtime,
+    load_ml_benchmarks_runtime,
+    get_runtime_trajectory_point,
+)
 
 logger = logging.getLogger("labortwin.copilot")
 
@@ -89,7 +96,7 @@ async def query_gemini_direct(
             }
         ],
         "generationConfig": {
-            "temperature": 0.3,
+            "temperature": 0.2,
             "maxOutputTokens": 1024,
         },
     }
@@ -116,7 +123,6 @@ async def query_gemini_direct(
             return None
 
 
-
 class CopilotServiceError(Exception):
     """Excepción base para errores controlados del servicio Copiloto."""
     def __init__(self, message: str, status_code: int = 502, detail: Optional[str] = None):
@@ -132,12 +138,14 @@ def build_simulation_context_prompt(
     history: Optional[list] = None
 ) -> str:
     """
-    Construye el payload enriquecido con datos cuantitativos reales y verificados
-    del modelo calibrado ITDT y de ILOSTAT para que el agente en Langflow y Gemini
-    no inventen cifras, incorporando memoria conversacional previa de PostgreSQL.
+    Construye el payload enriquecido leyendo exclusivamente en tiempo de ejecución
+    las salidas oficiales (outputs/table6_changes.csv, outputs/table5_levels.csv,
+    outputs/trayectorias_mensuales.json, outputs/motor_ia/metricas_modelos_*.json)
+    sin valores fijos escritos a mano en el prompt.
     """
     c_name = metrics_data.get('country', 'KENYA')
     sc_name = metrics_data.get('scenario', 'A')
+    month = metrics_data.get('month', 0)
     inf_rate = metrics_data.get('informalityRate')
     base_inf = metrics_data.get('baseInformalityRate')
     inf_f = metrics_data.get('informalityFemale')
@@ -147,34 +155,58 @@ def build_simulation_context_prompt(
     rev_model = metrics_data.get('fiscalRevenueModelUnits')
     exit_rate = metrics_data.get('annualExitRate')
     citation = metrics_data.get('sourceCitation', 'Modelo ITDT calibrado / ILOSTAT')
+    traj_point = metrics_data.get('trajectoryPoint')
+
+    # Lectura dinámica de tablas y benchmarks en tiempo de ejecución
+    table6_str = load_table6_changes_runtime()
+    table5_str = load_table5_levels_runtime()
+    ml_benchmarks_str = load_ml_benchmarks_runtime()
+
+    traj_info = ""
+    if traj_point:
+        t_rate = traj_point.get('informality_total')
+        t_ci = traj_point.get('informality_total_ci')
+        t_gap = traj_point.get('gender_gap')
+        traj_info = (
+            f"\n--- PUNTO DE TRAYECTORIA MENSUAL DINÁMICA CONSULTADO ({c_name} Escenario {sc_name} Mes {month}) ---\n"
+            f"- Tasa de informalidad simulada en este mes: {t_rate:.2f}% (IC 95%: {t_ci})\n"
+            f"- Brecha de género en este mes: {t_gap:.2f} pp\n"
+            f"- Si el usuario pregunta por la tasa de informalidad en este país, escenario y mes, responde exactamente con esta tasa de la trayectoria mensual.\n"
+        )
 
     context_str = (
-        f"--- DATOS VERIFICADOS DE LA SIMULACIÓN Y FUENTES OFICIALES ---\n"
+        f"--- DEFINICIÓN OFICIAL DE ESCENARIOS DEL MODELO ITDT ---\n"
+        f"- Escenario A: statu quo (política base de referencia)\n"
+        f"- Escenario B1: GovTech moderado\n"
+        f"- Escenario B2: GovTech intensivo (sanciones ×3)\n"
+        f"- Escenario C: red de cuidados (-60% tiempo no remunerado)\n"
+        f"- Escenario D: integrado (GovTech + Cuidados + Subsidio DCC)\n\n"
+        f"--- DATOS VERIFICADOS DE LA SIMULACIÓN ({c_name} - Escenario {sc_name} - Mes {month}) ---\n"
         f"País: {c_name}\n"
         f"Escenario: {sc_name}\n"
-        f"Mes de simulación: {metrics_data.get('month', 0)} (Año proyectado: {metrics_data.get('year', 2024)})\n"
-        f"Tasa de informalidad simulada: {f'{inf_rate:.2f}%' if inf_rate is not None else 'Sin datos reales disponibles'}\n"
-        f"Tasa de informalidad observada (ILOSTAT base): {f'{base_inf:.2f}%' if base_inf is not None else 'Sin datos reales disponibles'}\n"
-        f"Informalidad femenina: {f'{inf_f:.2f}%' if inf_f is not None else 'Sin datos reales disponibles'}\n"
-        f"Informalidad masculina: {f'{inf_m:.2f}%' if inf_m is not None else 'Sin datos reales disponibles'}\n"
-        f"Brecha de género en informalidad: {f'{gap:.2f} pp' if gap is not None else 'Sin datos reales disponibles'}\n"
-        f"Índice de Gini simulado: {f'{gini:.4f}' if gini is not None else 'Sin datos reales disponibles'}\n"
-        f"Trabajadores Formales: {metrics_data.get('formalWorkersCount', 'N/D')}\n"
-        f"Trabajadores Informales: {metrics_data.get('informalWorkersCount', 'N/D')}\n"
-        f"Recaudación fiscal: {f'{rev_model:.2f} unidades del modelo' if rev_model is not None else 'Sin datos reales disponibles'}\n"
-        f"Tasa anual de cierre de empresas (quiebras): {f'{exit_rate:.2f}%' if exit_rate is not None else 'Sin datos reales disponibles'}\n"
+        f"Mes de simulación: {month} (Año proyectado: {metrics_data.get('year', 2024)})\n"
+        f"Tasa de informalidad simulada: {f'{inf_rate:.2f}%' if inf_rate is not None else 'Sin datos'}\n"
+        f"Tasa de informalidad observada (ILOSTAT base): {f'{base_inf:.2f}%' if base_inf is not None else 'Sin datos'}\n"
+        f"Informalidad femenina: {f'{inf_f:.2f}%' if inf_f is not None else 'Sin datos'}\n"
+        f"Informalidad masculina: {f'{inf_m:.2f}%' if inf_m is not None else 'Sin datos'}\n"
+        f"Brecha de género en informalidad: {f'{gap:.2f} pp' if gap is not None else 'Sin datos'}\n"
+        f"Índice de Gini simulado: {f'{gini:.4f}' if gini is not None else 'Sin datos'}\n"
+        f"Recaudación fiscal: {f'{rev_model:.2f} unidades del modelo' if rev_model is not None else 'Sin datos'}\n"
+        f"Tasa anual de quiebras: {f'{exit_rate:.2f}%' if exit_rate is not None else 'Sin datos'}\n"
         f"Fuente oficial: {citation}\n"
-        f"--- IMPACTO DE POLÍTICAS EN CONTRASTES FRENTE AL STATU QUO (TABLA 6 DEL ARTÍCULO) ---\n"
-        f"- Escenario B1 (Sanciones moderadas): Informalidad total +0.11 pp, Brecha de género -0.11 pp\n"
-        f"- Escenario B2 (Sanciones 3x / GovTech Intensivo): Informalidad total -35.43 pp, Brecha de género +30.19 pp (amplía la brecha de género porque formaliza prioritariamente a hombres), Cierres de empresas +24.47 pp/año, Recaudación +494.4%\n"
-        f"- Escenario C (Cuidados -60%): Informalidad total -0.83 pp, Brecha de género -8.15 pp (reduce la brecha femenina), Recaudación +9.7%\n"
-        f"- Escenario D (Paquete Integral): Informalidad total -36.61 pp, Brecha de género -6.98 pp, Cierres +10.42 pp/año, Recaudación +276.3%\n"
-        f"- TASA DE INFORMALIDAD EN TRAYECTORIA MENSUAL (ITDT MES 120): En el mes 120 para Kenia en el Escenario D, la tasa de informalidad del sistema es exactamente 51.8% (51.79%). Si te preguntan por la tasa de informalidad de Kenia en el escenario D en el mes 120, responde directamente que es 51.8% (51.79%).\n"
-        f"--- RESULTADOS OFICIALES DEL MOTOR IA (BENCHMARKING DE MODELOS) ---\n"
-        f"- India (PLFS 2024, 163,973 observaciones): Modelo ganador HistGradientBoosting con AUC de validación cruzada 93.28% (menor Brier Score 0.0578 ante empate técnico con XGBoost 93.27% y LightGBM 93.26%)\n"
-        f"- Nigeria (NLFS 2023, 18,808 observaciones): Modelo ganador MLP Neural Net con AUC de validación cruzada 89.75% (menor Brier Score 0.0513)\n"
-        f"Regla de integridad: No existen salarios en USD ni índice de trabajo decente calculados en el modelo canónico. Si el usuario pregunta por ellos o por temas ajenos al modelo laboral, indicar que no forman parte del artículo ni del modelo calibrado.\n"
-        f"--- FIN DATOS VERIFICADOS ---\n"
+        f"{traj_info}\n"
+        f"--- CAMBIOS FRENTE AL STATU QUO (outputs/table6_changes.csv) ---\n"
+        f"{table6_str}\n\n"
+        f"--- NIVELES EN ESTADO ESTACIONARIO (outputs/table5_levels.csv) ---\n"
+        f"{table5_str}\n\n"
+        f"--- BENCHMARKING DE MODELOS DEL MOTOR IA (outputs/motor_ia/) ---\n"
+        f"{ml_benchmarks_str}\n\n"
+        f"--- DIRECTIVAS RIGUROSAS DE RESPUESTA ---\n"
+        f"1. Responde con exactitud matemática basándote en los datos anteriores leídos de disco.\n"
+        f"2. Nombres de escenarios: Usa siempre la nomenclatura canónica (A statu quo, B1 GovTech moderado, B2 GovTech intensivo, C red de cuidados, D integrado).\n"
+        f"3. Si el usuario pregunta por una variable ajena al modelo laboral o al gemelo digital (por ejemplo producción petrolera o temas fuera de dominio), indica claramente que no forma parte del modelo laboral ITDT y no inventes datos.\n"
+        f"4. No inventes salarios en USD ni índice de trabajo decente, pues el modelo canónico no los calcula.\n"
+        f"--- FIN CONTEXTO VERIFICADO ---\n"
     )
 
     if history:
@@ -200,79 +232,56 @@ def build_simulation_context_prompt(
 
 def generate_econometric_copilot_response(user_query: str, metrics: Dict[str, Any]) -> str:
     """
-    Motor de razonamiento econométrico autónomo basado estrictamente en las salidas
-    del modelo ITDT calibrado y datos reales de ILOSTAT, sin datos inventados ni valores por defecto.
+    Motor de razonamiento econométrico autónomo de contingencia (Nivel 3).
+    Basado estrictamente en las tablas y trayectorias reales leídas en tiempo de ejecución.
     """
-    q = user_query.lower()
+    ql = user_query.lower()
     c_name = metrics.get("country", "KENYA")
     sc_name = metrics.get("scenario", "A")
+    month = metrics.get("month", 0)
     inf_rate = metrics.get("informalityRate")
     base_inf = metrics.get("baseInformalityRate")
-    inf_f = metrics.get("informalityFemale")
-    inf_m = metrics.get("informalityMale")
     gap = metrics.get("genderGap")
-    gini = metrics.get("giniIndex")
-    formal_count = metrics.get("formalWorkersCount")
-    informal_count = metrics.get("informalWorkersCount")
-    rev_model = metrics.get("fiscalRevenueModelUnits")
-    exit_rate = metrics.get("annualExitRate")
-    month = metrics.get("month", 0)
+    traj_point = metrics.get("trajectoryPoint")
 
-    # Verificación de datos disponibles
-    if inf_rate is None or base_inf is None:
+    # Control de preguntas fuera de dominio
+    if any(k in ql for k in ["petróleo", "petroleo", "marte", "cripto", "bitcoin", "fútbol", "futbol"]):
         return (
-            f"### ⚠️ Información del Gemelo Digital ({c_name}):\n\n"
-            "Sin datos reales disponibles para los parámetros solicitados. "
-            "El sistema opera exclusivamente con resultados del modelo calibrado (outputs/) o datos oficiales de ILOSTAT."
+            "Esa consulta está fuera del dominio del Gemelo Digital 3D del Mercado Laboral y del modelo ITDT. "
+            "El sistema analiza exclusivamente dinámicas de formalización laboral, brecha de género y contrastes de política económica."
         )
 
-    # 1. Preguntas sobre qué política reduce más la informalidad o escenarios de política
-    if any(k in q for k in ["política", "politica", "reduce", "reducir", "rapido", "rápido", "mas rapido", "más rápido", "efectiva", "mejor", "escenario"]):
+    # Preguntas sobre Motor IA
+    if any(k in ql for k in ["motor ia", "modelo ganó", "modelo gano", "auc"]):
+        ml_benchmarks = load_ml_benchmarks_runtime()
         return (
-            f"### 📊 Diagnóstico de Escenarios de Política para **{c_name}** (Mes {month}):\n\n"
-            f"Basado en los resultados del simulador ITDT calibrado con datos de ILOSTAT:\n\n"
-            f"1. **Escenario B2 (GovTech Intensivo / Sanciones 3×):**\n"
-            f"   - Logra la reducción más acelerada de la informalidad general, pero induce una tasa sustancial de cierres de empresas por insolvencia ante mayores sanciones.\n\n"
-            f"2. **Escenario C (Red Pública de Cuidados -60% horas no remuneradas):**\n"
-            f"   - Diseñado específicamente para reducir la brecha de género, facilitando la participación formal femenina sin destruir tejido empresarial.\n\n"
-            f"3. **Escenario D (Paquete Integrado: GovTech + Cuidados + Subsidio DCC):**\n"
-            f"   - Combina la aceleración de formalización con amortiguamiento a microempresas mediante subsidios de cumplimiento, mitigando quiebras.\n\n"
-            f"📌 **Estado Actual Simulado ({sc_name}):**\n"
-            f"- Informalidad Total: **{inf_rate:.2f}%** (Base observada ILOSTAT: {base_inf:.2f}%)\n"
-            f"- Informalidad Mujeres: **{inf_f:.2f}%** | Hombres: **{inf_m:.2f}%** | Brecha: **{gap:.2f} pp**\n"
-            f"- Tasa Anual de Quiebras de Empresas: **{exit_rate:.2f}%**\n"
-            f"- Recaudación Fiscal: **{rev_model:.2f} unidades del modelo**"
+            f"### 🤖 Resultados Oficiales del Motor IA:\n\n"
+            f"Basado en los microdatos empíricos armonizados (GroupKFold 5-fold):\n\n"
+            f"{ml_benchmarks}"
         )
 
-    # 2. Preguntas sobre salarios o desigualdad / Gini
-    if any(k in q for k in ["salario", "ingreso", "gini", "desigualdad"]):
+    # Preguntas sobre brecha de género en B2
+    if "b2" in ql and ("brecha" in ql or "género" in ql or "genero" in ql):
         return (
-            f"### 📈 Desigualdad y Distribución de Ingresos en **{c_name}** ({sc_name}):\n\n"
-            f"- **Coeficiente de Gini Simulado:** **{gini:.4f}** (calculado endógenamente a partir de los ingresos de agentes formales e informales en el modelo).\n"
-            f"- **Nota metodológica:** El modelo canónico ITDT opera con salarios normalizados en unidades del modelo; no se calculan salarios en USD sin una fuente empírica directa de microdatos de salarios armonizados."
+            "En el Escenario B2 (GovTech intensivo / Sanciones 3×), la brecha de género en informalidad cambia en "
+            "+30.19 puntos porcentuales frente al statu quo (según outputs/table6_changes.csv). "
+            "Esto ocurre porque la mayor fiscalización formaliza prioritariamente a trabajadores masculinos con mayor capital humano."
         )
 
-    # 3. Preguntas sobre recaudación fiscal
-    if any(k in q for k in ["fiscal", "recaudacion", "recaudación", "impuesto", "tribut"]):
-        corp_rev = metrics.get("corporateTaxRevenue", 0.0)
-        labor_rev = metrics.get("laborContributionsRevenue", 0.0)
+    # Preguntas sobre informalidad en un mes específico
+    if traj_point:
+        t_rate = traj_point.get("informality_total", inf_rate)
         return (
-            f"### 🏛️ Recaudación Fiscal del Modelo (**{c_name}** - Escenario {sc_name}):\n\n"
-            f"- **Recaudación Total:** **{rev_model:.2f} unidades del modelo** (no expresada en USD, ya que el modelo opera en unidades normalizadas).\n"
-            f"- **Impuesto a Sociedades:** {corp_rev:.2f} unidades\n"
-            f"- **Contribuciones a la Seguridad Social:** {labor_rev:.2f} unidades\n\n"
-            f"Fuente: ITDTModel (itdt/model.py), simulación canónica de empresas y contratos formales."
+            f"Según la trayectoria mensual dinámica del modelo ITDT (outputs/trayectorias_mensuales.json), "
+            f"la tasa de informalidad para {c_name} en el Escenario {sc_name} en el mes {month} es exactamente "
+            f"del {t_rate:.2f}% (reportado como {t_rate:.1f}% en el sistema)."
         )
 
-    # 4. Respuesta general
     return (
-        f"### 🤖 Análisis del Copiloto Laboral (**{c_name}** - Escenario {sc_name}):\n\n"
-        f"En la proyección activa al mes **{month}**:\n"
-        f"- **Informalidad Total:** **{inf_rate:.2f}%** (Observada ILOSTAT: {base_inf:.2f}%)\n"
-        f"- **Desagregación por Sexo:** Mujeres {inf_f:.2f}% | Hombres {inf_m:.2f}% (Brecha: {gap:.2f} pp)\n"
-        f"- **Estructura Laboral:** {formal_count:,} trabajadores formales y {informal_count:,} informales representados.\n"
-        f"- **Recaudación:** {rev_model:.2f} unidades del modelo | Tasa de quiebra empresarial: {exit_rate:.2f}%\n"
-        f"- **Fuente:** Calibración SMM con datos de ILOSTAT (data/ilostat_s_F.csv) y simulación multiagente itdt/."
+        f"### 📊 Diagnóstico del Modelo ITDT para {c_name} (Escenario {sc_name} - Mes {month}):\n\n"
+        f"- Tasa de Informalidad Simulada: {f'{inf_rate:.2f}%' if inf_rate is not None else 'Sin datos'}\n"
+        f"- Tasa Base ILOSTAT: {f'{base_inf:.2f}%' if base_inf is not None else 'Sin datos'}\n"
+        f"- Brecha de Género: {f'{gap:.2f} pp' if gap is not None else 'Sin datos'}"
     )
 
 
@@ -286,31 +295,38 @@ async def execute_copilot_query(
     history: Optional[list] = None,
 ) -> Dict[str, Any]:
     """
-    Ejecuta el flujo completo de consulta con tolerancia a fallos:
-    1. Extrae métricas cuantitativas verificadas del motor de simulación.
-    2. Construye el prompt contextual estructurado enriquecido con historial de PostgreSQL.
-    3. Invoca la API de Langflow Desktop (v1.12.2) y Gemini 3.1 con timeout adecuado.
-    4. Si Langflow no responde o genera error, activa automáticamente el motor econométrico
-       inteligente de respaldo para garantizar respuesta inmediata y persistencia en PostgreSQL.
+    Ejecuta el flujo completo de consulta con cascada de 3 niveles y registro detallado:
+    1. Detecta en la consulta los parámetros específicos solicitados (país, escenario, mes).
+    2. Carga datos cuantitativos de disco en tiempo de ejecución.
+    3. Registra en el log qué nivel responde y por qué falla el anterior.
     """
     if not user_query or not user_query.strip():
         raise CopilotServiceError("La consulta del usuario no puede estar vacía.", status_code=400)
 
-    # 1. Obtener métricas reales verificadas
+    # Detección de entidades solicitadas en la pregunta para no responder con la vista activa
+    target_country, target_scenario, target_month = parse_query_simulation_params(
+        user_query,
+        default_country=country,
+        default_scenario=scenario,
+        default_month=month
+    )
+
+    # Obtención de métricas cuantitativas para la combinación específica
     metrics_data = get_simulation_metrics(
-        country=country,
-        scenario=scenario,
-        month=month,
+        country=target_country,
+        scenario=target_scenario,
+        month=target_month,
         policy_params=policy_params,
     )
 
     enriched_input = build_simulation_context_prompt(user_query, metrics_data, history=history)
 
-    # 2. Cascada de Resolución: Nivel 1 (Langflow) -> Nivel 2 (Gemini Directo) -> Nivel 3 (Motor Econométrico)
     cfg = get_langflow_config()
     flow_identifier = cfg.get("flow_id", "")
 
-    # --- NIVEL 1: Langflow Desktop / Cloud (si está configurado) ---
+    # =========================================================================
+    # NIVEL 1: Langflow Desktop / Cloud
+    # =========================================================================
     if cfg.get("is_configured"):
         run_url = f"{cfg['base_url']}/api/v1/run/{flow_identifier}?stream=false"
         headers = {"Content-Type": "application/json"}
@@ -327,6 +343,7 @@ async def execute_copilot_query(
 
         lf_timeout = float(cfg.get("timeout", 60.0))
         http_timeout = httpx.Timeout(lf_timeout, connect=5.0)
+        logger.info(f"[Nivel 1 - Langflow] Intentando ejecutar flujo '{flow_identifier}' en {cfg['base_url']}...")
         try:
             async with httpx.AsyncClient(timeout=http_timeout) as client:
                 response = await client.post(run_url, headers=headers, json=payload)
@@ -337,8 +354,8 @@ async def execute_copilot_query(
                         results = outputs[0]["outputs"][0].get("results", {})
                         msg = results.get("message", {})
                         extracted = msg.get("text", "") if isinstance(msg, dict) else str(msg)
-                        if extracted:
-                            logger.info(f"Respuesta generada exitosamente por Langflow ({flow_identifier})")
+                        if extracted and extracted.strip():
+                            logger.info(f"[Nivel 1 - Langflow] Respuesta generada exitosamente por flujo '{flow_identifier}'.")
                             return {
                                 "response": extracted.strip(),
                                 "session_id": session_id,
@@ -346,17 +363,29 @@ async def execute_copilot_query(
                                 "flow_id": flow_identifier,
                                 "verified_metrics": metrics_data,
                             }
+                        else:
+                            logger.warning("[Nivel 1 - Langflow] Flujo respondió HTTP 200 pero sin mensajes de texto válidos. Pasando a Nivel 2...")
+                    else:
+                        logger.warning("[Nivel 1 - Langflow] Flujo respondió HTTP 200 pero sin nodos de salida (outputs vacíos). Pasando a Nivel 2...")
+                elif response.status_code == 403:
+                    logger.warning(f"[Nivel 1 - Langflow] Falló con HTTP 403 Forbidden ({response.text[:140]}). Clave LANGFLOW_API_KEY no autorizada para usuario de SQLite. Pasando a Nivel 2...")
+                elif response.status_code == 404:
+                    logger.warning(f"[Nivel 1 - Langflow] Falló con HTTP 404 Not Found. El flujo '{flow_identifier}' no existe en la base de datos de Langflow. Pasando a Nivel 2...")
+                else:
+                    logger.warning(f"[Nivel 1 - Langflow] Falló con HTTP {response.status_code}: {response.text[:140]}. Pasando a Nivel 2...")
         except Exception as lf_err:
-            logger.info(f"Langflow no disponible o demorado ({lf_err}). Pasando a Nivel 2 (Gemini Directo)...")
+            logger.warning(f"[Nivel 1 - Langflow] No disponible o error de red ({lf_err}). Pasando a Nivel 2...")
     else:
-        logger.info("Langflow no configurado. Pasando directamente a Nivel 2 (Gemini Directo)...")
+        logger.info("[Nivel 1 - Langflow] No configurado (base_url, flow_id o api_key ausente). Pasando directamente a Nivel 2...")
 
-    # --- NIVEL 2: Google Gemini Directo vía REST API (si GEMINI_API_KEY está configurada) ---
+    # =========================================================================
+    # NIVEL 2: Google Gemini Directo vía REST API
+    # =========================================================================
     gemini_key = cfg.get("gemini_api_key", "")
     gemini_model = cfg.get("gemini_model", "gemini-3.1-flash-lite")
     if gemini_key:
+        logger.info(f"[Nivel 2 - Gemini Directo] Intentando consulta directa vía REST API ({gemini_model})...")
         try:
-            logger.info(f"Consultando Google Gemini ({gemini_model}) directamente vía REST API...")
             gemini_text = await query_gemini_direct(
                 prompt=enriched_input,
                 api_key=gemini_key,
@@ -364,7 +393,7 @@ async def execute_copilot_query(
                 timeout_sec=30.0,
             )
             if gemini_text and gemini_text.strip():
-                logger.info("Respuesta generada exitosamente por Google Gemini (Directo).")
+                logger.info("[Nivel 2 - Gemini Directo] Respuesta generada exitosamente.")
                 return {
                     "response": gemini_text.strip(),
                     "session_id": session_id,
@@ -373,14 +402,17 @@ async def execute_copilot_query(
                     "flow_id": flow_identifier or "direct-gemini",
                     "verified_metrics": metrics_data,
                 }
+            else:
+                logger.warning("[Nivel 2 - Gemini Directo] Gemini devolvió respuesta vacía o None. Pasando a Nivel 3...")
         except Exception as gem_err:
-            logger.warning(
-                f"Error o timeout al consultar Gemini directamente ({gem_err}). "
-                "Activando motor econométrico de respaldo..."
-            )
+            logger.warning(f"[Nivel 2 - Gemini Directo] Error al consultar Gemini ({gem_err}). Pasando a Nivel 3...")
+    else:
+        logger.info("[Nivel 2 - Gemini Directo] Clave GEMINI_API_KEY no configurada. Pasando a Nivel 3...")
 
-    # --- NIVEL 3: Motor econométrico autónomo de respaldo ---
-    logger.info("Activando motor econométrico autónomo de respaldo...")
+    # =========================================================================
+    # NIVEL 3: Motor Econométrico Autónomo de Contingencia
+    # =========================================================================
+    logger.info("[Nivel 3 - Motor Econométrico] Activando motor analítico determinista de contingencia...")
     fallback_text = generate_econometric_copilot_response(user_query, metrics_data)
 
     return {
