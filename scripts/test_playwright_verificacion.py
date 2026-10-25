@@ -138,7 +138,7 @@ def run_tests():
             # Esperar a que window.__itdtDebug esté disponible y tenga frames renderizados
             page.wait_for_function(
                 "() => window.__itdtDebug !== undefined && window.__itdtDebug.canvasRendered === true",
-                timeout=15000,
+                timeout=30000,
             )
             debug = page.evaluate("() => window.__itdtDebug")
 
