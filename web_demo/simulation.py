@@ -633,6 +633,17 @@ class SimulationEngine:
         }
 
 
+def load_muestra_trabajadores() -> List[Dict[str, Any]]:
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "src", "data", "muestra_trabajadores.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+
 def generate_worker_population(
     country_code: str,
     total_workers: int = 2500,
@@ -640,7 +651,7 @@ def generate_worker_population(
 ) -> List[Dict[str, Any]]:
     """
     Genera la población de partículas de trabajadores para vistas estáticas o Streamlit
-    alineada con las proporciones observadas en ILOSTAT.
+    alineada con las proporciones observadas en ILOSTAT y microdatos reales de muestra_trabajadores.json.
     """
     random.seed(seed)
     baseline = COUNTRY_BASELINES.get(country_code, COUNTRY_BASELINES["KENYA"])
@@ -652,20 +663,23 @@ def generate_worker_population(
     num_formal = int(round(total_workers * formal_ratio))
     num_informal = total_workers - num_formal
 
-    educations = ["Básica", "Media", "Superior"]
-    genders = ["Femenino", "Masculino"]
+    sample = load_muestra_trabajadores()
+    sample_formals = [p for p in sample if p.get("formal_base") is True]
+    sample_informals = [p for p in sample if p.get("formal_base") is False]
+    n_formals = len(sample_formals) or 1
+    n_informals = len(sample_informals) or 1
 
     workers: List[Dict[str, Any]] = []
     firms = get_model_firms(country_code)
     firms_count = max(1, len(firms))
 
-    # 1. Trabajadores Formales
+    # 1. Trabajadores Formales (formal_base = True)
     for i in range(num_formal):
         firm = firms[i % firms_count]
         orbit_radius = 1.4 + random.random() * 2.8
         orbit_speed = 0.015 + random.random() * 0.02
         orbit_angle = random.random() * math.pi * 2
-        human_capital = random.randint(65, 98)
+        profile = sample_formals[i % n_formals] if sample_formals else {}
 
         workers.append({
             "id": f"w-f-{i:04d}",
@@ -680,20 +694,26 @@ def generate_worker_population(
             "orbit_speed": orbit_speed,
             "orbit_angle": orbit_angle,
             "firm_id": firm["id"],
-            "human_capital": human_capital,
-            "age": 22 + random.randint(0, 38),
-            "gender": genders[i % 2],
-            "education": educations[min(2, human_capital // 35)],
+            "gender": profile.get("sexo", "Hombre"),
+            "education": profile.get("educacion", "Secundaria"),
+            "rural_zone": profile.get("zona", "Rural"),
+            "productivity_h": profile.get("productividad_h", 1.0),
+            "care_hours": profile.get("horas_cuidado", 10.0),
+            "digital_lit": profile.get("alfabetizacion_digital", 0.5),
+            "subsector": firm.get("sectorCategory", "Manufactura"),
+            "formal_base": True,
             "formalization_month": 0,
             "current_progress": 1.0,
         })
 
-    # 2. Trabajadores Informales
+    # 2. Trabajadores Informales (formal_base = False)
+    # NOTA: En el modelo canónico ITDT las trayectorias son macroeconómicas agregadas;
+    # la transición visual entre sectores es una animación ilustrativa.
     for i in range(num_informal):
         x = (random.random() - 0.5) * 36.0
         z = (random.random() - 0.5) * 36.0
-        human_capital = random.randint(18, 72)
         target_firm = firms[i % firms_count]
+        profile = sample_informals[i % n_informals] if sample_informals else {}
 
         workers.append({
             "id": f"w-inf-{i:04d}",
@@ -712,11 +732,15 @@ def generate_worker_population(
             "orbit_speed": 0.015,
             "orbit_angle": random.random() * math.pi * 2,
             "firm_id": None,
-            "human_capital": human_capital,
-            "age": 18 + random.randint(0, 46),
-            "gender": genders[i % 2],
-            "education": educations[min(2, human_capital // 40)],
-            "formalization_month": int(12 + (100 - human_capital) * 0.9),
+            "gender": profile.get("sexo", "Hombre"),
+            "education": profile.get("educacion", "Secundaria"),
+            "rural_zone": profile.get("zona", "Rural"),
+            "productivity_h": profile.get("productividad_h", 0.5),
+            "care_hours": profile.get("horas_cuidado", 12.0),
+            "digital_lit": profile.get("alfabetizacion_digital", 0.3),
+            "subsector": "Agricultura Familiar" if profile.get("zona") == "Rural" else "Comercio Ambulante / Taller",
+            "formal_base": False,
+            "formalization_month": 0,
             "current_progress": 0.0,
         })
 

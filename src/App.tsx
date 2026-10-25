@@ -47,7 +47,7 @@ import {
   BACKEND_URL
 } from './services/api';
 
-// Helper: Generate Worker Particles Population (2,500 boids with formalization schedules from ITDT real sample)
+// Helper: Generate Worker Particles Population (2,500 boids asignados desde la muestra empírica real ITDT)
 export function createWorkersPopulation(
   countryCode: CountryCode, 
   informalityRate: number,
@@ -63,12 +63,16 @@ export function createWorkersPopulation(
   const numFormal = Math.round(totalWorkers * formalRatio);
   const numInformal = totalWorkers - numFormal;
 
-  const sampleLen = (muestraTrabajadores as any[]).length || 2500;
+  // Requisito 5: Asignar a formales perfiles con formal_base = true y a informales con formal_base = false
+  const sampleFormals = (muestraTrabajadores as any[]).filter((p: any) => p.formal_base === true);
+  const sampleInformals = (muestraTrabajadores as any[]).filter((p: any) => p.formal_base === false);
+  const nFormals = sampleFormals.length || 1;
+  const nInformals = sampleInformals.length || 1;
 
-  // Formal workers (Anchored from month 0)
+  // Formal workers (Anchored to formal firms from month 0)
   for (let i = 0; i < numFormal; i++) {
     const hostFirm = formalFirms[i % formalFirms.length] || firmList[0];
-    const profile = (muestraTrabajadores as any[])[i % sampleLen];
+    const profile = sampleFormals[i % nFormals];
     const orbitRadius = 1.4 + ((i % 10) / 10) * 2.6;
     const orbitSpeed = 0.012 + ((i % 8) / 8) * 0.016;
     const orbitAngle = ((i * 137.5) * Math.PI) / 180;
@@ -100,15 +104,16 @@ export function createWorkersPopulation(
     });
   }
 
-  // Informal workers (with distributed formalization months based on productivity)
+  // Informal workers (perfiles reales con formal_base = false)
+  // NOTA METODOLÓGICA: El estado del trabajador por mes no está disponible a nivel individual en el modelo
+  // canónico ITDT (el modelo computa tasas macroeconómicas agregadas mensuales en outputs/trayectorias_mensuales.json).
+  // La animación visual de transición entre sectores es una representación puramente ilustrativa de las dinámicas agregadas.
   for (let i = 0; i < numInformal; i++) {
-    const workerIndex = numFormal + i;
-    const profile = (muestraTrabajadores as any[])[workerIndex % sampleLen];
+    const profile = sampleInformals[i % nInformals];
     const angle = ((i * 137.5) * Math.PI) / 180;
     const dist = 3 + Math.sqrt(i / (numInformal || 1)) * 16;
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
-    const baseMonth = Math.round(12 + (2.0 - Math.min(2.0, profile.productividad_h)) * 45);
 
     newWorkers.push({
       id: `w-informal-${i}`,
@@ -132,7 +137,7 @@ export function createWorkersPopulation(
       orbitSpeed: 0,
       orbitAngle: 0,
       subSector: profile.zona === 'Rural' ? 'Agricultura Familiar' : 'Comercio Ambulante / Taller',
-      formalizationMonth: baseMonth,
+      formalizationMonth: 0,
       currentProgress: 0.0,
       informalX: x,
       informalZ: z,

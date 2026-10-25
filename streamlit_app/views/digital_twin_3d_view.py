@@ -171,7 +171,14 @@ def render_digital_twin_3d_view():
                         opacity=0.88,
                     ),
                     text=sub.apply(
-                        lambda r: f"<b>Agente:</b> {r.get('code', '')}<br><b>Sector:</b> {r.get('display_sector', r.get('sector', '').title())}<br><b>Capital Humano:</b> {r.get('human_capital', 50)}/100<br><b>Ingreso Relativo:</b> {r.get('human_capital', 70) / 10.0:.1f} u.m.<br><b>Prob. Formalización:</b> {r.get('formalization_prob', int(r.get('current_progress', 0.0) * 100))}%",
+                        lambda r: f"<b>Agente:</b> {r.get('code', '')}<br>"
+                                  f"<b>Estado Laboral:</b> {r.get('display_sector', r.get('sector', '').title())}<br>"
+                                  f"<b>Sexo:</b> {r.get('gender', 'N/D')}<br>"
+                                  f"<b>Zona:</b> {r.get('rural_zone', 'N/D')}<br>"
+                                  f"<b>Nivel Educativo:</b> {r.get('education', 'Media')}<br>"
+                                  f"<b>Productividad (h_i):</b> {float(r.get('productivity_h', 1.0)):.3f}<br>"
+                                  f"<b>Cuidado Semanal:</b> {float(r.get('care_hours', 0.0)):.1f} hrs/sem<br>"
+                                  f"<b>Alf. Digital (K_dig):</b> {float(r.get('digital_lit', 0.0))*100:.1f}%",
                         axis=1
                     ),
                     hoverinfo="text",
@@ -286,17 +293,17 @@ def render_digital_twin_3d_view():
                 <span class="glow-badge badge-cyan">{selected_worker.get('display_sector', selected_worker.get('sector', '').title())}</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; color: #cbd5e1;">
-                <div><b>Edad:</b> {selected_worker.get('age', 30)} años</div>
-                <div><b>Género:</b> {selected_worker.get('gender', 'N/D')}</div>
-                <div><b>Educación:</b> {selected_worker.get('education', 'Media')}</div>
+                <div><b>Sexo (OIT):</b> {selected_worker.get('gender', 'N/D')}</div>
+                <div><b>Zona Geográfica:</b> {selected_worker.get('rural_zone', 'N/D')}</div>
+                <div><b>Nivel Educativo:</b> <span style="color:#818cf8;">{selected_worker.get('education', 'Media')}</span></div>
                 <div><b>Subsector:</b> {selected_worker.get('subsector', 'Manufactura')}</div>
-                <div><b>Capital Humano:</b> <span style="color:#00f0ff;">{selected_worker.get('human_capital', 50)}/100</span></div>
-                <div><b>Ingreso Relativo:</b> <span style="color:#10b981;">{selected_worker.get('human_capital', 70) / 10.0:.1f} u.m.</span></div>
-                <div><b>Tolerancia Riesgo:</b> {selected_worker.get('risk_tolerance', 50)}%</div>
-                <div><b>Prob. Formalización:</b> <span style="color:#f59e0b;">{selected_worker.get('formalization_prob', int(selected_worker.get('current_progress', 0.0) * 100))}%</span></div>
+                <div><b>Productividad Relativa (h_i):</b> <span style="color:#00f0ff;">{float(selected_worker.get('productivity_h', 1.0)):.3f}</span></div>
+                <div><b>Cuidado Semanal (H_care,i):</b> <span style="color:#f59e0b;">{float(selected_worker.get('care_hours', 10.0)):.1f} hrs/sem</span></div>
+                <div><b>Alfabetización Digital (K_dig):</b> <span style="color:#10b981;">{float(selected_worker.get('digital_lit', 0.5))*100:.1f}%</span></div>
+                <div><b>Estado Laboral ITDT:</b> <span style="color:{status_color}; font-weight:700;">{selected_worker.get('display_sector', selected_worker.get('sector', '').title())}</span></div>
             </div>
-            <div style="margin-top: 8px; font-size: 0.75rem; color: #94a3b8;">
-                <b>Progreso de Transición:</b> {int(selected_worker.get('current_progress', 0)*100)}% (Mes previsto: {selected_worker.get('formalization_month', 'N/A')})
+            <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; border-top: 1px dashed rgba(148, 163, 184, 0.3); padding-top: 6px;">
+                <b>Nota metodológica:</b> El modelo canónico ITDT calcula trayectorias macroeconómicas agregadas; la animación visual de partículas es puramente ilustrativa de las tasas del modelo.
             </div>
         </div>
         """, unsafe_allow_html=True)
