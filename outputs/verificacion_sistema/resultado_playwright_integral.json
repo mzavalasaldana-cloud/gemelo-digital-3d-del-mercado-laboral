@@ -17,42 +17,32 @@
       "14_modo_claro",
       "15_modo_oscuro"
     ],
-    "console_errors": {
-      "01_dashboard": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ],
-      "04_motor_ia_cv": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ],
-      "08_datasets_reports": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ]
-    },
+    "console_errors": {},
     "failed_requests": {},
     "worker_cards": [
       {
         "worker_index": 0,
         "title": "Trabajador Boid #F-1000",
         "attributes_valid": true,
-        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #F-1000\nEstado Laboral ITDT:\nFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nRural\nNivel Educativo:\nPrimaria / Básica\nProductividad Relativa (h_i):\n0.633\nHoras de Cuidado Semanales (H_care,i):\n9.8 hrs/sem\nAlfabetizació"
+        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #F-1000\nEstado Laboral ITDT:\nFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nUrbana\nNivel Educativo:\nTerciaria / Avanzada\nProductividad Relativa (h_i):\n1.454\nHoras de Cuidado Semanales (H_care,i):\n9.0 hrs/sem\nAlfabetiz"
       },
       {
         "worker_index": 500,
         "title": "Trabajador Boid #INF-2162",
         "attributes_valid": true,
-        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #INF-2162\nEstado Laboral ITDT:\nINFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nRural\nNivel Educativo:\nSecundaria / Intermedia\nProductividad Relativa (h_i):\n0.263\nHoras de Cuidado Semanales (H_care,i):\n11.3 hrs/sem\nAl"
+        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #INF-2162\nEstado Laboral ITDT:\nINFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nUrbana\nNivel Educativo:\nPrimaria / Básica\nProductividad Relativa (h_i):\n0.506\nHoras de Cuidado Semanales (H_care,i):\n8.4 hrs/sem\nAlfabeti"
       },
       {
         "worker_index": 1500,
         "title": "Trabajador Boid #INF-3162",
         "attributes_valid": true,
-        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #INF-3162\nEstado Laboral ITDT:\nINFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nUrbana\nNivel Educativo:\nSecundaria / Intermedia\nProductividad Relativa (h_i):\n0.903\nHoras de Cuidado Semanales (H_care,i):\n6.0 hrs/sem\nAl"
+        "text_sample": "TELEMETRÍA DE AGENTE\nTrabajador Boid #INF-3162\nEstado Laboral ITDT:\nINFORMAL\nSexo (OIT):\nHombre\nZona Geográfica:\nRural\nNivel Educativo:\nPrimaria / Básica\nProductividad Relativa (h_i):\n0.759\nHoras de Cuidado Semanales (H_care,i):\n12.9 hrs/sem\nAlfabeti"
       }
     ],
     "copilot_ui_test": {
       "question": "¿Cuál es la tasa de informalidad de Kenia en el escenario D en el mes 120?",
-      "has_expected_rate": false,
-      "response_snippet": "entados se derivan exclusivamente de la Tabla 6 del artículo y los parámetros de calibración del modelo multiagente. No existen salarios en USD ni índices de trabajo decente calculados en el modelo canónico, por lo que cualquier referencia a dichas métricas queda fuera del alcance de este análisis.*"
+      "has_expected_rate": true,
+      "response_snippet": "20?\n---MSG---\nLa tasa de informalidad de Kenia en el escenario D en el mes 120 es exactamente 51.8% (51.79%).\n---MSG---\n¿Cuál es la tasa de informalidad de Kenia en el escenario D en el mes 120?\n---MSG---\nLa tasa de informalidad de Kenia en el escenario D en el mes 120 es exactamente 51.8% (51.79%)."
     }
   },
   "streamlit": {

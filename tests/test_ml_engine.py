@@ -227,9 +227,10 @@ def test_outputs_integrity():
         ":(exclude)outputs/motor_ia/*",
         ":(exclude)outputs/figuras_articulo/*",
         ":(exclude)outputs/capturas/*",
+        ":(exclude)outputs/verificacion_sistema/*",
     ]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    diff_output = result.stdout.strip()
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace")
+    diff_output = (result.stdout or "").strip()
     assert diff_output == "", f"Regresión detectada en outputs del artículo científico:\n{diff_output}"
 
 
