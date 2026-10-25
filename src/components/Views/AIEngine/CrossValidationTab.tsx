@@ -153,14 +153,13 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
     stdRocAuc: 0.28,
   } : null);
 
-  const meanRocAuc = summary?.meanRocAuc ?? activeDeployedModel?.rocAuc ?? 93.05;
-  const stdRocAuc = summary?.stdRocAuc ?? 0.28;
-  const meanF1 = summary?.meanF1 ?? activeDeployedModel?.f1Score ?? 95.63;
-  const accTest = currentResult?.metricsTrainVsTest?.find((m: any) => m.metric === 'Accuracy')?.Test ?? activeDeployedModel?.accuracy ?? 92.21;
-  const brierVal = activeDeployedModel?.brierScore ?? 0.0573;
-  const logLossVal = activeDeployedModel?.brierScore ?? brierVal;
+  const meanRocAuc = summary?.meanRocAuc ?? activeDeployedModel?.rocAuc ?? null;
+  const stdRocAuc = summary?.stdRocAuc ?? null;
+  const meanF1 = summary?.meanF1 ?? activeDeployedModel?.f1Score ?? null;
+  const accTest = currentResult?.metricsTrainVsTest?.find((m: any) => m.metric === 'Accuracy')?.Test ?? activeDeployedModel?.accuracy ?? null;
+  const brierVal = activeDeployedModel?.brierScore ?? null;
+  const logLossVal = brierVal;
 
-  const defaultCM = { tn: 10582, fp: 1140, fn: 820, tp: 13800, tpPct: 94.4, fpPct: 9.7, fnPct: 5.6, tnPct: 90.3 };
   const rawCM = currentResult?.confusionMatrix || activeDeployedModel?.confusionMatrix;
   const cm = rawCM ? (Array.isArray(rawCM) ? {
     tn: Math.round(rawCM[0]?.[0] ?? 0),
@@ -171,24 +170,17 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
     fpPct: +(rawCM[0]?.[1] / (rawCM[0]?.[0] + rawCM[0]?.[1] || 1) * 100).toFixed(1),
     fnPct: +(rawCM[1]?.[0] / (rawCM[1]?.[0] + rawCM[1]?.[1] || 1) * 100).toFixed(1),
     tnPct: +(rawCM[0]?.[0] / (rawCM[0]?.[0] + rawCM[0]?.[1] || 1) * 100).toFixed(1),
-  } : rawCM) : defaultCM;
+  } : rawCM) : null;
 
   const totalCM = cm ? (((cm.tp ?? 0) + (cm.tn ?? 0) + (cm.fp ?? 0) + (cm.fn ?? 0)) || 1) : 1;
-  const cmAccuracy = cm ? ((((cm.tp ?? 0) + (cm.tn ?? 0)) / totalCM) * 100).toFixed(1) : "92.2";
+  const cmAccuracy = cm ? ((((cm.tp ?? 0) + (cm.tn ?? 0)) / totalCM) * 100).toFixed(1) : null;
 
   const rawRoc = (currentResult as any)?.rocCurve || activeDeployedModel?.rocCurve;
   const rocCurveData = rawRoc?.fpr ? rawRoc.fpr.map((fprVal: number, i: number) => ({
     fpr: +(fprVal.toFixed(3)),
     tpr: +(rawRoc.tpr[i]?.toFixed(3) || 0),
     random: +(fprVal.toFixed(3)),
-  })) : [
-    { fpr: 0.00, tpr: 0.00, random: 0.00 },
-    { fpr: 0.02, tpr: 0.70, random: 0.02 },
-    { fpr: 0.05, tpr: 0.88, random: 0.05 },
-    { fpr: 0.10, tpr: 0.94, random: 0.10 },
-    { fpr: 0.20, tpr: 0.97, random: 0.20 },
-    { fpr: 1.00, tpr: 1.00, random: 1.00 },
-  ];
+  })) : [];
 
   const rawFeatImp = (currentResult as any)?.featureImportance || activeDeployedModel?.featureImportances;
   const featureImportance = rawFeatImp ? (
@@ -201,14 +193,7 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                k.startsWith('sector_actividad') ? `Sector: ${k.replace('sector_actividad_', '')}` : k,
       importance: typeof v === 'number' ? +(v.toFixed(1)) : v,
     }))
-  ) : [
-    { feature: 'Años de Educación Formal', importance: 34.2 },
-    { feature: 'Horas Semanales Trabajadas', importance: 24.5 },
-    { feature: 'Edad del Trabajador', importance: 18.6 },
-    { feature: 'Sector de Actividad (Económico)', importance: 12.1 },
-    { feature: 'Zona Rural / Urbana', importance: 6.4 },
-    { feature: 'Sexo / Género (Mujer)', importance: 4.2 },
-  ];
+  ) : [];
 
   const modelLabel = currentResult?.algorithm || activeDeployedModel?.name || 'HistGradientBoosting';
 
@@ -453,8 +438,12 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('metricRocAuc', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{(meanRocAuc / 100).toFixed(3)}</span>
-                <span className="text-xs text-emerald-500 font-mono font-bold">±{(stdRocAuc / 100).toFixed(3)}</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {meanRocAuc != null ? (meanRocAuc / 100).toFixed(3) : 'Sin resultados'}
+                </span>
+                {stdRocAuc != null && (
+                  <span className="text-xs text-emerald-500 font-mono font-bold">±{(stdRocAuc / 100).toFixed(3)}</span>
+                )}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {nFolds} Folds {strategy}
@@ -464,8 +453,10 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('metricF1', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{meanF1.toFixed(1)}%</span>
-                <span className="text-xs text-cyan-600 dark:text-cyan-400 font-mono">Weighted</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {meanF1 != null ? `${meanF1.toFixed(1)}%` : 'Sin resultados'}
+                </span>
+                {meanF1 != null && <span className="text-xs text-cyan-600 dark:text-cyan-400 font-mono">Weighted</span>}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {language === 'en' ? 'Class balance metric' : 'Balanceo de clases formal/informal'}
@@ -475,8 +466,10 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('metricAccuracy', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{accTest.toFixed(1)}%</span>
-                <span className="text-xs text-emerald-500 font-mono">OK</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {accTest != null ? `${accTest.toFixed(1)}%` : 'Sin resultados'}
+                </span>
+                {accTest != null && <span className="text-xs text-emerald-500 font-mono">OK</span>}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {language === 'en' ? 'Global test set accuracy' : 'Precisión global en conjunto de prueba'}
@@ -486,8 +479,12 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
             <div className="hud-glass p-4 rounded-xl border border-cyan-500/20 relative overflow-hidden">
               <span className={`text-xs font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{t('metricLogLoss', language)}</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{logLossVal.toFixed(3)}</span>
-                <span className="text-xs text-emerald-500 font-mono">{language === 'en' ? 'Low error' : 'Bajo error'}</span>
+                <span className={`text-2xl font-display font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {logLossVal != null ? logLossVal.toFixed(3) : 'Sin resultados'}
+                </span>
+                {logLossVal != null && (
+                  <span className="text-xs text-emerald-500 font-mono">{language === 'en' ? 'Low error' : 'Bajo error'}</span>
+                )}
               </div>
               <p className={`text-[11px] font-mono mt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {language === 'en' ? 'Cross-entropy loss function' : 'Pérdida por entropía cruzada'}
@@ -510,25 +507,31 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
               </div>
 
               <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={rocCurveData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#e2e8f0' : '#1e293b'} />
-                    <XAxis dataKey="fpr" type="number" domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 10 }} label={{ value: 'FPR (1 - Specificity)', position: 'insideBottom', offset: -5, fontSize: 10, fill: '#64748b' }} />
-                    <YAxis dataKey="tpr" type="number" domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 10 }} label={{ value: 'TPR (Sensitivity)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#64748b' }} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(8, 12, 20, 0.95)', 
-                        borderColor: isLight ? '#cbd5e1' : '#00f0ff', 
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        color: isLight ? '#0f172a' : '#f8fafc'
-                      }} 
-                    />
-                    <Line type="monotone" dataKey="tpr" stroke="#00f0ff" strokeWidth={2.5} dot={false} name={modelLabel} />
-                    <Line type="monotone" dataKey="random" stroke="#64748b" strokeDasharray="4 4" dot={false} name="Random Guess (0.50)" />
-                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  </LineChart>
-                </ResponsiveContainer>
+                {rocCurveData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={rocCurveData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#e2e8f0' : '#1e293b'} />
+                      <XAxis dataKey="fpr" type="number" domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 10 }} label={{ value: 'FPR (1 - Specificity)', position: 'insideBottom', offset: -5, fontSize: 10, fill: '#64748b' }} />
+                      <YAxis dataKey="tpr" type="number" domain={[0, 1]} stroke="#64748b" tick={{ fontSize: 10 }} label={{ value: 'TPR (Sensitivity)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#64748b' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(8, 12, 20, 0.95)', 
+                          borderColor: isLight ? '#cbd5e1' : '#00f0ff', 
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          color: isLight ? '#0f172a' : '#f8fafc'
+                        }} 
+                      />
+                      <Line type="monotone" dataKey="tpr" stroke="#00f0ff" strokeWidth={2.5} dot={false} name={modelLabel} />
+                      <Line type="monotone" dataKey="random" stroke="#64748b" strokeDasharray="4 4" dot={false} name="Random Guess (0.50)" />
+                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-slate-400 font-mono text-xs">
+                    Sin resultados
+                  </div>
+                )}
               </div>
 
               {(() => {
@@ -536,16 +539,16 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                   ? (currentResult as any).metrics.rocAuc
                   : typeof activeDeployedModel?.rocAuc === 'number'
                   ? activeDeployedModel.rocAuc
-                  : 0.933;
-                const currentAucStr = currentAucVal.toFixed(3);
-                const currentAucPct = (currentAucVal * 100).toFixed(1);
+                  : null;
+                const currentAucStr = currentAucVal != null ? currentAucVal.toFixed(3) : 'Sin resultados';
+                const currentAucPct = currentAucVal != null ? (currentAucVal * 100).toFixed(1) : '--';
 
                 return (
                   <ExplainabilityCard
                     language={language}
                     theme={theme}
                     title={language === 'en' ? 'Chart Explainability: ROC-AUC Discrimination Curve' : 'Explicabilidad: Curva ROC y Capacidad de Discriminación'}
-                    variableOrMetric={`AUC = ${currentAucStr} (${currentAucVal >= 0.90 ? 'Excelente' : 'Bueno'})`}
+                    variableOrMetric={currentAucVal != null ? `AUC = ${currentAucStr} (${currentAucVal >= 0.90 ? 'Excelente' : 'Bueno'})` : 'Sin resultados'}
                     whatItIs={language === 'en'
                       ? 'Receiver Operating Characteristic (ROC) curve displaying true positive rate (sensitivity) vs false positive rate (1 - specificity) across all classification thresholds.'
                       : 'Curva de Característica Operativa del Receptor (ROC) que enfrenta la tasa de verdaderos positivos (sensibilidad) contra la tasa de falsos positivos en todos los umbrales posibles.'}
@@ -572,46 +575,52 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 font-mono text-xs text-center my-2">
-                <div className={`p-4 rounded-xl border ${
-                  isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200'
-                }`}>
-                  <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>TP (Formal)</span>
-                  <span className="text-2xl font-bold">{(cm?.tp ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-emerald-500 block">{((cm?.tp ?? 0) / 1000).toFixed(1)}k Hit</span>
-                </div>
+              {cm ? (
+                <div className="grid grid-cols-2 gap-2 font-mono text-xs text-center my-2">
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200'
+                  }`}>
+                    <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>TP (Formal)</span>
+                    <span className="text-2xl font-bold">{(cm.tp ?? 0).toLocaleString()}</span>
+                    <span className="text-[10px] text-emerald-500 block">{((cm.tp ?? 0) / 1000).toFixed(1)}k Hit</span>
+                  </div>
 
-                <div className={`p-4 rounded-xl border ${
-                  isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
-                }`}>
-                  <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>FP (Informal→Form)</span>
-                  <span className="text-2xl font-bold">{(cm?.fp ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-rose-500 block">Error Tipo I</span>
-                </div>
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+                  }`}>
+                    <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>FP (Informal→Form)</span>
+                    <span className="text-2xl font-bold">{(cm.fp ?? 0).toLocaleString()}</span>
+                    <span className="text-[10px] text-rose-500 block">Error Tipo I</span>
+                  </div>
 
-                <div className={`p-4 rounded-xl border ${
-                  isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
-                }`}>
-                  <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>FN (Form→Informal)</span>
-                  <span className="text-2xl font-bold">{(cm?.fn ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-rose-500 block">Error Tipo II</span>
-                </div>
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+                  }`}>
+                    <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>FN (Form→Informal)</span>
+                    <span className="text-2xl font-bold">{(cm.fn ?? 0).toLocaleString()}</span>
+                    <span className="text-[10px] text-rose-500 block">Error Tipo II</span>
+                  </div>
 
-                <div className={`p-4 rounded-xl border ${
-                  isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200'
-                }`}>
-                  <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>TN (Informal)</span>
-                  <span className="text-2xl font-bold">{(cm?.tn ?? 0).toLocaleString()}</span>
-                  <span className="text-[10px] text-emerald-500 block">{((cm?.tn ?? 0) / 1000).toFixed(1)}k Hit</span>
+                  <div className={`p-4 rounded-xl border ${
+                    isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-200'
+                  }`}>
+                    <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>TN (Informal)</span>
+                    <span className="text-2xl font-bold">{(cm.tn ?? 0).toLocaleString()}</span>
+                    <span className="text-[10px] text-emerald-500 block">{((cm.tn ?? 0) / 1000).toFixed(1)}k Hit</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-8 text-center text-slate-400 font-mono text-xs my-2">
+                  Sin resultados
+                </div>
+              )}
 
               <div className={`p-2.5 rounded-xl border flex items-center justify-between text-[11px] font-mono ${
                 isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900/50 border-slate-800 text-slate-300'
               }`}>
                 <span>{t('metricAccuracy', language)}:</span>
                 <span className="font-bold text-emerald-500">
-                  {cmAccuracy}%
+                  {cmAccuracy ? `${cmAccuracy}%` : 'Sin resultados'}
                 </span>
               </div>
 
@@ -644,24 +653,30 @@ export const CrossValidationTab: React.FC<CrossValidationTabProps> = ({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
-              {featureImportance.map((feat: any) => (
-                <div key={feat.feature} className={`p-3 rounded-xl border space-y-1.5 ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/40 border-slate-800'
-                }`}>
-                  <div className="flex justify-between font-semibold">
-                    <span className={isLight ? 'text-slate-800' : 'text-slate-200'}>{feat.feature}</span>
-                    <span className="text-cyan-600 dark:text-cyan-400">{feat.importance}%</span>
+            {featureImportance.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+                {featureImportance.map((feat: any) => (
+                  <div key={feat.feature} className={`p-3 rounded-xl border space-y-1.5 ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/40 border-slate-800'
+                  }`}>
+                    <div className="flex justify-between font-semibold">
+                      <span className={isLight ? 'text-slate-800' : 'text-slate-200'}>{feat.feature}</span>
+                      <span className="text-cyan-600 dark:text-cyan-400">{feat.importance}%</span>
+                    </div>
+                    <div className={`w-full h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}>
+                      <div
+                        className="bg-gradient-to-r from-cyan-400 to-indigo-500 h-full rounded-full"
+                        style={{ width: `${(feat.importance ?? 10) * 3.2}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className={`w-full h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}>
-                    <div
-                      className="bg-gradient-to-r from-cyan-400 to-indigo-500 h-full rounded-full"
-                      style={{ width: `${(feat.importance ?? 10) * 3.2}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-slate-400 font-mono text-xs">
+                Sin resultados
+              </div>
+            )}
 
             <ExplainabilityCard
               language={language}

@@ -594,7 +594,7 @@ export const EDATab: React.FC<EDATabProps> = ({
 
               <div className="space-y-2.5 font-mono text-xs">
                 {currentHighCorrs.map((pair: any, idx: number) => {
-                  const rVal = pair.r ?? pair.corr ?? 0.75;
+                  const rVal = pair.r ?? pair.corr ?? null;
                   const desc = pair.impact ?? pair.reason ?? pair.direction ?? 'Correlación significativa';
                   return (
                     <div key={idx} className={`p-3 rounded-xl border flex items-center justify-between gap-2 ${
@@ -607,7 +607,7 @@ export const EDATab: React.FC<EDATabProps> = ({
                         <span className={`text-[10px] line-clamp-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{desc}</span>
                       </div>
                       <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/40 shrink-0">
-                        +{typeof rVal === 'number' ? rVal.toFixed(2) : rVal}
+                        {typeof rVal === 'number' ? (rVal > 0 ? `+${rVal.toFixed(2)}` : rVal.toFixed(2)) : (rVal ?? 'Sin datos')}
                       </span>
                     </div>
                   );
