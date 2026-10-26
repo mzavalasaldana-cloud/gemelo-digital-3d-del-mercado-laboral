@@ -113,8 +113,13 @@ export function getModelFirms(
   const scData = cData?.[scClean] || cData?.['A'] || [];
   
   const clampedMonth = Math.max(1, Math.min(120, month > 0 ? month : 1));
-  const monthItem = scData[clampedMonth - 1] || {};
-  const formalRatio = monthItem.formal_firms_ratio ?? 0.05;
+  const monthItem = scData[clampedMonth - 1];
+
+  // Si falta formal_firms_ratio o no hay datos, no inventar torres ficticias
+  if (!monthItem || monthItem.formal_firms_ratio === undefined || monthItem.formal_firms_ratio === null) {
+    return [];
+  }
+  const formalRatio = Number(monthItem.formal_firms_ratio);
 
   let numFormal = Math.round(10 * formalRatio);
   if (formalRatio > 0.005 && numFormal === 0) {
@@ -131,42 +136,25 @@ export function getModelFirms(
     const z = Number((Math.sin(angle) * radius).toFixed(2));
     const fid = isFormal ? `UP-F-${slot + 1}` : `UP-INF-${slot + 1 - numFormal}`;
 
-    if (isFormal) {
-      firms.push({
-        id: fid,
-        name: fid,
-        type: 'formal',
-        x,
-        z,
-        height: 8.5,
-        L_j: 35.0,
-        Y_j: 120.0,
-        A_j: 1.5,
-        emergenceMonth: 0,
-        growthSpanMonths: 1,
-      });
-    } else {
-      firms.push({
-        id: fid,
-        name: fid,
-        type: 'informal_mycelium',
-        x,
-        z,
-        height: 2.2,
-        L_j: 3.0,
-        Y_j: 15.0,
-        A_j: 0.8,
-        emergenceMonth: 0,
-        growthSpanMonths: 1,
-      });
-    }
+    // Sin conexión con el modelo en vivo, los atributos individuales son null para mostrar "Sin dato"
+    firms.push({
+      id: fid,
+      name: fid,
+      type: isFormal ? 'formal' : 'informal_mycelium',
+      x,
+      z,
+      height: isFormal ? 8.5 : 2.2,
+      L_j: null,
+      Y_j: null,
+      A_j: null,
+      emergenceMonth: 0,
+      growthSpanMonths: 1,
+    });
   }
   return firms;
 }
 
-export const DEMO_FIRMS: StructuralFirm[] = getModelFirms('KENYA', 'A', 0);
-export const MODEL_FIRMS = DEMO_FIRMS;
-export const MOCK_FIRMS = DEMO_FIRMS;
+export const MODEL_FIRMS: StructuralFirm[] = getModelFirms('KENYA', 'A', 0);
 
 export const DEMO_ML_ALGORITHMS: MLAlgorithmMetric[] = [];
 export const MOCK_ML_ALGORITHMS = DEMO_ML_ALGORITHMS;

@@ -45,9 +45,9 @@ export interface StructuralFirm {
   x: number;
   z: number;
   height: number;
-  L_j?: number;
-  Y_j?: number;
-  A_j?: number;
+  L_j?: number | null;
+  Y_j?: number | null;
+  A_j?: number | null;
   sizeEmployees?: number;
   baseEmployees?: number;
   sectorCategory?: string;

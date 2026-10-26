@@ -1,6 +1,8 @@
 """
 Report and Brief Export Generator for Labor Market Digital Twin.
 Generates PDF (ReportLab), Excel (openpyxl), HTML, CSV and JSON.
+All scenario parameters and policy instruments are derived directly from
+itdt.parameters.FixedParameters and itdt.model.ITDTModel.step logic.
 """
 
 import io
@@ -10,64 +12,135 @@ from reportlab.lib.pagesizes import letter  # type: ignore
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle  # type: ignore
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
 from reportlab.lib import colors  # type: ignore
+from itdt.parameters import FixedParameters
+
+
+def build_scenario_instruments(scenario_key: str = "A") -> Dict[str, Any]:
+    """
+    Genera dinámicamente la tabla de instrumentos a partir de itdt.parameters.FixedParameters
+    y de la lógica de política de itdt.model.ITDTModel.step.
+    """
+    p = FixedParameters()
+    sc = str(scenario_key).upper().strip()
+    if sc in ("BASELINE", "STATUS_QUO"):
+        sc = "A"
+    elif sc.startswith("ESCENARIO "):
+        sc = sc.replace("ESCENARIO ", "").strip()
+
+    if sc == "B1":
+        kappa_val = p.kappa * 2.5
+        d_growth_val = p.D_sys_growth * 3.0
+        phi_1_val = p.phi_1 * 1.5
+        mu_mult = 1.0
+        care_mult = 1.0
+        beta_val = p.beta * 1.0
+        dcc_sub_str = "Sin subsidio"
+        name = "GovTech Moderado"
+        desc = "Sensibilidad de auditoría y cobertura digital aumentadas; facturación electrónica obligatoria (sanciones sin cambio)."
+    elif sc == "B2":
+        kappa_val = p.kappa * 2.5
+        d_growth_val = p.D_sys_growth * 3.0
+        phi_1_val = p.phi_1 * 1.5
+        mu_mult = 3.0
+        care_mult = 1.0
+        beta_val = p.beta * 1.0
+        dcc_sub_str = "Sin subsidio"
+        name = "GovTech Intensivo"
+        desc = "GovTech B1 complementado con sanciones por informalidad triplicadas (μ0 y μ1 × 3)."
+    elif sc == "C":
+        kappa_val = p.kappa * 1.0
+        d_growth_val = p.D_sys_growth * 1.0
+        phi_1_val = p.phi_1 * 1.0
+        mu_mult = 1.0
+        care_mult = 0.40
+        beta_val = p.beta * 1.0
+        dcc_sub_str = "Sin subsidio"
+        name = "Cuidado Infantil / Corresponsabilidad"
+        desc = "Reducción del 60% en horas de cuidado no remunerado de las mujeres (H_care × 0.40); resto como A."
+    elif sc == "D":
+        kappa_val = p.kappa * 2.5
+        d_growth_val = p.D_sys_growth * 3.0
+        phi_1_val = p.phi_1 * 1.5
+        mu_mult = 3.0
+        care_mult = 0.40
+        beta_val = p.beta * 1.5
+        dcc_sub_str = "Subsidio del 80% (L ≤ 10)"
+        name = "Paquete Integral (GovTech + Cuidado + Subsidio DCC)"
+        desc = "B2 + C + subsidio del 80% al DCC para empresas con L ≤ 10 + valoración de protección social β × 1.5."
+    else:
+        sc = "A"
+        kappa_val = p.kappa * 1.0
+        d_growth_val = p.D_sys_growth * 1.0
+        phi_1_val = p.phi_1 * 1.0
+        mu_mult = 1.0
+        care_mult = 1.0
+        beta_val = p.beta * 1.0
+        dcc_sub_str = "Sin subsidio"
+        name = "Status Quo (Línea Base)"
+        desc = "Trayectoria base sin reformas de digitalización acelerada ni transferencias de cuidado."
+
+    # Instrumentos según los 6 ejes canónicos de ITDT
+    instruments = [
+        (
+            "Sensibilidad de probabilidad de auditoría (κ)",
+            f"{kappa_val:.2f} ({'×2.5' if sc in ('B1', 'B2', 'D') else 'Base'})",
+            "Sensibilidad logística de detección fiscal ante el tamaño relativo de la empresa",
+        ),
+        (
+            "Crecimiento mensual de cobertura digital (D_sys)",
+            f"{d_growth_val:.4f}/mes ({'×3 (0.45 p.p./mes)' if sc in ('B1', 'B2', 'D') else 'Base 0.0015/mes'})",
+            "Velocidad de penetración de sistemas digitales y facturación",
+        ),
+        (
+            "Costo cumplimiento digital regresivo (φ1)",
+            f"{phi_1_val:.2f} ({'×1.5 (Fact. Electrónica)' if sc in ('B1', 'B2', 'D') else 'Base 0.30'})",
+            "Componente regresivo del costo digital de cumplimiento (DCC)",
+        ),
+        (
+            "Sanciones por informalidad (μ0, μ1)",
+            f"{'×3.0 (Triplicadas)' if mu_mult > 1.0 else 'Sin cambio (Base)'}",
+            f"Sanción base ({p.mu_0 * mu_mult:.2f}) y no lineal ({p.mu_1 * mu_mult:.3f}) ante auditoría",
+        ),
+        (
+            "Horas de cuidado de las MUJERES (H_care)",
+            f"{'×0.40 (−60%)' if care_mult < 1.0 else 'Sin cambio (Base)'}",
+            "Carga de trabajo de cuidado no remunerado asignada a mujeres",
+        ),
+        (
+            "Subsidio al DCC de microempresas",
+            dcc_sub_str,
+            "Alivio al costo digital para empresas con demanda laboral L ≤ 10",
+        ),
+        (
+            "Valor de la protección social (β)",
+            f"{beta_val:.3f} ({'×1.5' if sc == 'D' else 'Base 0.25'})",
+            "Utilidad subjetiva percibida por formalidad laboral",
+        ),
+    ]
+
+    return {
+        "scenario": sc,
+        "name": name,
+        "description": desc,
+        "instruments": instruments,
+        "params": {
+            "kappa": kappa_val,
+            "d_growth": d_growth_val,
+            "phi_1": phi_1_val,
+            "mu_0": p.mu_0 * mu_mult,
+            "mu_1": p.mu_1 * mu_mult,
+            "mu_mult": mu_mult,
+            "care_mult": care_mult,
+            "beta": beta_val,
+            "dcc_subsidy": sc == "D",
+        },
+    }
+
 
 SCENARIO_INSTRUMENTS: Dict[str, Dict[str, Any]] = {
-    "A": {
-        "name": "Status Quo (Línea Base)",
-        "description": "Sin intervención de política digital ni transferencias.",
-        "instruments": [
-            ("Costo de entrada/formalización (κ)", "1.0× (Línea Base)", "Barrera de entrada ordinaria a la formalidad"),
-            ("Cobertura digital", "1.0× (Línea Base)", "Infraestructura y adopción digital estándar"),
-            ("Detección de evasión (φ1)", "1.0× (Línea Base)", "Capacidad de auditoría y fiscalización estándar"),
-            ("Sanciones por evasión (μ0, μ1)", "1.0× (Línea Base)", "Régimen sancionatorio ordinario"),
-            ("Tiempo de cuidado (H_care)", "1.0× (Línea Base)", "Carga de cuidado no remunerado sin subsidio"),
-        ],
-    },
-    "B1": {
-        "name": "GovTech Moderado",
-        "description": "Digitalización y fiscalización moderadas.",
-        "instruments": [
-            ("Costo de entrada/formalización (κ)", "×1.5", "Reducción de barreras burocráticas digitales"),
-            ("Cobertura digital", "×1.5", "Expansión moderada de ventanilla única y conectividad"),
-            ("Detección de evasión (φ1)", "×1.2", "Mejora moderada en fiscalización algorítmica"),
-            ("Sanciones por evasión (μ0, μ1)", "×1.5", "Incremento proporcional de penalidades por informalidad"),
-            ("Tiempo de cuidado (H_care)", "1.0×", "Sin intervención específica en cuidados"),
-        ],
-    },
-    "B2": {
-        "name": "GovTech Intensivo",
-        "description": "Digitalización profunda, alta fiscalización y reducción sustancial de costos.",
-        "instruments": [
-            ("Costo de entrada/formalización (κ)", "×2.5", "Ventanilla única interoperable de bajo costo"),
-            ("Cobertura digital", "×3.0", "Despliegue masivo de infraestructura e identidad digital"),
-            ("Detección de evasión (φ1)", "×1.5", "Auditoría digital cruzada y fiscalización inteligente"),
-            ("Sanciones por evasión (μ0, μ1)", "×3.0", "Régimen sancionatorio estricto ante evasión"),
-            ("Tiempo de cuidado (H_care)", "1.0×", "Sin intervención específica en cuidados"),
-        ],
-    },
-    "C": {
-        "name": "Cuidado Infantil / Corresponsabilidad",
-        "description": "Reducción de la carga de cuidado no remunerado sobre la oferta laboral femenina.",
-        "instruments": [
-            ("Costo de entrada/formalización (κ)", "1.0×", "Línea base"),
-            ("Cobertura digital", "1.0×", "Línea base"),
-            ("Detección de evasión (φ1)", "1.0×", "Línea base"),
-            ("Sanciones por evasión (μ0, μ1)", "1.0×", "Línea base"),
-            ("Tiempo de cuidado (H_care)", "×0.5", "Centros de cuidado y subsidios de corresponsabilidad"),
-        ],
-    },
-    "D": {
-        "name": "Paquete Integral (GovTech + Cuidado)",
-        "description": "Combinación sinérgica de GovTech intensivo y política de cuidados.",
-        "instruments": [
-            ("Costo de entrada/formalización (κ)", "×2.5", "Ventanilla digital integral"),
-            ("Cobertura digital", "×3.0", "Identidad y plataformas digitales universales"),
-            ("Detección de evasión (φ1)", "×1.5", "Fiscalización algorítmica avanzada"),
-            ("Sanciones por evasión (μ0, μ1)", "×3.0", "Disuasión estricta de evasión"),
-            ("Tiempo de cuidado (H_care)", "×0.5", "Reducción a la mitad del tiempo dedicado a cuidados"),
-        ],
-    },
+    sc: build_scenario_instruments(sc) for sc in ("A", "B1", "B2", "C", "D")
 }
+
 
 def _resolve_scenario_info(scenario_name: str, policy_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     sc = ""
@@ -79,7 +152,7 @@ def _resolve_scenario_info(scenario_name: str, policy_params: Optional[Dict[str,
         sc = "A"
     elif sc.startswith("ESCENARIO "):
         sc = sc.replace("ESCENARIO ", "").strip()
-    return SCENARIO_INSTRUMENTS.get(sc, SCENARIO_INSTRUMENTS["A"])
+    return build_scenario_instruments(sc)
 
 
 def generate_pdf_report(

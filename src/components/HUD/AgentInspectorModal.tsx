@@ -188,7 +188,7 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
               <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
                 <span className="text-slate-400 block text-[10px]">Empleo (L_j):</span>
                 <span className="font-semibold text-cyan-300">
-                  {firm.L_j != null ? firm.L_j.toFixed(2) : (firm.sizeEmployees ?? 'Sin dato')}
+                  {firm.L_j != null ? firm.L_j.toFixed(2) : 'Sin dato'}
                 </span>
               </div>
               <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
@@ -210,6 +210,10 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
                 <span className="text-[10px] text-slate-400 block">Identificador:</span>
                 <span className="text-xs text-cyan-300 font-semibold">{firm.id}</span>
               </div>
+            </div>
+
+            <div className="pt-2 text-[10px] text-slate-400 border-t border-slate-800/80 italic">
+              Nota: atributos de una réplica al final de la simulación (mes 120).
             </div>
           </div>
         )}

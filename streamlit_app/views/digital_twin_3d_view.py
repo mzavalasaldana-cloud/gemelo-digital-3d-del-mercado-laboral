@@ -338,5 +338,8 @@ def render_digital_twin_3d_view():
                 <div><b>Productividad (A_j):</b> {sel_firm.get('A_j', 0.0):.2f}</div>
                 <div><b>Tipo:</b> {sel_firm.get('type', '')}</div>
             </div>
+            <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; border-top: 1px dashed rgba(148, 163, 184, 0.3); padding-top: 6px;">
+                <b>Nota metodológica:</b> atributos de una réplica al final de la simulación (mes 120); la proporción de unidades productivas formales/informales refleja el mes seleccionado.
+            </div>
         </div>
         """, unsafe_allow_html=True)

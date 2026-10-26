@@ -111,6 +111,8 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int
     Extrae las empresas reales del propio ITDTModel.
     Las 10 torres visualizadas representan la proporción real de empresas formales del modelo
     en ese mes y escenario (round(10 * proporción formal)), sin proporciones fijas 6/4.
+    Los atributos individuales de las empresas (L_j, Y_j, A_j) salen del estado final de la réplica
+    (mes 120), aunque el número de torres sea el del mes elegido.
     """
     c_clean = country_code.upper() if country_code else "KENYA"
     sc_clean = scenario.upper().strip() if scenario else "A"
@@ -183,9 +185,9 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int
         else:
             inf_pos = slot_idx - num_formal
             j = selected_informal[inf_pos % len(selected_informal)] if selected_informal else slot_idx
-            l_j = int(round(model.L[j])) if j < len(model.L) else 4
-            y_j = round(float(model.Y[j]), 2) if j < len(model.Y) else 10.0
-            a_j = round(float(model.A[j]), 3) if j < len(model.A) else 1.0
+            l_j = int(round(model.L[j]))
+            y_j = round(float(model.Y[j]), 2)
+            a_j = round(float(model.A[j]), 3)
             firms_list.append({
                 "id": f"UP-INF-{j+1:02d}",
                 "type": "informal_mycelium",

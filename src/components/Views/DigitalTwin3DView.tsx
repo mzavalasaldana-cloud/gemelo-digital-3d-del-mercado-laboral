@@ -26,7 +26,8 @@ import {
   Layers, 
   Radio, 
   Zap,
-  Info
+  Info,
+  AlertTriangle
 } from 'lucide-react';
 import { playHoloClick, playPolicyWaveSound } from '../../utils/audioSynth';
 
@@ -141,6 +142,14 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
           metrics={metrics}
         />
       </div>
+ 
+      {/* Aviso si no hay torres por falta de formal_firms_ratio o sin conexion */}
+      {firms.length === 0 && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-auto bg-amber-500/20 border border-amber-500/50 text-amber-200 px-4 py-2.5 rounded-xl text-xs font-mono-hud backdrop-blur-md flex items-center gap-2 shadow-2xl">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>Sin conexión con el modelo</span>
+        </div>
+      )}
 
       {/* Floating Minimal HUD: Top-Right Live Metrics Pill */}
       <div className="absolute top-20 right-6 z-20 pointer-events-auto flex items-center gap-2">
