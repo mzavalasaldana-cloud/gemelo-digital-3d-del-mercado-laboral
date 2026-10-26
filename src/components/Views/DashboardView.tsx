@@ -210,11 +210,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const cData = (trayectoriasData as any)[cClean] || (trayectoriasData as any)['KENYA'];
     const aData = cData?.['A'] || [];
     const aLast = aData.length > 0 ? aData[aData.length - 1] : null;
-    const baseRev = aLast ? Number(aLast.fiscal_revenue.toFixed(1)) : 1381.1;
-    const baseGap = aLast ? Number(aLast.gender_gap.toFixed(2)) : 7.20;
+    const baseRev = aLast?.fiscal_revenue != null ? Number(aLast.fiscal_revenue.toFixed(1)) : null;
+    const baseGap = aLast?.gender_gap != null ? Number(aLast.gender_gap.toFixed(2)) : null;
 
-    const currentRev = Number((metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue ?? baseRev).toFixed(1));
-    const currentGap = Number((metrics?.genderGap ?? baseGap).toFixed(2));
+    const currentRev = (metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue ?? baseRev) != null
+      ? Number((metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue ?? baseRev)!.toFixed(1))
+      : null;
+    const currentGap = (metrics?.genderGap ?? baseGap) != null
+      ? Number((metrics?.genderGap ?? baseGap)!.toFixed(2))
+      : null;
 
     return [
       {
@@ -229,8 +233,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       },
       {
         indicador: (language === 'en' ? 'Fiscal Revenue (Model Units)' : 'Recaudación Fiscal (Unidades Modelo)'),
-        [baseKey]: baseRev,
-        [interventionKey]: currentRev,
+        [baseKey]: baseRev ?? (language === 'en' ? 'No data' : 'Sin dato'),
+        [interventionKey]: currentRev ?? (language === 'en' ? 'No data' : 'Sin dato'),
       },
       {
         indicador: (language === 'en' ? 'Gender Gap (pp)' : 'Brecha de Género (pp)'),
@@ -411,7 +415,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>
-                +{(metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue ?? 0).toFixed(1)}
+                {(metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue) != null
+                  ? `+${(metrics?.fiscalRevenueModelUnits ?? metrics?.fiscalRevenue)!.toFixed(1)}`
+                  : (language === 'en' ? 'No data' : 'Sin dato')}
               </span>
               <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 {language === 'en' ? 'u.m. / yr' : 'u.m. / año'}
@@ -420,8 +426,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className={`mt-3 text-[11px] font-mono flex justify-between border-t pt-2 ${
               isLight ? 'border-slate-200 text-slate-600' : 'border-slate-800 text-slate-400'
             }`}>
-              <span>{language === 'en' ? 'Corporate' : 'Sociedades'}: +{(metrics?.corporateTaxRevenueModelUnits ?? metrics?.corporateTaxRevenue ?? 0).toFixed(1)}</span>
-              <span className="text-cyan-400">{language === 'en' ? 'Labor' : 'Seg. Social'}: +{(metrics?.laborContributionsModelUnits ?? metrics?.laborContributionsRevenue ?? 0).toFixed(1)}</span>
+              <span>
+                {language === 'en' ? 'Corporate' : 'Sociedades'}: {(metrics?.corporateTaxRevenueModelUnits ?? metrics?.corporateTaxRevenue) != null
+                  ? `+${(metrics?.corporateTaxRevenueModelUnits ?? metrics?.corporateTaxRevenue)!.toFixed(1)}`
+                  : (language === 'en' ? 'No data' : 'Sin dato')}
+              </span>
+              <span className="text-cyan-400">
+                {language === 'en' ? 'Labor' : 'Seg. Social'}: {(metrics?.laborContributionsModelUnits ?? metrics?.laborContributionsRevenue) != null
+                  ? `+${(metrics?.laborContributionsModelUnits ?? metrics?.laborContributionsRevenue)!.toFixed(1)}`
+                  : (language === 'en' ? 'No data' : 'Sin dato')}
+              </span>
             </div>
           </div>
 
@@ -436,7 +450,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className={`text-3xl font-display font-bold tracking-tight ${isLight ? 'text-sky-700' : 'text-cyan-300'}`}>
-                {metrics?.genderGap !== undefined ? (metrics.genderGap >= 0 ? `+${metrics.genderGap.toFixed(2)}` : metrics.genderGap.toFixed(2)) : '+1.63'}
+                {metrics?.genderGap != null
+                  ? (metrics.genderGap >= 0 ? `+${metrics.genderGap.toFixed(2)}` : metrics.genderGap.toFixed(2))
+                  : (language === 'en' ? 'No data' : 'Sin dato')}
               </span>
               <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>p.p.</span>
             </div>

@@ -93,41 +93,53 @@ def render_dashboard_view():
             badge="Equidad"
         )
     with c3:
-        base_gini = metrics.get("baseGiniIndex", profile.get("baseGini", 0.35))
+        base_gini = metrics.get("baseGiniIndex")
         gini_now = metrics.get("giniIndex", base_gini)
+        gini_str = f"{gini_now}" if gini_now is not None else "Sin dato"
+        base_gini_str = f"Base: {base_gini}" if base_gini is not None else "Base: Sin dato"
         render_metric_card(
             label="Índice de Gini",
-            value=f"{gini_now}",
-            delta=f"Base: {base_gini}",
-            delta_positive=(gini_now <= base_gini),
+            value=gini_str,
+            delta=base_gini_str,
+            delta_positive=(gini_now <= base_gini) if (gini_now is not None and base_gini is not None) else True,
             icon="⚖️",
             badge="Agentes ITDT"
         )
     with c4:
-        formal_pct = round(100.0 - metrics.get('informalityRate', 0.0), 1)
+        inf_rate = metrics.get('informalityRate')
+        if inf_rate is not None:
+            formal_pct = round(100.0 - inf_rate, 1)
+            formal_str = f"{formal_pct}%"
+            workers = metrics.get('formalWorkersCount')
+            delta_workers = f"{workers:,} trabajadores" if workers is not None else ""
+        else:
+            formal_str = "Sin dato"
+            delta_workers = "Sin dato"
         render_metric_card(
             label="Empleo Formal",
-            value=f"{formal_pct}%",
-            delta=f"{metrics.get('formalWorkersCount', 0):,} trabajadores",
+            value=formal_str,
+            delta=delta_workers,
             delta_positive=True,
             icon="👔",
             badge="ITDT"
         )
     with c5:
-        exit_rate = metrics.get("annualExitRate", 0.0)
+        exit_rate = metrics.get("annualExitRate")
+        exit_str = f"{exit_rate:.1f}%" if exit_rate is not None else "Sin dato"
         render_metric_card(
             label="Cierres Anuales",
-            value=f"{exit_rate:.1f}%",
+            value=exit_str,
             delta="Quiebra PYME",
-            delta_positive=(exit_rate < 5.0),
+            delta_positive=(exit_rate < 5.0) if exit_rate is not None else True,
             icon="⚠️",
             badge="Fragilidad"
         )
     with c6:
-        rev_val = metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD', 0.0))
+        rev_val = metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD'))
+        rev_str = f"{rev_val:,.1f}" if rev_val is not None else "Sin dato"
         render_metric_card(
             label="Recaudación Fiscal",
-            value=f"{rev_val:,.1f}",
+            value=rev_str,
             delta="Unidades de modelo (ITDT)",
             delta_positive=True,
             icon="🏛️",
@@ -357,28 +369,30 @@ def render_dashboard_view():
     with tab_lorenz:
         c_lor1, c_lor2 = st.columns([1.2, 1.2])
         with c_lor1:
-            p_pts = np.linspace(0, 1, 100)
-            gini_val = metrics.get("giniIndex", profile.get("baseGini", 0.35))
-            alpha = (1.0 + gini_val) / max(0.01, (1.0 - gini_val))
-            lorenz_actual = p_pts ** alpha
-            base_gini_val = metrics.get("baseGiniIndex", profile.get("baseGini", 0.35))
-            base_alpha = (1.0 + base_gini_val) / max(0.01, (1.0 - base_gini_val))
-            lorenz_baseline = p_pts ** base_alpha
+            gini_val = metrics.get("giniIndex")
+            base_gini_val = metrics.get("baseGiniIndex")
+            if gini_val is not None and base_gini_val is not None:
+                p_pts = np.linspace(0, 1, 100)
+                alpha = (1.0 + gini_val) / max(0.01, (1.0 - gini_val))
+                lorenz_actual = p_pts ** alpha
+                base_alpha = (1.0 + base_gini_val) / max(0.01, (1.0 - base_gini_val))
+                lorenz_baseline = p_pts ** base_alpha
 
-            fig_lorenz = go.Figure()
-            fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=p_pts*100, mode='lines', name='Igualdad Perfecta', line=dict(color='#64748b', dash='dash')))
-            fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_baseline*100, mode='lines', name=f'Línea Base (Gini {base_gini_val})', line=dict(color='#f59e0b')))
-            fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_actual*100, mode='lines', name=f'Simulado ({scenario} Gini {gini_val})', line=dict(color='#00f0ff', width=3)))
+                fig_lorenz = go.Figure()
+                fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=p_pts*100, mode='lines', name='Igualdad Perfecta', line=dict(color='#64748b', dash='dash')))
+                fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_baseline*100, mode='lines', name=f'Línea Base (Gini {base_gini_val})', line=dict(color='#f59e0b')))
+                fig_lorenz.add_trace(go.Scatter(x=p_pts*100, y=lorenz_actual*100, mode='lines', name=f'Simulado ({scenario} Gini {gini_val})', line=dict(color='#00f0ff', width=3)))
 
-            fig_lorenz.update_layout(
-                title=dict(text="Curva de Lorenz"),
-                xaxis=dict(title="% Trabajadores"),
-                yaxis=dict(title="% Ingreso"),
-                margin=dict(l=30, r=20, t=30, b=40),
-                height=240,
-            )
-            apply_chart_theme(fig_lorenz)
-            st.plotly_chart(fig_lorenz, use_container_width=True)
+                fig_lorenz.update_layout(
+                    title=dict(text="Curva de Lorenz"),
+                    xaxis=dict(title="% Trabajadores"),
+                    yaxis=dict(title="% Ingreso"),
+                    margin=dict(l=30, r=20, t=30, b=40),
+                    height=240,
+                )
+                apply_chart_theme(fig_lorenz)
+            else:
+                st.info("Sin dato de Gini disponible para trazar la curva de Lorenz.")
 
         with c_lor2:
             st.markdown("##### Gradientes Distributivos No Calibrados:")

@@ -447,11 +447,11 @@ export default function App() {
       const netFem = mItem.informality_female;
       const netMasc = mItem.informality_male;
       const netGap = mItem.gender_gap;
-      const netGini = mItem.gini_index ?? 0.288;
-      const netRev = mItem.fiscal_revenue ?? 1381.05;
-      const netExit = mItem.annual_exit_rate ?? 0.05;
-      const corpTax = mItem.corporate_tax_revenue ?? Number((netRev * 0.865).toFixed(2));
-      const laborTax = Number((netRev - corpTax).toFixed(2));
+      const netGini = mItem.gini_index ?? null;
+      const netRev = mItem.fiscal_revenue ?? null;
+      const netExit = mItem.annual_exit_rate ?? null;
+      const corpTax = mItem.corporate_tax_revenue ?? null;
+      const laborTax = mItem.labor_contributions_revenue ?? (netRev != null && corpTax != null ? Number((netRev - corpTax).toFixed(2)) : null);
       const formalCount = Math.round(2500 * (1 - netInf / 100));
       const informalCount = 2500 - formalCount;
 
@@ -481,9 +481,11 @@ export default function App() {
     const baseFem = country === 'KENYA' ? 90.19 : country === 'NIGERIA' ? 96.39 : country === 'INDIA' ? 91.93 : 95.77;
     const baseMasc = country === 'KENYA' ? 83.13 : country === 'NIGERIA' ? 89.92 : country === 'INDIA' ? 86.76 : 78.08;
     const netGap = Number((baseFem - baseMasc).toFixed(2));
-    const netRev = m0.fiscal_revenue ?? 1381.05;
-    const corpTax = m0.corporate_tax_revenue ?? Number((netRev * 0.865).toFixed(2));
-    const laborTax = Number((netRev - corpTax).toFixed(2));
+    const netRev = m0.fiscal_revenue ?? null;
+    const corpTax = m0.corporate_tax_revenue ?? null;
+    const laborTax = m0.labor_contributions_revenue ?? (netRev != null && corpTax != null ? Number((netRev - corpTax).toFixed(2)) : null);
+    const netExit = m0.annual_exit_rate ?? null;
+    const netGini = m0.gini_index ?? baseGini ?? null;
     const formalCount = Math.round(2500 * (1 - baseInformality / 100));
     const informalCount = 2500 - formalCount;
 
@@ -492,7 +494,7 @@ export default function App() {
       informalityFemale: baseFem,
       informalityMale: baseMasc,
       genderGap: netGap,
-      giniIndex: baseGini,
+      giniIndex: netGini,
       formalWorkersCount: formalCount,
       informalWorkersCount: informalCount,
       unemployedCount: 0,
@@ -502,7 +504,7 @@ export default function App() {
       corporateTaxRevenue: corpTax,
       laborContributionsModelUnits: laborTax,
       laborContributionsRevenue: laborTax,
-      annualExitRate: 0.05,
+      annualExitRate: netExit,
       isRealData: true,
       source: 'Modelo ITDT (Línea Base)',
     };

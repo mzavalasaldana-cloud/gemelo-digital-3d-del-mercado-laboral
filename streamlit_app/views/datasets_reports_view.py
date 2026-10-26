@@ -153,7 +153,7 @@ def render_datasets_reports_view():
             </div>
             <div style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.6;">
                 Informe técnico estructurado con evaluación de impacto macroeconómico, brechas observadas de género (ILOSTAT),
-                informalidad simulada ({report_metrics.get('informalityRate', 0.0)}%) y recaudación ({report_metrics.get('fiscalRevenueModelUnits', report_metrics.get('fiscalRevenueMillionUSD', 0.0)):,.1f} u.m.).
+                informalidad simulada ({f"{report_metrics['informalityRate']}%" if report_metrics.get('informalityRate') is not None else "Sin dato"}) y recaudación ({f"{report_metrics['fiscalRevenueModelUnits']:,.1f} u.m." if report_metrics.get('fiscalRevenueModelUnits') is not None else "Sin dato"}).
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -213,17 +213,17 @@ def render_datasets_reports_view():
             <h4 style="color: #00f0ff; margin-top: 0;">Diagnóstico Macroeconómico Preliminar</h4>
             <p>
                 La implementación del paquete de políticas para <b>{profile.get('name', country_code)}</b> bajo el escenario <b>{scenario}</b> 
-                induce una reducción estimada de la informalidad del <b>{profile.get('baseInformalityRate', 0.0)}%</b> al <b>{metrics.get('informalityRate', 0.0)}%</b> 
+                induce una reducción estimada de la informalidad del <b>{f"{profile['baseInformalityRate']}%" if profile.get('baseInformalityRate') is not None else "Sin dato"}</b> al <b>{f"{metrics['informalityRate']}%" if metrics.get('informalityRate') is not None else "Sin dato"}</b> 
                 en un horizonte continuo de 10 años (Mes {month}).
             </p>
             <p>
-                La <b>Recaudación Fiscal del Modelo</b> se proyecta en <b>{metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD', 0.0)):,.1f} unidades del modelo</b> 
+                La <b>Recaudación Fiscal del Modelo</b> se proyecta en <b>{f"{metrics['fiscalRevenueModelUnits']:,.1f} unidades del modelo" if metrics.get('fiscalRevenueModelUnits') is not None else "Sin dato"}</b> 
                 (impuesto a sociedades y contribuciones laborales calculadas endógenamente en ITDTModel).
             </p>
             <h4 style="color: #10b981;">Alineamiento con Estándares y Brechas de Género</h4>
             <p>
-                La brecha de informalidad por sexo se sitúa en <b>{metrics.get('genderGap', 0):+.2f} puntos porcentuales</b> 
-                (Informalidad femenina: {metrics.get('informalityFemale', 0):.1f}% vs masculina: {metrics.get('informalityMale', 0):.1f}%), 
+                La brecha de informalidad por sexo se sitúa en <b>{f"{metrics['genderGap']:+.2f} puntos porcentuales" if metrics.get('genderGap') is not None else "Sin dato"}</b> 
+                (Informalidad femenina: {f"{metrics['informalityFemale']:.1f}%" if metrics.get('informalityFemale') is not None else "Sin dato"} vs masculina: {f"{metrics['informalityMale']:.1f}%" if metrics.get('informalityMale') is not None else "Sin dato"}), 
                 evaluada conforme a las series observadas de ILOSTAT.
             </p>
         </div>

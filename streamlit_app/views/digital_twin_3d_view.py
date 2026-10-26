@@ -57,9 +57,9 @@ def render_digital_twin_3d_view():
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <span class="glow-badge badge-cyan">Mes {month}/120 ({cur_month_name} {cur_year})</span>
                 <span class="glow-badge badge-emerald">Escenario {scenario}</span>
-                <span class="glow-badge badge-amber">Informalidad: {metrics.get('informalityRate', 0.0)}%</span>
-                <span class="glow-badge badge-purple">Brecha F−M: {metrics.get('genderGap', 0):+.1f} p.p.</span>
-                <span class="glow-badge badge-cyan">Gini: {metrics.get('giniIndex', 0.35):.3f}</span>
+                <span class="glow-badge badge-amber">Informalidad: {f"{metrics['informalityRate']}%" if metrics.get('informalityRate') is not None else "Sin dato"}</span>
+                <span class="glow-badge badge-purple">Brecha F−M: {f"{metrics['genderGap']:+.1f} p.p." if metrics.get('genderGap') is not None else "Sin dato"}</span>
+                <span class="glow-badge badge-cyan">{f"Gini: {metrics['giniIndex']:.3f}" if metrics.get('giniIndex') is not None else "Gini: Sin dato"}</span>
             </div>
         </div>
     </div>

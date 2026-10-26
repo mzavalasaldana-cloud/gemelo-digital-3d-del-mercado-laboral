@@ -55,10 +55,18 @@ def generate_pdf_report(
     story.append(Spacer(1, 10))
 
     # Summary Paragraph
+    inf_str = f"{metrics['informalityRate']}%" if metrics.get('informalityRate') is not None else "Sin dato"
+    gini_str = f"{metrics['giniIndex']}" if metrics.get('giniIndex') is not None else "Sin dato"
+    rev_str = f"{metrics['fiscalRevenueModelUnits']:,.1f} u.m." if metrics.get('fiscalRevenueModelUnits') is not None else "Sin dato"
+    exit_str = f"{metrics['annualExitRate']:.1f}%" if metrics.get('annualExitRate') is not None else "Sin dato"
+    fem_str = f"{metrics['informalityFemale']}%" if metrics.get('informalityFemale') is not None else "Sin dato"
+    male_str = f"{metrics['informalityMale']}%" if metrics.get('informalityMale') is not None else "Sin dato"
+    gap_str = f"{metrics['genderGap']:+.2f} pp" if metrics.get('genderGap') is not None else "Sin dato"
+
     summary_text = (
         f"El presente informe sintetiza los resultados de la simulación micro-económica basada en agentes. "
-        f"Bajo las intervenciones parametrizadas, la tasa de informalidad proyectada alcanza el <b>{metrics.get('informalityRate', 0)}%</b> "
-        f"con un Índice de Gini de <b>{metrics.get('giniIndex', 0)}</b> y un Índice de Trabajo Decente OIT de <b>{metrics.get('decentWorkIndex', 0)}/100</b>."
+        f"Bajo las intervenciones parametrizadas, la tasa de informalidad proyectada alcanza el <b>{inf_str}</b> "
+        f"con un Índice de Gini de <b>{gini_str}</b> y un Índice de Trabajo Decente OIT de <b>{metrics.get('decentWorkIndex', 0)}/100</b>."
     )
     story.append(Paragraph(summary_text, body_style))
     story.append(Spacer(1, 14))
@@ -67,13 +75,13 @@ def generate_pdf_report(
     story.append(Paragraph("1. Indicadores Estructurales del Mercado Laboral", heading2_style))
     metrics_data = [
         ["Indicador Macroeconómico", "Valor Simulado", "Impacto vs Línea Base"],
-        ["Tasa de Informalidad Laboral", f"{metrics.get('informalityRate', 0)}%", "Favorable (Reducción)"],
-        ["Informalidad Femenina", f"{metrics.get('informalityFemale', 0)}%", "Desagregación por Sexo"],
-        ["Informalidad Masculina", f"{metrics.get('informalityMale', 0)}%", "Desagregación por Sexo"],
-        ["Brecha de Género", f"{metrics.get('genderGap', 0):+.2f} pp", "Equidad de Género"],
-        ["Índice de Concentración de Gini", f"{metrics.get('giniIndex', 0)}", "Mayor Equidad Salarial"],
-        ["Recaudación Fiscal (Unidades Modelo)", f"{metrics.get('fiscalRevenueModelUnits', metrics.get('fiscalRevenueMillionUSD', 0)):,.1f} u.m.", "Sostenibilidad Tributaria ITDT"],
-        ["Tasa Anual de Quiebra Empresarial", f"{metrics.get('annualExitRate', 0):.1f}%", "Fragilidad Estructural"],
+        ["Tasa de Informalidad Laboral", inf_str, "Favorable (Reducción)"],
+        ["Informalidad Femenina", fem_str, "Desagregación por Sexo"],
+        ["Informalidad Masculina", male_str, "Desagregación por Sexo"],
+        ["Brecha de Género", gap_str, "Equidad de Género"],
+        ["Índice de Concentración de Gini", gini_str, "Mayor Equidad Salarial"],
+        ["Recaudación Fiscal (Unidades Modelo)", rev_str, "Sostenibilidad Tributaria ITDT"],
+        ["Tasa Anual de Quiebra Empresarial", exit_str, "Fragilidad Estructural"],
     ]
     t1 = Table(metrics_data, colWidths=[240, 140, 160])
     t1.setStyle(TableStyle([
@@ -199,15 +207,15 @@ def generate_html_report(
         <div class="grid">
             <div class="card">
                 <div class="card-label">Informalidad Laboral</div>
-                <div class="card-val">{metrics.get('informalityRate')}%</div>
+                <div class="card-val">{f"{metrics['informalityRate']}%" if metrics.get('informalityRate') is not None else "Sin dato"}</div>
             </div>
             <div class="card">
                 <div class="card-label">Índice de Gini</div>
-                <div class="card-val">{metrics.get('giniIndex')}</div>
+                <div class="card-val">{metrics.get('giniIndex') if metrics.get('giniIndex') is not None else "Sin dato"}</div>
             </div>
             <div class="card">
                 <div class="card-label">Brecha de Género</div>
-                <div class="card-val">{metrics.get('genderGap', 0):+.2f} pp</div>
+                <div class="card-val">{f"{metrics['genderGap']:+.2f} pp" if metrics.get('genderGap') is not None else "Sin dato"}</div>
             </div>
         </div>
 

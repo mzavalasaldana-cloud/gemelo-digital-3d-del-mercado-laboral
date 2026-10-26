@@ -128,7 +128,9 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int
     
     clamped_m = max(1, min(120, month if month > 0 else 1))
     if c_traj and len(c_traj) >= clamped_m:
-        formal_ratio = c_traj[clamped_m - 1].get("formal_firms_ratio", 0.05)
+        formal_ratio = c_traj[clamped_m - 1].get("formal_firms_ratio")
+        if formal_ratio is None:
+            formal_ratio = float(np.mean(model.is_formal_firm))
     else:
         formal_ratio = float(np.mean(model.is_formal_firm))
 
@@ -308,42 +310,73 @@ def calculate_structural_metrics(
     if c_traj and clamped_month > 0:
         # Mes 1 a 120 de la política
         curr_item = c_traj[clamped_month - 1]
-        inf_total = float(curr_item["informality_total"])
-        inf_fem = float(curr_item["informality_female"])
-        inf_male = float(curr_item["informality_male"])
-        gender_gap = float(curr_item["gender_gap"])
-        annual_exit_rate = float(curr_item["annual_exit_rate"])
-        fiscal_revenue = float(curr_item["fiscal_revenue"])
-        corporate_tax = float(curr_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
-        labor_tax = round(fiscal_revenue - corporate_tax, 2)
-        gini_sim = float(curr_item.get("gini_index", 0.288))
-        formal_firms_ratio = float(curr_item.get("formal_firms_ratio", 0.05))
+        inf_total = float(curr_item["informality_total"]) if curr_item.get("informality_total") is not None else None
+        inf_fem = float(curr_item["informality_female"]) if curr_item.get("informality_female") is not None else None
+        inf_male = float(curr_item["informality_male"]) if curr_item.get("informality_male") is not None else None
+        gender_gap = float(curr_item["gender_gap"]) if curr_item.get("gender_gap") is not None else (
+            round(inf_fem - inf_male, 2) if (inf_fem is not None and inf_male is not None) else None
+        )
+        annual_exit_rate = float(curr_item["annual_exit_rate"]) if curr_item.get("annual_exit_rate") is not None else None
+        fiscal_revenue = float(curr_item["fiscal_revenue"]) if curr_item.get("fiscal_revenue") is not None else None
+        corporate_tax = float(curr_item["corporate_tax_revenue"]) if curr_item.get("corporate_tax_revenue") is not None else None
+        labor_tax = float(curr_item["labor_contributions_revenue"]) if curr_item.get("labor_contributions_revenue") is not None else (
+            round(fiscal_revenue - corporate_tax, 2) if (fiscal_revenue is not None and corporate_tax is not None) else None
+        )
+        gini_sim = float(curr_item["gini_index"]) if curr_item.get("gini_index") is not None else None
+        formal_firms_ratio = float(curr_item["formal_firms_ratio"]) if curr_item.get("formal_firms_ratio") is not None else None
     else:
         # Mes 0 (Línea base pre-política del país)
         a_traj = traj_data.get(country_clean, {}).get("A", [])
         curr_item = a_traj[0] if a_traj else {}
-        inf_total = float(baseline["baseInformality"])
-        inf_fem = float(baseline["baseInformalityFemale"])
-        inf_male = float(baseline["baseInformalityMale"])
-        gender_gap = round(inf_fem - inf_male, 2)
-        annual_exit_rate = 0.05
-        fiscal_revenue = float(curr_item.get("fiscal_revenue", 1381.05))
-        corporate_tax = float(curr_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
-        labor_tax = round(fiscal_revenue - corporate_tax, 2)
-        gini_sim = float(curr_item.get("gini_index", 0.288))
-        formal_firms_ratio = float(curr_item.get("formal_firms_ratio", 0.05))
+        inf_total = float(baseline["baseInformality"]) if baseline.get("baseInformality") is not None else (
+            float(curr_item["informality_total"]) if curr_item.get("informality_total") is not None else None
+        )
+        inf_fem = float(baseline["baseInformalityFemale"]) if baseline.get("baseInformalityFemale") is not None else (
+            float(curr_item["informality_female"]) if curr_item.get("informality_female") is not None else None
+        )
+        inf_male = float(baseline["baseInformalityMale"]) if baseline.get("baseInformalityMale") is not None else (
+            float(curr_item["informality_male"]) if curr_item.get("informality_male") is not None else None
+        )
+        gender_gap = round(inf_fem - inf_male, 2) if (inf_fem is not None and inf_male is not None) else (
+            float(curr_item["gender_gap"]) if curr_item.get("gender_gap") is not None else None
+        )
+        annual_exit_rate = float(curr_item["annual_exit_rate"]) if curr_item.get("annual_exit_rate") is not None else None
+        fiscal_revenue = float(curr_item["fiscal_revenue"]) if curr_item.get("fiscal_revenue") is not None else None
+        corporate_tax = float(curr_item["corporate_tax_revenue"]) if curr_item.get("corporate_tax_revenue") is not None else None
+        labor_tax = float(curr_item["labor_contributions_revenue"]) if curr_item.get("labor_contributions_revenue") is not None else (
+            round(fiscal_revenue - corporate_tax, 2) if (fiscal_revenue is not None and corporate_tax is not None) else None
+        )
+        gini_sim = float(curr_item["gini_index"]) if curr_item.get("gini_index") is not None else None
+        formal_firms_ratio = float(curr_item["formal_firms_ratio"]) if curr_item.get("formal_firms_ratio") is not None else None
 
     total_pop_vis = 2500
-    formal_count = round(total_pop_vis * (1.0 - inf_total / 100.0))
-    informal_count = total_pop_vis - formal_count
+    if inf_total is not None:
+        formal_count = round(total_pop_vis * (1.0 - inf_total / 100.0))
+        informal_count = total_pop_vis - formal_count
+    else:
+        formal_count = None
+        informal_count = None
     unemployed_count = 0
 
-    base_gini_sim = round(float(baseline.get("baseGini", 0.288)), 4)
+    a_traj_base = traj_data.get(country_clean, {}).get("A", [])
+    m0_base = a_traj_base[0] if a_traj_base else {}
+    if baseline.get("baseGini") is not None:
+        base_gini_sim = round(float(baseline["baseGini"]), 4)
+    elif m0_base.get("gini_index") is not None:
+        base_gini_sim = round(float(m0_base["gini_index"]), 4)
+    else:
+        base_gini_sim = None
+
     avg_formal_wage_model = 1.85
     avg_informal_wage_model = 1.00
 
-    corp_tax = round(corporate_tax, 2)
-    labor_tax = round(fiscal_revenue - corp_tax, 2)
+    corp_tax = round(corporate_tax, 2) if corporate_tax is not None else None
+    labor_tax = round(labor_tax, 2) if labor_tax is not None else (
+        round(fiscal_revenue - corp_tax, 2) if (fiscal_revenue is not None and corp_tax is not None) else None
+    )
+
+    formal_firms_cnt = int(curr_item.get("formal_firms_count", round(100 * formal_firms_ratio))) if formal_firms_ratio is not None else curr_item.get("formal_firms_count")
+    informal_firms_cnt = int(curr_item.get("informal_firms_count", 100 - round(100 * formal_firms_ratio))) if formal_firms_ratio is not None else curr_item.get("informal_firms_count")
 
     res = {
         "country": country_clean,
@@ -351,38 +384,40 @@ def calculate_structural_metrics(
         "month": clamped_month,
         "timelineMonth": clamped_month,
         "year": 2024 + (clamped_month // 12),
-        "informalityRate": round(inf_total, 2),
-        "informalityFemale": round(inf_fem, 2),
-        "informalityMale": round(inf_male, 2),
-        "genderGap": round(gender_gap, 2),
-        "giniIndex": gini_sim,
-        "baseInformalityRate": baseline["baseInformality"],
+        "informalityRate": round(inf_total, 2) if inf_total is not None else None,
+        "informalityFemale": round(inf_fem, 2) if inf_fem is not None else None,
+        "informalityMale": round(inf_male, 2) if inf_male is not None else None,
+        "genderGap": round(gender_gap, 2) if gender_gap is not None else None,
+        "giniIndex": round(gini_sim, 4) if gini_sim is not None else None,
+        "baseInformalityRate": baseline.get("baseInformality"),
         "baseGiniIndex": base_gini_sim,
         "formalWorkersCount": formal_count,
         "informalWorkersCount": informal_count,
         "unemployedCount": unemployed_count,
         "avgFormalWageModel": avg_formal_wage_model,
         "avgInformalWageModel": avg_informal_wage_model,
-        "fiscalRevenueModelUnits": round(fiscal_revenue, 2),
-        "fiscalRevenue": round(fiscal_revenue, 2),
+        "fiscalRevenueModelUnits": round(fiscal_revenue, 2) if fiscal_revenue is not None else None,
+        "fiscalRevenue": round(fiscal_revenue, 2) if fiscal_revenue is not None else None,
         "corporateTaxRevenueModelUnits": corp_tax,
         "corporateTaxRevenue": corp_tax,
         "laborContributionsModelUnits": labor_tax,
         "laborContributionsRevenue": labor_tax,
-        "annualExitRate": round(annual_exit_rate, 2),
-        "formalFirmsCount": int(curr_item.get("formal_firms_count", round(100 * formal_firms_ratio))),
-        "informalFirmsCount": int(curr_item.get("informal_firms_count", 100 - round(100 * formal_firms_ratio))),
-        "formalVacancies": int(curr_item.get("formal_vacancies", 15)),
-        "willingWorkersCount": int(curr_item.get("willing_workers_count", informal_count)),
-        "digitalCoverage": round(float(curr_item.get("d_sys", 0.3)), 4),
-        "temperature": round(float(curr_item.get("temperature", 0.5)), 4),
+        "annualExitRate": round(annual_exit_rate, 2) if annual_exit_rate is not None else None,
+        "formalFirmsRatio": round(formal_firms_ratio, 4) if formal_firms_ratio is not None else None,
+        "formalFirmsCount": formal_firms_cnt,
+        "informalFirmsCount": informal_firms_cnt,
+        "formalVacancies": int(curr_item["formal_vacancies"]) if curr_item.get("formal_vacancies") is not None else None,
+        "willingWorkersCount": int(curr_item["willing_workers_count"]) if curr_item.get("willing_workers_count") is not None else informal_count,
+        "digitalCoverage": round(float(curr_item["d_sys"]), 4) if curr_item.get("d_sys") is not None else None,
+        "temperature": round(float(curr_item["temperature"]), 4) if curr_item.get("temperature") is not None else None,
         "informalityByEducation": curr_item.get("informality_by_education", {}),
         "informalityByZone": curr_item.get("informality_by_zone", {}),
         "informalityByQuintile": curr_item.get("informality_by_quintile", {}),
         "phaseProgress": round(clamped_month / 120.0, 3),
-        "source": "Modelo ITDT Calibrado (outputs/policy_experiments_results.json / ILOSTAT)",
-        "sourceCitation": "Calibración con microdatos de agregados de ILOSTAT (data/ilostat_s_F.csv) y simulación multiagente itdt/",
+        "source": "Modelo ITDT Calibrado (outputs/trayectorias_mensuales.json / ILOSTAT)",
+        "sourceCitation": "Calibración con series agregadas de ILOSTAT (data/ilostat_s_F.csv) y simulación multiagente itdt/",
     }
+
     if not policy_params:
         _STRUCTURAL_METRICS_CACHE[(country_clean, sc_clean, clamped_month, seed)] = res
     return res
@@ -864,10 +899,10 @@ def get_simulated_monthly_trajectory(country_code: str = "KENYA", scenario: str 
             "hombres_ci_high": ci_m[1],
             "brecha": item["gender_gap"],
             "formalidad": round(100.0 - item["informality_total"], 2),
-            "formal_firms_ratio": item.get("formal_firms_ratio", 0.0),
-            "annual_exit_rate": item.get("annual_exit_rate", 0.0),
-            "recaudacion": item.get("fiscal_revenue", 0.0),
-            "gini": item.get("gini_index", 0.288),
+            "formal_firms_ratio": item.get("formal_firms_ratio"),
+            "annual_exit_rate": item.get("annual_exit_rate"),
+            "recaudacion": item.get("fiscal_revenue"),
+            "gini": item.get("gini_index"),
             "tipo": "Simulación ITDT (meses 1-120 de la política)",
         })
     return traj
