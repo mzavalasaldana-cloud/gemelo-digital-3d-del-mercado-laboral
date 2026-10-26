@@ -173,12 +173,12 @@ def render_digital_twin_3d_view():
                     text=sub.apply(
                         lambda r: f"<b>Agente:</b> {r.get('code', '')}<br>"
                                   f"<b>Estado Laboral:</b> {r.get('display_sector', r.get('sector', '').title())}<br>"
-                                  f"<b>Sexo:</b> {r.get('gender', 'N/D')}<br>"
-                                  f"<b>Zona:</b> {r.get('rural_zone', 'N/D')}<br>"
-                                  f"<b>Nivel Educativo:</b> {r.get('education', 'Media')}<br>"
-                                  f"<b>Productividad (h_i):</b> {float(r.get('productivity_h', 1.0)):.3f}<br>"
-                                  f"<b>Cuidado Semanal:</b> {float(r.get('care_hours', 0.0)):.1f} hrs/sem<br>"
-                                  f"<b>Alf. Digital (K_dig):</b> {float(r.get('digital_lit', 0.0))*100:.1f}%",
+                                  f"<b>Sexo:</b> {r.get('gender') or 'Sin dato'}<br>"
+                                  f"<b>Zona:</b> {r.get('rural_zone') or 'Sin dato'}<br>"
+                                  f"<b>Nivel Educativo:</b> {r.get('education') or 'Sin dato'}<br>"
+                                  f"<b>Productividad (h_i):</b> {f'{float(r[\"productivity_h\"]):.3f}' if r.get('productivity_h') is not None else 'Sin dato'}<br>"
+                                  f"<b>Cuidado Semanal:</b> {f'{float(r[\"care_hours\"]):.1f} hrs/sem' if r.get('care_hours') is not None else 'Sin dato'}<br>"
+                                  f"<b>Alf. Digital (K_dig):</b> {f'{float(r[\"digital_lit\"])*100:.1f}%' if r.get('digital_lit') is not None else 'Sin dato'}",
                         axis=1
                     ),
                     hoverinfo="text",
@@ -293,13 +293,12 @@ def render_digital_twin_3d_view():
                 <span class="glow-badge badge-cyan">{selected_worker.get('display_sector', selected_worker.get('sector', '').title())}</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; color: #cbd5e1;">
-                <div><b>Sexo (OIT):</b> {selected_worker.get('gender', 'N/D')}</div>
-                <div><b>Zona Geográfica:</b> {selected_worker.get('rural_zone', 'N/D')}</div>
-                <div><b>Nivel Educativo:</b> <span style="color:#818cf8;">{selected_worker.get('education', 'Media')}</span></div>
-                <div><b>Subsector:</b> {selected_worker.get('subsector', 'Manufactura')}</div>
-                <div><b>Productividad Relativa (h_i):</b> <span style="color:#00f0ff;">{float(selected_worker.get('productivity_h', 1.0)):.3f}</span></div>
-                <div><b>Cuidado Semanal (H_care,i):</b> <span style="color:#f59e0b;">{float(selected_worker.get('care_hours', 10.0)):.1f} hrs/sem</span></div>
-                <div><b>Alfabetización Digital (K_dig):</b> <span style="color:#10b981;">{float(selected_worker.get('digital_lit', 0.5))*100:.1f}%</span></div>
+                <div><b>Sexo (OIT):</b> {selected_worker.get('gender') or 'Sin dato'}</div>
+                <div><b>Zona Geográfica:</b> {selected_worker.get('rural_zone') or 'Sin dato'}</div>
+                <div><b>Nivel Educativo:</b> <span style="color:#818cf8;">{selected_worker.get('education') or 'Sin dato'}</span></div>
+                <div><b>Productividad Relativa (h_i):</b> <span style="color:#00f0ff;">{f"{float(selected_worker['productivity_h']):.3f}" if selected_worker.get('productivity_h') is not None else "Sin dato"}</span></div>
+                <div><b>Cuidado Semanal (H_care,i):</b> <span style="color:#f59e0b;">{f"{float(selected_worker['care_hours']):.1f} hrs/sem" if selected_worker.get('care_hours') is not None else "Sin dato"}</span></div>
+                <div><b>Alfabetización Digital (K_dig):</b> <span style="color:#10b981;">{f"{float(selected_worker['digital_lit'])*100:.1f}%" if selected_worker.get('digital_lit') is not None else "Sin dato"}</span></div>
                 <div><b>Estado Laboral ITDT:</b> <span style="color:{status_color}; font-weight:700;">{selected_worker.get('display_sector', selected_worker.get('sector', '').title())}</span></div>
             </div>
             <div style="margin-top: 8px; font-size: 0.72rem; color: #94a3b8; border-top: 1px dashed rgba(148, 163, 184, 0.3); padding-top: 6px;">
@@ -317,7 +316,7 @@ def render_digital_twin_3d_view():
         st.markdown(f"""
         <div class="holo-card" style="border-left: 4px solid #00f0ff; font-size: 0.85rem;">
             <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem; margin-bottom: 6px;">{sel_firm['name']}</div>
-            <div style="color: #94a3b8; margin-bottom: 6px;">Sector: <b>{sel_firm['sectorCategory']}</b> | Tipo: <b>{sel_firm['type'].upper()}</b></div>
+            <div style="color: #94a3b8; margin-bottom: 6px;">Tipo: <b>{sel_firm['type'].upper()}</b></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; color: #cbd5e1;">
                 <div><b>Empleados:</b> {sel_firm['sizeEmployees']}</div>
                 <div><b>Productividad:</b> {sel_firm['productivityScore']}/100</div>

@@ -98,7 +98,6 @@ export function createWorkersPopulation(
       orbitRadius,
       orbitSpeed,
       orbitAngle,
-      subSector: hostFirm?.sectorCategory ?? 'Manufactura',
       formalizationMonth: 0,
       currentProgress: 1.0,
     });
@@ -136,7 +135,6 @@ export function createWorkersPopulation(
       orbitRadius: 0,
       orbitSpeed: 0,
       orbitAngle: 0,
-      subSector: profile.zona === 'Rural' ? 'Agricultura Familiar' : 'Comercio Ambulante / Taller',
       formalizationMonth: 0,
       currentProgress: 0.0,
       informalX: x,

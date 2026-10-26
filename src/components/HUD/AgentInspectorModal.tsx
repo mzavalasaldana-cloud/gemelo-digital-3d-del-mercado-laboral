@@ -88,22 +88,21 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
                 {worker.sector === 'formal' ? 'FORMAL' : 'INFORMAL'}
               </span>
             </div>
-
             {/* Sexo, Educación y Zona */}
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
                 <span className="text-slate-400 block text-[10px]">Sexo (OIT):</span>
-                <span className="font-semibold text-slate-200">{worker.gender}</span>
+                <span className="font-semibold text-slate-200">{worker.gender ?? 'Sin dato'}</span>
               </div>
               <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
                 <span className="text-slate-400 block text-[10px]">Zona Geográfica:</span>
-                <span className="font-semibold text-slate-200">{worker.ruralZone}</span>
+                <span className="font-semibold text-slate-200">{worker.ruralZone ?? 'Sin dato'}</span>
               </div>
             </div>
 
             <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px]">
               <span className="text-slate-400 block text-[10px]">Nivel Educativo:</span>
-              <span className="font-semibold text-indigo-300">{worker.education}</span>
+              <span className="font-semibold text-indigo-300">{worker.education ?? 'Sin dato'}</span>
             </div>
 
             {/* Productividad Econométrica h_i y Cuidado Semanal H_care */}
@@ -113,12 +112,14 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
                   <span className="flex items-center gap-1">
                     <TrendingUp className="w-3 h-3 text-cyan-400" /> Productividad Relativa (h_i):
                   </span>
-                  <span className="font-bold text-cyan-300">{worker.productivityH.toFixed(3)}</span>
+                  <span className="font-bold text-cyan-300">
+                    {worker.productivityH != null ? worker.productivityH.toFixed(3) : 'Sin dato'}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-cyan-400 h-full rounded-full glow-cyan"
-                    style={{ width: `${Math.min(100, Math.max(10, (worker.productivityH / 2.0) * 100))}%` }}
+                    style={{ width: `${worker.productivityH != null ? Math.min(100, Math.max(10, (worker.productivityH / 2.0) * 100)) : 0}%` }}
                   />
                 </div>
               </div>
@@ -128,12 +129,14 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
                   <span className="flex items-center gap-1">
                     <Layers className="w-3 h-3 text-amber-400" /> Horas de Cuidado Semanales (H_care,i):
                   </span>
-                  <span className="font-bold text-amber-300">{worker.careHours.toFixed(1)} hrs/sem</span>
+                  <span className="font-bold text-amber-300">
+                    {worker.careHours != null ? `${worker.careHours.toFixed(1)} hrs/sem` : 'Sin dato'}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-amber-400 h-full rounded-full glow-amber"
-                    style={{ width: `${Math.min(100, (worker.careHours / 48) * 100)}%` }}
+                    style={{ width: `${worker.careHours != null ? Math.min(100, (worker.careHours / 48) * 100) : 0}%` }}
                   />
                 </div>
               </div>
@@ -144,7 +147,7 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
               <div>
                 <span className="text-[10px] text-slate-400 block">Alfabetización Digital (K_dig):</span>
                 <span className="text-sm font-bold text-emerald-400">
-                  {(worker.digitalLit * 100).toFixed(1)}%
+                  {worker.digitalLit != null ? `${(worker.digitalLit * 100).toFixed(1)}%` : 'Sin dato'}
                 </span>
               </div>
               <div className="text-right">
@@ -181,15 +184,9 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                <span className="text-slate-400 block text-[10px]">Sector:</span>
-                <span className="font-semibold text-slate-200 truncate block">{firm.sectorCategory}</span>
-              </div>
-              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                <span className="text-slate-400 block text-[10px]">Tamaño de Empleo:</span>
-                <span className="font-semibold text-cyan-300">{firm.sizeEmployees} trabajadores</span>
-              </div>
+            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px]">
+              <span className="text-slate-400 block text-[10px]">Tamaño de Empleo:</span>
+              <span className="font-semibold text-cyan-300">{firm.sizeEmployees} trabajadores</span>
             </div>
 
             {/* Productivity & Compliance */}
