@@ -202,6 +202,9 @@ make scenarios
 
 # 8. Descomposición por ablación de B2 frente a A con recalibración de variantes
 make mechanism
+#    Regeneración de réplicas de ablación y cálculo de IC 95 % por bootstrap en dos etapas:
+#    python scripts/ic_ablacion_replicas.py . 2 outputs
+#    python scripts/ic_ablacion_bootstrap.py outputs/ablacion_replicas.json outputs/ablacion_ic95.json
 
 # 9. Análisis de sensibilidad (+-20%), especificaciones CES y choque exógeno
 make sensitivity
@@ -256,10 +259,16 @@ Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, 
 > [!TIP]
 > - Las **Tablas 12 y 13** (Gradientes distributivos de género y validación frente a ILOSTAT) se generan mediante `python scripts/validar_gradientes_ilostat.py`.
 > - La **Tabla 14** (Robustez ante reglas de entrada de firmas: libre entrada vs. firmas fijas) se evalúa con `python scripts/robustez_reglas_entrada.py`.
+> - Los **Intervalos de Confianza al 95 % de la Ablación** (Tabla 8) se regeneran ejecutando secuencialmente:
+>   ```bash
+>   python scripts/ic_ablacion_replicas.py . 2 outputs
+>   python scripts/ic_ablacion_bootstrap.py outputs/ablacion_replicas.json outputs/ablacion_ic95.json
+>   ```
 
 ---
 
 ## 📚 Documentación y Diagnóstico Científico
+- Consulta [`docs/ODD_protocol.md`](docs/ODD_protocol.md) para la especificación formal completa del modelo según el estándar ODD (*Overview, Design concepts, Details*, Grimm et al., 2020).
 - Consulta [`docs/DIAGNOSTICO.md`](docs/DIAGNOSTICO.md) para el inventario completo de ecuaciones del artículo científico vs. la arquitectura del código.
 - Consulta [`outputs/loco_insumos.md`](outputs/loco_insumos.md) para la auditoría de aislamiento de información en la validación fuera de muestra.
 - Consulta [`LICENSE`](LICENSE) para los términos de la Licencia MIT.
