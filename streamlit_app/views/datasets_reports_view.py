@@ -4,6 +4,8 @@ Datasets & Reportes: Microdata Ingestion, Household Survey Catalog, and Multi-fo
 
 import streamlit as st
 import json
+from typing import Optional
+import pandas as pd
 
 from streamlit_app.data.mock_data import PRELOADED_DATASETS, COUNTRY_PROFILES
 from backend.ml_engine import load_real_country_microdata
@@ -55,6 +57,9 @@ def render_datasets_reports_view():
 
     st.warning("⚠️ **Aviso Metodológico:** Datos sintéticos de demostración; no son microdatos oficiales. El modelo y el artículo no usan microdatos, sino únicamente tasas agregadas de ILOSTAT.")
 
+    microdata_res = load_real_country_microdata(country_code)
+    df_sample: Optional[pd.DataFrame] = microdata_res[0] if microdata_res is not None else None
+
     tab_datasets, tab_reports = st.tabs(["📚 Catálogo & Ingesta de Microdatos", "📑 Generador de Informes Ejecutivos"])
 
     # -------------------------------------------------------------
@@ -98,9 +103,8 @@ def render_datasets_reports_view():
 
         # Microdata Sample Profiler & Table
         render_section_header("Explorador y Perfilador de Microdatos Activos", icon="🔍", badge="500 Registros Muestra")
-        microdata_res = load_real_country_microdata(country_code)
-        if microdata_res is not None:
-            df_sample, fname, cname = microdata_res
+        if microdata_res is not None and df_sample is not None:
+            _, fname, cname = microdata_res
             df_display = df_sample.head(500)
             st.dataframe(
                 df_display,

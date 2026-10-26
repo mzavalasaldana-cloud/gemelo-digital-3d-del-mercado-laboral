@@ -178,9 +178,9 @@ def main():
     }
 
     for target in TARGET_COUNTRIES:
-        pais = target["pais"]
-        code = target["codigo"]
-        anio = target["anio"]
+        pais = str(target["pais"])
+        code = str(target["codigo"])
+        anio = int(target["anio"])
 
         print(f"\n[*] Descargando {pais} ({code}) año {anio} desde SDMX ILOSTAT...")
         payload, url = fetch_country_sdmx(code, anio)
@@ -215,7 +215,15 @@ def main():
 
     # Ordenar por país, año, y orden de sexo (Total, Mujeres, Hombres)
     sex_order = {"Total": 0, "Mujeres": 1, "Hombres": 2}
-    all_rows.sort(key=lambda x: (x["codigo"], x["anio"], sex_order.get(x["sexo"], 3)))
+
+    def _sort_key(r: Dict[str, Any]) -> Tuple[str, int, int]:
+        c = str(r.get("codigo") or "")
+        raw_anio = r.get("anio")
+        a = int(raw_anio) if raw_anio is not None else 0
+        s = sex_order.get(str(r.get("sexo") or ""), 3)
+        return (c, a, s)
+
+    all_rows.sort(key=_sort_key)
 
     # Guardar en data/ilostat_calibracion.csv
     fieldnames = [

@@ -211,14 +211,15 @@ def main():
     }
 
     for ind_info in INDICATORS:
-        ind_code = ind_info["indicator"]
-        target_classifs = ind_info["target_classifs"]
+        ind_code = str(ind_info["indicator"])
+        raw_classifs = ind_info["target_classifs"]
+        target_classifs: List[str] = list(raw_classifs) if isinstance(raw_classifs, list) else [raw_classifs]
         print(f"\n>>> Indicador: {ind_code} ({ind_info['description']})")
 
         for country in TARGET_COUNTRIES:
-            c_name = country["name"]
-            c_code = country["code"]
-            c_target_year = country["target_year"]
+            c_name = str(country["name"])
+            c_code = str(country["code"])
+            c_target_year = int(country["target_year"])
 
             print(f"\n  [+] Consultando {c_name} ({c_code}), objetivo año {c_target_year}...")
 

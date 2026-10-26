@@ -27,7 +27,7 @@ import json
 import urllib.request
 import numpy as np
 from PIL import Image
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright  # type: ignore
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -225,7 +225,7 @@ def capture_all():
         for target in TARGETS:
             page = context.new_page()
             page.set_default_timeout(90000)
-            out_path = os.path.join(OUTPUT_DIR, target["filename"])
+            out_path = os.path.join(OUTPUT_DIR, str(target["filename"]))
             json_path = os.path.splitext(out_path)[0] + ".json"
 
             print(f"\n==========================================")
@@ -301,7 +301,7 @@ def capture_all():
                 print(f"    * Posición Cámara: {debug_obj.get('cameraPosition')}")
 
             # Verificación con PIL y métricas visuales
-            v_metrics = evaluate_image_visual_metrics(out_path, target["type"])
+            v_metrics = evaluate_image_visual_metrics(out_path, str(target["type"]))
             w = v_metrics["width"]
             h = v_metrics["height"]
             std = v_metrics["pixel_std"]
@@ -340,7 +340,7 @@ def capture_all():
     print("\n" + "=" * 80)
     print("TODAS LAS CAPTURAS COMPLETADAS SATISFACTORIAMENTE:")
     for r in results:
-        print(f" - {r['filename']} ({r['dimensions']}, {r['size_bytes'] / 1024 / 1024:.2f} MB, std={r['pixel_std']}, colores={r['unique_colors']}) -> JSON: {r['json_filename']}")
+        print(f" - {r['filename']} ({r['dimensions']}, {float(r['size_bytes']) / 1024 / 1024:.2f} MB, std={r['pixel_std']}, colores={r['unique_colors']}) -> JSON: {r['json_filename']}")
     print("=" * 80)
 
 

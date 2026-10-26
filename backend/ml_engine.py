@@ -1,4 +1,5 @@
 import os
+import json
 import uuid
 import logging
 import time
@@ -41,14 +42,14 @@ except ImportError:
     HAS_LIGHTGBM = False
 
 try:
-    import catboost as cb
+    import catboost as cb  # type: ignore
     HAS_CATBOOST = True
 except ImportError:
     cb = None
     HAS_CATBOOST = False
 
 try:
-    import pyreadstat
+    import pyreadstat  # type: ignore
     HAS_PYREADSTAT = True
 except ImportError:
     pyreadstat = None
@@ -723,7 +724,7 @@ def run_stratified_cv(
 
         y_test_pred = model.predict(X_test)
         if hasattr(model, "predict_proba"):
-            probs = model.predict_proba(X_test)[:, 1]
+            probs = np.asarray(model.predict_proba(X_test))[:, 1]
         else:
             probs = y_test_pred
 

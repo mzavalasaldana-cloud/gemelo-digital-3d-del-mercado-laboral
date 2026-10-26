@@ -133,7 +133,7 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int
         formal_ratio = float(np.mean(model.is_formal_firm))
 
     # Número de torres formales entre las 10 torres (round(10 * formal_ratio))
-    num_formal = int(round(10.0 * formal_ratio))
+    num_formal = round(10.0 * formal_ratio)
     if formal_ratio > 0.005 and num_formal == 0:
         num_formal = 1
     num_formal = min(10, max(0, num_formal))
@@ -307,36 +307,34 @@ def calculate_structural_metrics(
 
     if c_traj and clamped_month > 0:
         # Mes 1 a 120 de la política
-        m_item = c_traj[clamped_month - 1]
-        inf_total = float(m_item["informality_total"])
-        inf_fem = float(m_item["informality_female"])
-        inf_male = float(m_item["informality_male"])
-        gender_gap = float(m_item["gender_gap"])
-        annual_exit_rate = float(m_item["annual_exit_rate"])
-        fiscal_revenue = float(m_item["fiscal_revenue"])
-        corporate_tax = float(m_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
+        curr_item = c_traj[clamped_month - 1]
+        inf_total = float(curr_item["informality_total"])
+        inf_fem = float(curr_item["informality_female"])
+        inf_male = float(curr_item["informality_male"])
+        gender_gap = float(curr_item["gender_gap"])
+        annual_exit_rate = float(curr_item["annual_exit_rate"])
+        fiscal_revenue = float(curr_item["fiscal_revenue"])
+        corporate_tax = float(curr_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
         labor_tax = round(fiscal_revenue - corporate_tax, 2)
-        gini_sim = float(m_item.get("gini_index", 0.288))
-        formal_firms_ratio = float(m_item.get("formal_firms_ratio", 0.05))
+        gini_sim = float(curr_item.get("gini_index", 0.288))
+        formal_firms_ratio = float(curr_item.get("formal_firms_ratio", 0.05))
     else:
         # Mes 0 (Línea base pre-política del país)
         a_traj = traj_data.get(country_clean, {}).get("A", [])
-        m0_item = a_traj[0] if a_traj else {}
+        curr_item = a_traj[0] if a_traj else {}
         inf_total = float(baseline["baseInformality"])
         inf_fem = float(baseline["baseInformalityFemale"])
         inf_male = float(baseline["baseInformalityMale"])
         gender_gap = round(inf_fem - inf_male, 2)
         annual_exit_rate = 0.05
-        fiscal_revenue = float(m0_item.get("fiscal_revenue", 1381.05))
-        corporate_tax = float(m0_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
+        fiscal_revenue = float(curr_item.get("fiscal_revenue", 1381.05))
+        corporate_tax = float(curr_item.get("corporate_tax_revenue", round(fiscal_revenue * 0.865, 2)))
         labor_tax = round(fiscal_revenue - corporate_tax, 2)
-        gini_sim = float(m0_item.get("gini_index", 0.288))
-        formal_firms_ratio = float(m0_item.get("formal_firms_ratio", 0.05))
-
-    curr_item = m_item if (c_traj and clamped_month > 0) else m0_item
+        gini_sim = float(curr_item.get("gini_index", 0.288))
+        formal_firms_ratio = float(curr_item.get("formal_firms_ratio", 0.05))
 
     total_pop_vis = 2500
-    formal_count = int(round(total_pop_vis * (1.0 - inf_total / 100.0)))
+    formal_count = round(total_pop_vis * (1.0 - inf_total / 100.0))
     informal_count = total_pop_vis - formal_count
     unemployed_count = 0
 

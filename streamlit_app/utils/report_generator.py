@@ -5,11 +5,11 @@ Generates PDF (ReportLab), Excel (openpyxl), HTML, CSV and JSON.
 
 import io
 import pandas as pd
-from typing import Dict, Any
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
+from typing import Dict, Any, List, Optional
+from reportlab.lib.pagesizes import letter  # type: ignore
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle  # type: ignore
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
+from reportlab.lib import colors  # type: ignore
 
 def generate_pdf_report(
     country_name: str,
@@ -20,7 +20,7 @@ def generate_pdf_report(
     """Generates a styled executive policy brief in PDF format."""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-    story = []
+    story: List[Any] = []
 
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
@@ -28,14 +28,14 @@ def generate_pdf_report(
         parent=styles["Heading1"],
         fontSize=20,
         leading=24,
-        textColor=colors.HexColor("#0f172a"),
+        textColor=colors.HexColor("#0f172a"),  # type: ignore
         spaceAfter=8,
     )
     subtitle_style = ParagraphStyle(
         "ReportSubtitle",
         parent=styles["Normal"],
         fontSize=10,
-        textColor=colors.HexColor("#475569"),
+        textColor=colors.HexColor("#475569"),  # type: ignore
         spaceAfter=16,
     )
     heading2_style = ParagraphStyle(
@@ -43,7 +43,7 @@ def generate_pdf_report(
         parent=styles["Heading2"],
         fontSize=13,
         leading=16,
-        textColor=colors.HexColor("#1e293b"),
+        textColor=colors.HexColor("#1e293b"),  # type: ignore
         spaceBefore=12,
         spaceAfter=8,
     )
@@ -130,7 +130,7 @@ def generate_excel_report(
     country_name: str,
     metrics: Dict[str, Any],
     policy_params: Dict[str, float],
-    microdata_sample: pd.DataFrame
+    microdata_sample: Optional[pd.DataFrame] = None
 ) -> bytes:
     """Generates multi-sheet Excel file with summary, metrics, and microdata."""
     buffer = io.BytesIO()
