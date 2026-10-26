@@ -44,13 +44,13 @@ export interface StructuralFirm {
   type: 'formal' | 'informal_mycelium';
   x: number;
   z: number;
-  sizeEmployees: number;
   height: number;
+  L_j?: number;
+  Y_j?: number;
+  A_j?: number;
+  sizeEmployees?: number;
+  baseEmployees?: number;
   sectorCategory?: string;
-  productivityScore: number;
-  formalizationCostUSD?: number;
-  taxComplianceRate: number; // %
-  baseEmployees: number;
   isFormalizedScenario?: boolean;
   shockwaveActive?: boolean;
   emergenceMonth?: number;
@@ -58,11 +58,8 @@ export interface StructuralFirm {
 }
 
 export interface PolicyParameters {
-  registrationCostReduction: number; // 0 to 100%
-  smeSubsidyUSDMonth: number; // 0 to 150 USD/month
-  skillsTrainingCoverage: number; // 0 to 100%
-  socialProtectionTax: number; // 0 to 50%
-  smartInspectionCoverage: number; // 0 to 100%
+  scenario?: ScenarioPreset;
+  [key: string]: any;
 }
 
 export type ScenarioPreset = 
@@ -72,9 +69,6 @@ export type ScenarioPreset =
   | 'C'
   | 'D'
   | 'BASELINE'
-  | 'SCENARIO_A_REGISTRATION'
-  | 'SCENARIO_B_WORKER_SUBSIDY'
-  | 'SCENARIO_E_AUTOMATION_SHOCK'
   | 'CUSTOM';
 
 

@@ -164,20 +164,19 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int
         if is_f and len(selected_formal) > slot_idx:
             j = selected_formal[slot_idx]
             l_j = int(round(model.L[j]))
-            y_j = float(model.Y[j])
-            a_j = float(model.A[j])
+            y_j = round(float(model.Y[j]), 2)
+            a_j = round(float(model.A[j]), 3)
             firms_list.append({
-                "id": f"firm-f-{j:03d}",
-                "name": f"Unidad Productiva Formal #{j+1}",
+                "id": f"UP-F-{j+1:02d}",
+                "type": "formal",
                 "x": x,
                 "z": z,
+                "height": round(max(3.5, min(8.5, y_j * 0.3)), 2),
+                "L_j": l_j,
+                "Y_j": y_j,
+                "A_j": a_j,
                 "sizeEmployees": l_j,
                 "baseEmployees": l_j,
-                "height": round(max(3.5, min(8.5, y_j * 0.3)), 2),
-                "type": "formal",
-                "isFormalizedScenario": True,
-                "productivityScore": round(a_j * 10, 1),
-                "taxComplianceRate": 100,
                 "emergenceMonth": 0,
                 "growthSpanMonths": 1,
             })
@@ -185,20 +184,19 @@ def get_model_firms(country_code: str = "KENYA", scenario: str = "A", month: int
             inf_pos = slot_idx - num_formal
             j = selected_informal[inf_pos % len(selected_informal)] if selected_informal else slot_idx
             l_j = int(round(model.L[j])) if j < len(model.L) else 4
-            y_j = float(model.Y[j]) if j < len(model.Y) else 10.0
-            a_j = float(model.A[j]) if j < len(model.A) else 1.0
+            y_j = round(float(model.Y[j]), 2) if j < len(model.Y) else 10.0
+            a_j = round(float(model.A[j]), 3) if j < len(model.A) else 1.0
             firms_list.append({
-                "id": f"firm-inf-{j:03d}",
-                "name": f"Unidad Productiva Informal #{j+1}",
+                "id": f"UP-INF-{j+1:02d}",
+                "type": "informal_mycelium",
                 "x": x,
                 "z": z,
+                "height": round(max(1.8, min(4.0, y_j * 0.2)), 2),
+                "L_j": l_j,
+                "Y_j": y_j,
+                "A_j": a_j,
                 "sizeEmployees": l_j,
                 "baseEmployees": l_j,
-                "height": round(max(1.8, min(4.0, y_j * 0.2)), 2),
-                "type": "informal_mycelium",
-                "isFormalizedScenario": False,
-                "productivityScore": round(a_j * 10, 1),
-                "taxComplianceRate": 0,
                 "emergenceMonth": 0,
                 "growthSpanMonths": 1,
             })
@@ -235,12 +233,8 @@ def _get_or_run_itdt_model(country_code: str, scenario: str, seed: int = 20260) 
 
     # Mapeo a escenarios canónicos A, B1, B2, C, D
     sc_clean = scenario.upper().strip() if scenario else "A"
-    if sc_clean in ("BASELINE", "SCENARIO_A_REGISTRATION", "STATUS_QUO"):
+    if sc_clean in ("BASELINE", "STATUS_QUO"):
         sc_clean = "A"
-    elif sc_clean in ("SCENARIO_B_WORKER_SUBSIDY", "GOVTECH_MODERADO"):
-        sc_clean = "B1"
-    elif sc_clean in ("SCENARIO_E_AUTOMATION_SHOCK", "GOVTECH_INTENSIVO"):
-        sc_clean = "B2"
     elif sc_clean not in SCENARIO_CONFIGS:
         sc_clean = "A"
 
@@ -292,11 +286,11 @@ def calculate_structural_metrics(
         country_clean = "KENYA"
 
     sc_clean = scenario.upper().strip() if scenario else "A"
-    if sc_clean in ("BASELINE", "SCENARIO_A_REGISTRATION", "STATUS_QUO"):
+    if sc_clean in ("BASELINE", "STATUS_QUO"):
         sc_clean = "A"
-    elif sc_clean in ("SCENARIO_B_WORKER_SUBSIDY", "GOVTECH_MODERADO"):
+    elif sc_clean in ("GOVTECH_MODERADO",):
         sc_clean = "B1"
-    elif sc_clean in ("SCENARIO_E_AUTOMATION_SHOCK", "GOVTECH_INTENSIVO"):
+    elif sc_clean in ("GOVTECH_INTENSIVO",):
         sc_clean = "B2"
     elif sc_clean not in SCENARIO_CONFIGS:
         sc_clean = "A"

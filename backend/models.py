@@ -105,13 +105,9 @@ class CopilotMessageModel(Base):
 # ==========================================
 
 class PolicyParameters(BaseModel):
-    registrationCostReduction: float = Field(default=0.0, ge=0.0, le=100.0, description="Reducción costos de registro (0-100%)")
-    smeSubsidyUSDMonth: float = Field(default=0.0, ge=0.0, le=150.0, description="Subsidio mensual PyMEs (0-150 USD)")
-    skillsTrainingCoverage: float = Field(default=0.0, ge=0.0, le=100.0, description="Cobertura de capacitación técnica (0-100%)")
-    socialProtectionTax: float = Field(default=15.0, ge=0.0, le=50.0, description="Tasa de contribución protección social (0-50%)")
-    smartInspectionCoverage: float = Field(default=0.0, ge=0.0, le=100.0, description="Inspección inteligente satelital/digital (0-100%)")
+    scenario: Optional[str] = Field(default="A", description="Escenario de política ITDT (A, B1, B2, C, D)")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
 
 class StructuralMetrics(BaseModel):

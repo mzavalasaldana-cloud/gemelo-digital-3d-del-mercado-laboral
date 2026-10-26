@@ -11,11 +11,82 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
 from reportlab.lib import colors  # type: ignore
 
+SCENARIO_INSTRUMENTS: Dict[str, Dict[str, Any]] = {
+    "A": {
+        "name": "Status Quo (Línea Base)",
+        "description": "Sin intervención de política digital ni transferencias.",
+        "instruments": [
+            ("Costo de entrada/formalización (κ)", "1.0× (Línea Base)", "Barrera de entrada ordinaria a la formalidad"),
+            ("Cobertura digital", "1.0× (Línea Base)", "Infraestructura y adopción digital estándar"),
+            ("Detección de evasión (φ1)", "1.0× (Línea Base)", "Capacidad de auditoría y fiscalización estándar"),
+            ("Sanciones por evasión (μ0, μ1)", "1.0× (Línea Base)", "Régimen sancionatorio ordinario"),
+            ("Tiempo de cuidado (H_care)", "1.0× (Línea Base)", "Carga de cuidado no remunerado sin subsidio"),
+        ],
+    },
+    "B1": {
+        "name": "GovTech Moderado",
+        "description": "Digitalización y fiscalización moderadas.",
+        "instruments": [
+            ("Costo de entrada/formalización (κ)", "×1.5", "Reducción de barreras burocráticas digitales"),
+            ("Cobertura digital", "×1.5", "Expansión moderada de ventanilla única y conectividad"),
+            ("Detección de evasión (φ1)", "×1.2", "Mejora moderada en fiscalización algorítmica"),
+            ("Sanciones por evasión (μ0, μ1)", "×1.5", "Incremento proporcional de penalidades por informalidad"),
+            ("Tiempo de cuidado (H_care)", "1.0×", "Sin intervención específica en cuidados"),
+        ],
+    },
+    "B2": {
+        "name": "GovTech Intensivo",
+        "description": "Digitalización profunda, alta fiscalización y reducción sustancial de costos.",
+        "instruments": [
+            ("Costo de entrada/formalización (κ)", "×2.5", "Ventanilla única interoperable de bajo costo"),
+            ("Cobertura digital", "×3.0", "Despliegue masivo de infraestructura e identidad digital"),
+            ("Detección de evasión (φ1)", "×1.5", "Auditoría digital cruzada y fiscalización inteligente"),
+            ("Sanciones por evasión (μ0, μ1)", "×3.0", "Régimen sancionatorio estricto ante evasión"),
+            ("Tiempo de cuidado (H_care)", "1.0×", "Sin intervención específica en cuidados"),
+        ],
+    },
+    "C": {
+        "name": "Cuidado Infantil / Corresponsabilidad",
+        "description": "Reducción de la carga de cuidado no remunerado sobre la oferta laboral femenina.",
+        "instruments": [
+            ("Costo de entrada/formalización (κ)", "1.0×", "Línea base"),
+            ("Cobertura digital", "1.0×", "Línea base"),
+            ("Detección de evasión (φ1)", "1.0×", "Línea base"),
+            ("Sanciones por evasión (μ0, μ1)", "1.0×", "Línea base"),
+            ("Tiempo de cuidado (H_care)", "×0.5", "Centros de cuidado y subsidios de corresponsabilidad"),
+        ],
+    },
+    "D": {
+        "name": "Paquete Integral (GovTech + Cuidado)",
+        "description": "Combinación sinérgica de GovTech intensivo y política de cuidados.",
+        "instruments": [
+            ("Costo de entrada/formalización (κ)", "×2.5", "Ventanilla digital integral"),
+            ("Cobertura digital", "×3.0", "Identidad y plataformas digitales universales"),
+            ("Detección de evasión (φ1)", "×1.5", "Fiscalización algorítmica avanzada"),
+            ("Sanciones por evasión (μ0, μ1)", "×3.0", "Disuasión estricta de evasión"),
+            ("Tiempo de cuidado (H_care)", "×0.5", "Reducción a la mitad del tiempo dedicado a cuidados"),
+        ],
+    },
+}
+
+def _resolve_scenario_info(scenario_name: str, policy_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    sc = ""
+    if policy_params and "scenario" in policy_params:
+        sc = str(policy_params["scenario"]).upper().strip()
+    if not sc and scenario_name:
+        sc = scenario_name.upper().strip()
+    if sc in ("BASELINE", "STATUS_QUO"):
+        sc = "A"
+    elif sc.startswith("ESCENARIO "):
+        sc = sc.replace("ESCENARIO ", "").strip()
+    return SCENARIO_INSTRUMENTS.get(sc, SCENARIO_INSTRUMENTS["A"])
+
+
 def generate_pdf_report(
     country_name: str,
     scenario_name: str,
     metrics: Dict[str, Any],
-    policy_params: Dict[str, float]
+    policy_params: Dict[str, Any]
 ) -> bytes:
     """Generates a styled executive policy brief in PDF format."""
     buffer = io.BytesIO()
@@ -50,8 +121,9 @@ def generate_pdf_report(
     body_style = styles["BodyText"]
 
     # Header
+    sc_info = _resolve_scenario_info(scenario_name, policy_params)
     story.append(Paragraph("INFORME EJECUTIVO DE POLÍTICA LABORAL Y FORMALIZACIÓN", title_style))
-    story.append(Paragraph(f"Gemelo Digital 3D | País: <b>{country_name}</b> | Escenario: <b>{scenario_name}</b> | Horizonte: 10 Años", subtitle_style))
+    story.append(Paragraph(f"Gemelo Digital 3D | País: <b>{country_name}</b> | Escenario: <b>{sc_info['name']}</b> | Horizonte: 10 Años", subtitle_style))
     story.append(Spacer(1, 10))
 
     # Summary Paragraph
@@ -64,9 +136,9 @@ def generate_pdf_report(
     gap_str = f"{metrics['genderGap']:+.2f} pp" if metrics.get('genderGap') is not None else "Sin dato"
 
     summary_text = (
-        f"El presente informe sintetiza los resultados de la simulación micro-económica basada en agentes. "
+        f"El presente informe sintetiza los resultados de la simulación macroeconómica del modelo ITDT. "
         f"Bajo las intervenciones parametrizadas, la tasa de informalidad proyectada alcanza el <b>{inf_str}</b> "
-        f"con un Índice de Gini de <b>{gini_str}</b> y un Índice de Trabajo Decente OIT de <b>{metrics.get('decentWorkIndex', 0)}/100</b>."
+        f"con un Índice de Gini de <b>{gini_str}</b>."
     )
     story.append(Paragraph(summary_text, body_style))
     story.append(Spacer(1, 14))
@@ -99,16 +171,15 @@ def generate_pdf_report(
     story.append(Spacer(1, 14))
 
     # Policy Levers Table
-    story.append(Paragraph("2. Paquete de Políticas Públicas Aplicado", heading2_style))
-    policies_data = [
-        ["Palanca de Reforma", "Intensidad / Nivel", "Mecanismo de Transmisión"],
-        ["Reducción de Costos de Registro", f"{policy_params.get('registrationCostReduction', 0)}%", "Disminuye barrera de entrada a formalidad"],
-        ["Subsidio Salarial Directo a PYMEs", f"{policy_params.get('smeSubsidyUSDMonth', 0)} u.m./mes", "Fomenta absorción de empleo formal"],
-        ["Cobertura de Formación y Habilidades", f"{policy_params.get('skillsTrainingCoverage', 0)}%", "Aumenta productividad laboral marginal"],
-        ["Inspección Laboral Inteligente", f"{policy_params.get('smartInspectionCoverage', 0)}%", "Detección no punitiva y regularización"],
-        ["Tasa de Contribución Social", f"{policy_params.get('socialProtectionTax', 0)}%", "Financiamiento de cobertura solidaria"],
-    ]
-    t2 = Table(policies_data, colWidths=[200, 120, 220])
+    story.append(Paragraph(f"2. Parámetros del Escenario: {sc_info['name']}", heading2_style))
+    story.append(Paragraph(sc_info["description"], body_style))
+    story.append(Spacer(1, 6))
+
+    policies_data = [["Instrumento de Política (ITDT)", "Intensidad / Parámetro Real", "Mecanismo de Transmisión"]]
+    for inst, val, mec in sc_info["instruments"]:
+        policies_data.append([inst, val, mec])
+
+    t2 = Table(policies_data, colWidths=[200, 130, 210])
     t2.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0284c7')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -137,7 +208,7 @@ def generate_pdf_report(
 def generate_excel_report(
     country_name: str,
     metrics: Dict[str, Any],
-    policy_params: Dict[str, float],
+    policy_params: Dict[str, Any],
     microdata_sample: Optional[pd.DataFrame] = None
 ) -> bytes:
     """Generates multi-sheet Excel file with summary, metrics, and microdata."""
@@ -159,11 +230,13 @@ def generate_excel_report(
         ])
         summary_df.to_excel(writer, sheet_name="Resumen Ejecutivo", index=False)
 
-        # Sheet 2: Políticas
+        # Sheet 2: Políticas reales del escenario
+        sc_info = _resolve_scenario_info(policy_params.get("scenario", "A"), policy_params)
         policies_df = pd.DataFrame([
-            {"Palanca de Política": k, "Valor Configurado": v} for k, v in policy_params.items()
+            {"Instrumento ITDT": inst, "Parámetro Real": val, "Mecanismo": mec}
+            for inst, val, mec in sc_info["instruments"]
         ])
-        policies_df.to_excel(writer, sheet_name="Parámetros Políticas", index=False)
+        policies_df.to_excel(writer, sheet_name="Instrumentos Escenario", index=False)
 
         # Sheet 3: Microdatos
         if microdata_sample is not None and not microdata_sample.empty:
@@ -176,9 +249,15 @@ def generate_html_report(
     country_name: str,
     scenario_name: str,
     metrics: Dict[str, Any],
-    policy_params: Dict[str, float]
+    policy_params: Dict[str, Any]
 ) -> str:
     """Generates standalone interactive HTML brief."""
+    sc_info = _resolve_scenario_info(scenario_name, policy_params)
+    table_rows = "".join(
+        f"<tr><td>{inst}</td><td><strong>{val}</strong></td><td>{mec}</td></tr>"
+        for inst, val, mec in sc_info["instruments"]
+    )
+
     html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -202,7 +281,7 @@ def generate_html_report(
 <body>
     <div class="container">
         <h1>Gemelo Digital 3D del Mercado Laboral</h1>
-        <p>Informe Ejecutivo: <strong>{country_name}</strong> | Escenario: <strong>{scenario_name}</strong></p>
+        <p>Informe Ejecutivo: <strong>{country_name}</strong> | Escenario: <strong>{sc_info['name']}</strong></p>
         
         <div class="grid">
             <div class="card">
@@ -219,14 +298,11 @@ def generate_html_report(
             </div>
         </div>
 
-        <h3>Paquete de Políticas Simulado</h3>
+        <h3>Parámetros Reales del Escenario: {sc_info['name']}</h3>
+        <p>{sc_info['description']}</p>
         <table>
-            <tr><th>Palanca</th><th>Valor</th></tr>
-            <tr><td>Reducción Costos Registro</td><td>{policy_params.get('registrationCostReduction')}%</td></tr>
-            <tr><td>Subsidio PYMEs u.m./mes</td><td>{policy_params.get('smeSubsidyUSDMonth')} u.m.</td></tr>
-            <tr><td>Cobertura Habilidades</td><td>{policy_params.get('skillsTrainingCoverage')}%</td></tr>
-            <tr><td>Inspección Inteligente</td><td>{policy_params.get('smartInspectionCoverage')}%</td></tr>
-            <tr><td>Tasa Protección Social</td><td>{policy_params.get('socialProtectionTax')}%</td></tr>
+            <tr><th>Instrumento de Política (ITDT)</th><th>Parámetro Real</th><th>Mecanismo de Transmisión</th></tr>
+            {table_rows}
         </table>
     </div>
 </body>

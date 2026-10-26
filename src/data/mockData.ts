@@ -27,7 +27,6 @@ export interface CountryProfile {
     terrainRoughness: number;
     colorTint: string;
   };
-  contextDescription: string;
 }
 
 export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
@@ -46,7 +45,6 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
       terrainRoughness: 1.4,
       colorTint: '#00f0ff',
     },
-    contextDescription: 'Alta prevalencia del sector informal "Jua Kali", microfinanzas móviles M-Pesa y polo tecnológico en Nairobi.',
   },
   NIGERIA: {
     code: 'NIGERIA',
@@ -63,7 +61,6 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
       terrainRoughness: 1.6,
       colorTint: '#10b981',
     },
-    contextDescription: 'Mercados urbanos densos, comercio informal masivo en Lagos y brechas significativas entre el sector formal corporativo y microtalleres.',
   },
   INDIA: {
     code: 'INDIA',
@@ -80,7 +77,6 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
       terrainRoughness: 1.8,
       colorTint: '#38bdf8',
     },
-    contextDescription: 'Enorme sector informal "unorganized", transición de manufactura semi-formal y plataformas gig de servicios.',
   },
   BANGLADESH: {
     code: 'BANGLADESH',
@@ -97,16 +93,11 @@ export const COUNTRY_PROFILES: Record<CountryCode, CountryProfile> = {
       terrainRoughness: 1.2,
       colorTint: '#06b6d4',
     },
-    contextDescription: 'Exportación textil con encadenamientos de talleres subcontratados y microcréditos rurales.',
   },
 };
 
 export const INITIAL_POLICY_STATE: PolicyParameters = {
-  registrationCostReduction: 30, // 30% reduction
-  smeSubsidyUSDMonth: 50, // $50/month
-  skillsTrainingCoverage: 25, // 25% coverage
-  socialProtectionTax: 12, // 12% tax/contribution
-  smartInspectionCoverage: 20, // 20% inspection
+  scenario: 'A',
 };
 
 // GENERADOR DINÁMICO DE EMPRESAS SEGÚN LA PROPORCIÓN REAL DE FIRMAS FORMALES DE ITDTModel
@@ -138,38 +129,35 @@ export function getModelFirms(
     const radius = isFormal ? 8.5 : 5.2;
     const x = Number((Math.cos(angle) * radius).toFixed(2));
     const z = Number((Math.sin(angle) * radius).toFixed(2));
+    const fid = isFormal ? `UP-F-${slot + 1}` : `UP-INF-${slot + 1 - numFormal}`;
 
     if (isFormal) {
       firms.push({
-        id: `firm-f-${slot + 1}`,
-        name: `Unidad Productiva Formal #${slot + 1}`,
+        id: fid,
+        name: fid,
         type: 'formal',
         x,
         z,
-        sizeEmployees: 35,
-        baseEmployees: 35,
         height: 8.5,
-        productivityScore: 65.0,
-        taxComplianceRate: 100,
+        L_j: 35.0,
+        Y_j: 120.0,
+        A_j: 1.5,
         emergenceMonth: 0,
         growthSpanMonths: 1,
-        isFormalizedScenario: true,
       });
     } else {
       firms.push({
-        id: `firm-inf-${slot + 1}`,
-        name: `Unidad Productiva Informal #${slot + 1}`,
+        id: fid,
+        name: fid,
         type: 'informal_mycelium',
         x,
         z,
-        sizeEmployees: 3,
-        baseEmployees: 3,
         height: 2.2,
-        productivityScore: 18.0,
-        taxComplianceRate: 0,
+        L_j: 3.0,
+        Y_j: 15.0,
+        A_j: 0.8,
         emergenceMonth: 0,
         growthSpanMonths: 1,
-        isFormalizedScenario: false,
       });
     }
   }
@@ -240,57 +228,6 @@ export const DEMO_USERS: UserAccount[] = [
 ];
 export const MOCK_USERS = DEMO_USERS;
 
-export const DEMO_SIM_RUNS: SimulationRun[] = [
-  {
-    id: 'RUN-2034-098',
-    name: 'Kenia: Reducción Barreras Registro + Subsidio $50',
-    timestamp: 'Hoy, 22:45',
-    country: 'KENYA',
-    scenario: 'Escenario A + B Combinado',
-    status: 'completada',
-    informalityChange: -12.4,
-    executionTimeSec: 4.8,
-  },
-  {
-    id: 'RUN-2034-097',
-    name: 'India: Shock de Automatización en Ensamblaje',
-    timestamp: 'Hoy, 21:12',
-    country: 'INDIA',
-    scenario: 'Escenario E Automatización',
-    status: 'completada',
-    informalityChange: +6.1,
-    executionTimeSec: 5.2,
-  },
-  {
-    id: 'RUN-2034-096',
-    name: 'Nigeria: Programa Masivo Capacitación Técnica',
-    timestamp: 'Ayer, 18:30',
-    country: 'NIGERIA',
-    scenario: 'Política de Capital Humano',
-    status: 'completada',
-    informalityChange: -7.8,
-    executionTimeSec: 6.1,
-  },
-  {
-    id: 'RUN-2034-095',
-    name: 'Bangladesh: Subsidio RMG vs Informalidad Rural',
-    timestamp: 'Ayer, 14:05',
-    country: 'BANGLADESH',
-    scenario: 'Transición Estructural',
-    status: 'completada',
-    informalityChange: -9.2,
-    executionTimeSec: 4.5,
-  },
-  {
-    id: 'RUN-2034-094',
-    name: 'Stress Test: Hiper-inspección Punitiva',
-    timestamp: 'Hace 2 días',
-    country: 'KENYA',
-    scenario: 'Fiscalización Estricta 80%',
-    status: 'error',
-    informalityChange: +3.2,
-    executionTimeSec: 8.9,
-  },
-];
+export const DEMO_SIM_RUNS: SimulationRun[] = [];
 export const MOCK_SIM_RUNS = DEMO_SIM_RUNS;
 

@@ -171,7 +171,7 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
           <div className="space-y-3 font-mono-hud text-xs">
             {/* Type & Architecture */}
             <div className="p-2 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-              <span className="text-slate-400 text-[11px]">Estructura 3D:</span>
+              <span className="text-slate-400 text-[11px]">Estado ITDT:</span>
               <span
                 className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                   firm.type === 'formal'
@@ -179,62 +179,36 @@ export const AgentInspectorModal = React.memo<AgentInspectorModalProps>(({
                     : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                 }`}
               >
-                {firm.type === 'formal' ? 'Prisma Hexagonal Formal' : 'Red de Micelio Informal'}
+                {firm.type === 'formal' ? 'Formal (Prisma)' : 'Informal (Micelio)'}
               </span>
             </div>
 
-            {/* Key Metrics */}
-            <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px]">
-              <span className="text-slate-400 block text-[10px]">Tamaño de Empleo:</span>
-              <span className="font-semibold text-cyan-300">{firm.sizeEmployees} trabajadores</span>
-            </div>
-
-            {/* Productivity & Compliance */}
-            <div className="space-y-2">
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-300 mb-0.5">
-                  <span className="flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-cyan-400" /> Score de Productividad:
-                  </span>
-                  <span className="font-bold text-cyan-300">{firm.productivityScore}/100</span>
-                </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-cyan-400 h-full rounded-full glow-cyan"
-                    style={{ width: `${firm.productivityScore}%` }}
-                  />
-                </div>
+            {/* Model Attributes: L_j, Y_j, A_j */}
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                <span className="text-slate-400 block text-[10px]">Empleo (L_j):</span>
+                <span className="font-semibold text-cyan-300">
+                  {firm.L_j != null ? firm.L_j.toFixed(2) : (firm.sizeEmployees ?? 'Sin dato')}
+                </span>
               </div>
-
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-300 mb-0.5">
-                  <span className="flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-emerald-400" /> Cumplimiento Tributario:
-                  </span>
-                  <span className="font-bold text-emerald-300">{firm.taxComplianceRate}%</span>
-                </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-emerald-400 h-full rounded-full"
-                    style={{ width: `${firm.taxComplianceRate}%` }}
-                  />
-                </div>
+              <div className="p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                <span className="text-slate-400 block text-[10px]">Producción (Y_j):</span>
+                <span className="font-semibold text-cyan-300">
+                  {firm.Y_j != null ? firm.Y_j.toFixed(2) : 'Sin dato'}
+                </span>
               </div>
             </div>
 
-            {/* Productividad A_j de la unidad */}
             <div className="p-2.5 rounded-xl bg-slate-900/80 border border-cyan-500/20 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 block">Productividad A_j:</span>
+                <span className="text-[10px] text-slate-400 block">Productividad Tecnológica (A_j):</span>
                 <span className="text-sm font-bold text-amber-300">
-                  {firm.productivityScore} / 100
+                  {firm.A_j != null ? firm.A_j.toFixed(2) : 'Sin dato'}
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 block">Vínculos de Luz:</span>
-                <span className="text-xs text-cyan-300 font-semibold">
-                  {firm.type === 'formal' ? 'Fibra Óptica Activa' : 'Dispersión Orgánica'}
-                </span>
+                <span className="text-[10px] text-slate-400 block">Identificador:</span>
+                <span className="text-xs text-cyan-300 font-semibold">{firm.id}</span>
               </div>
             </div>
           </div>

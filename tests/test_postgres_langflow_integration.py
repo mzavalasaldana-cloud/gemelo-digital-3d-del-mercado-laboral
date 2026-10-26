@@ -47,7 +47,7 @@ async def test_postgres_message_lifecycle():
             source="langflow",
             flow_id="2d660758-1eee-46f8-969f-c17998844627",
             verified_metrics={"informalityRate": 82.7},
-            policy_params={"smeSubsidyUSDMonth": 50.0}
+            policy_params={"scenario": "B1"}
         )
         session.add(msg)
         await session.commit()

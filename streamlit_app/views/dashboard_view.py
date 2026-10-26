@@ -294,13 +294,18 @@ def render_dashboard_view():
         render_section_header("Comparativa: Línea Base vs Estado Actual", icon="⚖️", badge="Equilibrio")
 
         comp_df = pd.DataFrame({
-            "Indicador": ["Informalidad Total (%)", "Informalidad Mujeres (%)", "Informalidad Hombres (%)", "Trabajo Decente (0-100)"],
-            "Línea Base (ILOSTAT)": [base_inf, profile.get("baseInformalityFemale", 90.0), profile.get("baseInformalityMale", 83.0), 45],
+            "Indicador": ["Informalidad Total (%)", "Informalidad Mujeres (%)", "Informalidad Hombres (%)", "Brecha de Género (pp)"],
+            "Línea Base (ILOSTAT)": [
+                base_inf,
+                profile.get("baseInformalityFemale", 90.0),
+                profile.get("baseInformalityMale", 83.0),
+                profile.get("genderGap", 7.0)
+            ],
             f"Simulación (Mes {month})": [
                 metrics.get("informalityRate", base_inf),
                 metrics.get("informalityFemale", base_inf),
                 metrics.get("informalityMale", base_inf),
-                metrics.get("decentWorkIndex", 50)
+                metrics.get("genderGap", 0.0)
             ]
         })
 

@@ -1404,12 +1404,6 @@ export const DigitalTwinScene: React.FC<DigitalTwinSceneProps> = ({
         shockRing.visible = false;
         firmPivot.add(shockRing);
         shockwaveRingsRef.current.push(shockRing);
-
-        if (scenario === 'SCENARIO_E_AUTOMATION_SHOCK' && firm.id === 'firm-f-01') {
-          shockRing.visible = true;
-          shockRing.scale.set(1, 1, 1);
-          shockMat.opacity = 0.95;
-        }
       } else {
         // ==========================================
         // 2. INFORMAL SECTOR: SWARM & MYCELIAL NODULES

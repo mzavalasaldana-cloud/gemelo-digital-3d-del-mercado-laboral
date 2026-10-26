@@ -33,8 +33,6 @@ import { ILODecentWorkModal } from './components/Modals/ILODecentWorkModal';
 import { AIChatbotModal } from './components/HUD/AIChatbotModal';
 import { 
   playPolicyWaveSound, 
-  playShockwaveSound, 
-  playCrystallizeSound, 
   playHoloClick 
 } from './utils/audioSynth';
 import { 
@@ -538,71 +536,12 @@ export default function App() {
   const handleSelectScenario = (newScenario: ScenarioPreset) => {
     setScenario(newScenario);
     setPolicyWaveTrigger((prev) => prev + 1);
-
-    if (newScenario === 'SCENARIO_A_REGISTRATION') {
-      playCrystallizeSound();
-      setPolicyParams({
-        ...policyParams,
-        registrationCostReduction: 80,
-        smeSubsidyUSDMonth: 40,
-      });
-      setFirms((prev) =>
-        prev.map((f) => (f.id === 'firm-inf-01' ? { ...f, isFormalizedScenario: true, type: 'formal', emergenceMonth: 12 } : f))
-      );
-      setWorkers((prev) =>
-        prev.map((w) => {
-          if (w.sector === 'informal') {
-            return {
-              ...w,
-              formalizationMonth: Math.max(8, w.formalizationMonth - 28),
-            };
-          }
-          return w;
-        })
-      );
-    } else if (newScenario === 'SCENARIO_B_WORKER_SUBSIDY') {
-      playCrystallizeSound();
-      setPolicyParams({
-        ...policyParams,
-        smeSubsidyUSDMonth: 75,
-        skillsTrainingCoverage: 60,
-      });
-      setWorkers((prev) =>
-        prev.map((w) => {
-          if (w.sector === 'informal') {
-            return {
-              ...w,
-              formalizationMonth: Math.max(6, w.formalizationMonth - 38),
-            };
-          }
-          return w;
-        })
-      );
-    } else if (newScenario === 'SCENARIO_E_AUTOMATION_SHOCK') {
-      playShockwaveSound();
-      setFirms((prev) =>
-        prev.map((f) => (f.id === 'firm-f-01' ? { ...f, shockwaveActive: true } : f))
-      );
-      setWorkers((prev) =>
-        prev.map((w, i) => {
-          // Automation displaces workers at Month 36
-          if (w.sector === 'formal' && w.firmId === 'firm-f-01' && i % 3 === 0) {
-            return {
-              ...w,
-              formalizationMonth: 999, // pushed out of formality
-            };
-          }
-          return w;
-        })
-      );
-    } else if (newScenario === 'BASELINE' || newScenario === 'A') {
-      playHoloClick(800);
-      setPolicyParams(INITIAL_POLICY_STATE);
-      const dynamicFirms = getModelFirms(country, 'A', month);
-      setFirms(dynamicFirms);
-      const baseInf = COUNTRY_PROFILES[country].baseInformalityRate;
-      setWorkers(createWorkersPopulation(country, baseInf, dynamicFirms));
-    }
+    playHoloClick(800);
+    setPolicyParams({ scenario: newScenario });
+    const dynamicFirms = getModelFirms(country, newScenario, month);
+    setFirms(dynamicFirms);
+    const baseInf = COUNTRY_PROFILES[country].baseInformalityRate;
+    setWorkers(createWorkersPopulation(country, baseInf, dynamicFirms));
   };
 
   // Trigger New Simulation Run

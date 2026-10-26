@@ -7,7 +7,8 @@ import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 
-from streamlit_app.data.mock_data import COUNTRY_PROFILES, DEMO_FIRMS
+from streamlit_app.data.mock_data import COUNTRY_PROFILES
+from web_demo.simulation import get_model_firms
 from streamlit_app.simulation_engine import (
     generate_worker_population,
     update_worker_positions_for_month,
@@ -40,6 +41,7 @@ def render_digital_twin_3d_view():
     base_workers = get_cached_workers(country_code)
     workers = update_worker_positions_for_month(base_workers, month, scenario, policy_params)
     metrics = calculate_structural_metrics(country_code, policy_params, scenario, month)
+    model_firms = get_model_firms(country_code=country_code, scenario=scenario, month=month)
 
     # 1. Top HUD Bar
     month_names = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
@@ -184,19 +186,23 @@ def render_digital_twin_3d_view():
                     hoverinfo="text",
                 ))
 
-        # Add Firm Hubs
-        for firm in DEMO_FIRMS:
+        # Add Firm Hubs from Model
+        for firm in model_firms:
             is_formal = firm["type"] == "formal"
             f_color = "#00f0ff" if is_formal else "#f59e0b"
             f_symbol = "diamond" if is_formal else "square"
+            tipo_label = "Formal" if is_formal else "Informal"
+            l_val = firm.get("L_j", 0.0)
+            y_val = firm.get("Y_j", 0.0)
+            a_val = firm.get("A_j", 0.0)
             
             fig_3d.add_trace(go.Scatter3d(
                 x=[firm["x"]],
                 y=[firm["height"] / 2.0],
                 z=[firm["z"]],
                 mode="markers+text",
-                name=firm["name"],
-                text=[firm["name"]],
+                name=firm["id"],
+                text=[firm["id"]],
                 textposition="top center",
                 textfont=dict(color=f_color, size=10),
                 marker=dict(
@@ -206,7 +212,13 @@ def render_digital_twin_3d_view():
                     opacity=0.95,
                     line=dict(color="#ffffff", width=1.5)
                 ),
-                hovertext=f"<b>Empresa:</b> {firm['name']}<br><b>Tipo:</b> {firm['type'].upper()}<br><b>Empleados:</b> {firm['sizeEmployees']}<br><b>Productividad:</b> {firm['productivityScore']}/100<br><b>Cumplimiento Fiscal:</b> {firm['taxComplianceRate']}%",
+                hovertext=(
+                    f"<b>Unidad Productiva:</b> {firm['id']}<br>"
+                    f"<b>Estado:</b> {tipo_label}<br>"
+                    f"<b>Empleo (L_j):</b> {l_val:.2f}<br>"
+                    f"<b>Producción (Y_j):</b> {y_val:.2f}<br>"
+                    f"<b>Productividad (A_j):</b> {a_val:.2f}"
+                ),
                 hoverinfo="text",
                 showlegend=False
             ))
@@ -308,20 +320,23 @@ def render_digital_twin_3d_view():
         """, unsafe_allow_html=True)
 
         # Firm Inspector
-        render_section_header("Inspector de Hubs Empresariales", icon="🏢", badge="Hubs 3D")
-        firm_names = [f["name"] for f in DEMO_FIRMS]
-        sel_firm_name = st.selectbox("Seleccionar Empresa", options=firm_names, index=0)
-        sel_firm = next((f for f in DEMO_FIRMS if f["name"] == sel_firm_name), DEMO_FIRMS[0])
+        render_section_header("Inspector de Unidades Productivas", icon="🏢", badge="Modelo ITDT")
+        firm_ids = [f["id"] for f in model_firms] if model_firms else ["UP-F-01"]
+        sel_firm_id = st.selectbox("Seleccionar Unidad Productiva", options=firm_ids, index=0)
+        sel_firm = next((f for f in model_firms if f["id"] == sel_firm_id), model_firms[0] if model_firms else {"id": "UP-F-01", "type": "formal", "L_j": 0.0, "Y_j": 0.0, "A_j": 0.0})
+        is_sel_formal = sel_firm.get("type") == "formal"
+        firm_border = "#00f0ff" if is_sel_formal else "#f59e0b"
+        tipo_sel_label = "Formal" if is_sel_formal else "Informal"
 
         st.markdown(f"""
-        <div class="holo-card" style="border-left: 4px solid #00f0ff; font-size: 0.85rem;">
-            <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem; margin-bottom: 6px;">{sel_firm['name']}</div>
-            <div style="color: #94a3b8; margin-bottom: 6px;">Tipo: <b>{sel_firm['type'].upper()}</b></div>
+        <div class="holo-card" style="border-left: 4px solid {firm_border}; font-size: 0.85rem;">
+            <div style="font-weight: 700; color: #f8fafc; font-size: 0.95rem; margin-bottom: 6px;">{sel_firm['id']}</div>
+            <div style="color: #94a3b8; margin-bottom: 6px;">Estado: <b style="color: {firm_border};">{tipo_sel_label}</b></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; color: #cbd5e1;">
-                <div><b>Empleados:</b> {sel_firm['sizeEmployees']}</div>
-                <div><b>Productividad:</b> {sel_firm['productivityScore']}/100</div>
-                <div><b>Cumplimiento:</b> {sel_firm['taxComplianceRate']}%</div>
-                <div><b>Costo Registro:</b> {sel_firm.get('formalizationCostUSD', 100)} u.m.</div>
+                <div><b>Empleo (L_j):</b> {sel_firm.get('L_j', 0.0):.2f}</div>
+                <div><b>Producción (Y_j):</b> {sel_firm.get('Y_j', 0.0):.2f}</div>
+                <div><b>Productividad (A_j):</b> {sel_firm.get('A_j', 0.0):.2f}</div>
+                <div><b>Tipo:</b> {sel_firm.get('type', '')}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
