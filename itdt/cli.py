@@ -220,12 +220,19 @@ def cmd_all():
     print("======================================================================")
 
 
+def cmd_reproduce():
+    """Genera el paquete oficial de reproducción del artículo (Figuras 5 y 6, Tablas 4 a 8 en Excel y MD, y ZIP)."""
+    from scripts.reproduce_paper import run_reproduction_pipeline
+    run_reproduction_pipeline()
+
+
 def cmd_help():
     """Muestra la ayuda de los comandos disponibles."""
     print("======================================================================")
     print(" ITDT: Paquete de Replicación del Artículo")
     print("======================================================================")
     print("Comandos disponibles:")
+    print("  reproduce    - Genera el paquete oficial de figuras y tablas en Excel/MD con interpretabilidad")
     print("  smoke        - Pruebas unitarias, metamórficas y corrida rápida (< 1 min)")
     print("  calibrate    - Calibración SMM basal (Tablas 2 y 11, Figura 4)")
     print("  calib_se     - Calibración con errores estándar (10 conjuntos de semillas)")
@@ -241,6 +248,7 @@ def cmd_help():
 
 
 CLI_DISPATCH = {
+    "reproduce": cmd_reproduce,
     "smoke": cmd_smoke,
     "calibrate": cmd_calibrate,
     "calib_se": cmd_calib_se,

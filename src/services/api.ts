@@ -436,4 +436,268 @@ export const clearCopilotHistoryApi = async (
   return await res.json();
 };
 
+// ==========================================
+// 6. OUTPUTS SCIENTIFIC FIGURES & IMAGES API
+// ==========================================
+
+export interface OutputImageItem {
+  filename: string;
+  relativePath: string;
+  category: 'paper_figures' | 'capturas_hd' | 'reproduce' | string;
+  categoryLabel: string;
+  title: string;
+  description: string;
+  sizeBytes: number;
+  sizeFormatted: string;
+  extension: string;
+  lastModified?: string;
+  downloadUrl: string;
+  previewUrl: string;
+}
+
+export interface OutputImagesCatalogResponse {
+  status: string;
+  total: number;
+  categories: Array<{ id: string; label: string; count: number }>;
+  images: OutputImageItem[];
+}
+
+export const FALLBACK_OUTPUT_IMAGES: OutputImageItem[] = [
+  {
+    filename: 'figure4_calibration.png',
+    relativePath: 'figure4_calibration.png',
+    category: 'paper_figures',
+    categoryLabel: 'Figuras del Paper',
+    title: 'Figura 4: Calibración SMM del Modelo ITDT',
+    description: 'Momentos simulados vs. momentos observados de ILOSTAT para informalidad laboral y dispersión salarial.',
+    sizeBytes: 208420,
+    sizeFormatted: '208 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=figure4_calibration.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=figure4_calibration.png`,
+  },
+  {
+    filename: 'figure5_sanctions_sweep.png',
+    relativePath: 'figure5_sanctions_sweep.png',
+    category: 'paper_figures',
+    categoryLabel: 'Figuras del Paper',
+    title: 'Figura 5: Barrido de Sanciones e Intensidad GovTech',
+    description: 'Elasticidad de la informalidad ante variaciones de 1× a 5× en sanciones (μ0, μ1) y fiscalización digital.',
+    sizeBytes: 280969,
+    sizeFormatted: '281 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=figure5_sanctions_sweep.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=figure5_sanctions_sweep.png`,
+  },
+  {
+    filename: 'figure6_trajectories.png',
+    relativePath: 'figure6_trajectories.png',
+    category: 'paper_figures',
+    categoryLabel: 'Figuras del Paper',
+    title: 'Figura 6: Trayectorias Dinámicas de Transición (Meses 1-120)',
+    description: 'Evolución mensual continua de la informalidad y brecha de género por escenario canónico (A, B1, B2, C, D).',
+    sizeBytes: 720939,
+    sizeFormatted: '721 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=figure6_trajectories.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=figure6_trajectories.png`,
+  },
+  {
+    filename: 'figure7_policy_effects.png',
+    relativePath: 'figure7_policy_effects.png',
+    category: 'paper_figures',
+    categoryLabel: 'Figuras del Paper',
+    title: 'Figura 7: Efectos Netos y Contrastes Estructurales',
+    description: 'Comparativa de largo plazo del impacto macroeconómico, recaudación fiscal y equidad de género.',
+    sizeBytes: 173164,
+    sizeFormatted: '173 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=figure7_policy_effects.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=figure7_policy_effects.png`,
+  },
+  {
+    filename: 'fig_dashboard_kenia_escenarioA.png',
+    relativePath: 'capturas/fig_dashboard_kenia_escenarioA.png',
+    category: 'capturas_hd',
+    categoryLabel: 'Capturas HD (4800×2700 px)',
+    title: 'Captura HD: Tablero Ejecutivo - Escenario A (Status Quo)',
+    description: 'Tablero ejecutivo en ultra-alta resolución al mes 120 de la política en Kenia.',
+    sizeBytes: 812396,
+    sizeFormatted: '812 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=capturas/fig_dashboard_kenia_escenarioA.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=capturas/fig_dashboard_kenia_escenarioA.png`,
+  },
+  {
+    filename: 'fig_dashboard_kenia_escenarioD.png',
+    relativePath: 'capturas/fig_dashboard_kenia_escenarioD.png',
+    category: 'capturas_hd',
+    categoryLabel: 'Capturas HD (4800×2700 px)',
+    title: 'Captura HD: Tablero Ejecutivo - Escenario D (Integrado)',
+    description: 'Tablero ejecutivo con paquete integrado de GovTech y Cuidados.',
+    sizeBytes: 808615,
+    sizeFormatted: '809 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=capturas/fig_dashboard_kenia_escenarioD.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=capturas/fig_dashboard_kenia_escenarioD.png`,
+  },
+  {
+    filename: 'fig_gemelo3d_kenia_escenarioA.png',
+    relativePath: 'capturas/fig_gemelo3d_kenia_escenarioA.png',
+    category: 'capturas_hd',
+    categoryLabel: 'Capturas HD (4800×2700 px)',
+    title: 'Captura HD: Gemelo Digital 3D - Escenario A (Mes 120)',
+    description: 'Render espacial 3D con proporción real de empresas formales e informales al mes 120.',
+    sizeBytes: 4030597,
+    sizeFormatted: '3.8 MB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=capturas/fig_gemelo3d_kenia_escenarioA.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=capturas/fig_gemelo3d_kenia_escenarioA.png`,
+  },
+  {
+    filename: 'fig_gemelo3d_kenia_escenarioA_m60.png',
+    relativePath: 'capturas/fig_gemelo3d_kenia_escenarioA_m60.png',
+    category: 'capturas_hd',
+    categoryLabel: 'Capturas HD (4800×2700 px)',
+    title: 'Captura HD: Gemelo Digital 3D - Escenario A (Mes 60)',
+    description: 'Estado de transición a mitad de ciclo (mes 60) del régimen inercial.',
+    sizeBytes: 3964514,
+    sizeFormatted: '3.8 MB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=capturas/fig_gemelo3d_kenia_escenarioA_m60.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=capturas/fig_gemelo3d_kenia_escenarioA_m60.png`,
+  },
+  {
+    filename: 'fig_gemelo3d_kenia_escenarioB2.png',
+    relativePath: 'capturas/fig_gemelo3d_kenia_escenarioB2.png',
+    category: 'capturas_hd',
+    categoryLabel: 'Capturas HD (4800×2700 px)',
+    title: 'Captura HD: Gemelo Digital 3D - Escenario B2 (GovTech 3×, Mes 120)',
+    description: 'Visualización 3D con sanciones triplicadas y fiscalización algorítmica intensiva al mes 120.',
+    sizeBytes: 3487788,
+    sizeFormatted: '3.3 MB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=capturas/fig_gemelo3d_kenia_escenarioB2.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=capturas/fig_gemelo3d_kenia_escenarioB2.png`,
+  },
+  {
+    filename: 'fig_gemelo3d_kenia_escenarioB2_m60.png',
+    relativePath: 'capturas/fig_gemelo3d_kenia_escenarioB2_m60.png',
+    category: 'capturas_hd',
+    categoryLabel: 'Capturas HD (4800×2700 px)',
+    title: 'Captura HD: Gemelo Digital 3D - Escenario B2 (GovTech 3×, Mes 60)',
+    description: 'Estado intermedio en el mes 60 bajo régimen de sanciones 3×.',
+    sizeBytes: 3655948,
+    sizeFormatted: '3.5 MB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=capturas/fig_gemelo3d_kenia_escenarioB2_m60.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=capturas/fig_gemelo3d_kenia_escenarioB2_m60.png`,
+  },
+  {
+    filename: 'figura5_intensidad_sanciones.png',
+    relativePath: 'reproduce/figura5_intensidad_sanciones.png',
+    category: 'reproduce',
+    categoryLabel: 'Figuras de Replicación',
+    title: 'Figura 5 (Replicación): Intensidad de Sanciones',
+    description: 'Gráfico generado por el pipeline de reproducción científica del artículo para barrido de sanciones.',
+    sizeBytes: 399060,
+    sizeFormatted: '390 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=reproduce/figura5_intensidad_sanciones.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=reproduce/figura5_intensidad_sanciones.png`,
+  },
+  {
+    filename: 'figura6_informalidad_sexo.png',
+    relativePath: 'reproduce/figura6_informalidad_sexo.png',
+    category: 'reproduce',
+    categoryLabel: 'Figuras de Replicación',
+    title: 'Figura 6 (Replicación): Informalidad por Sexo',
+    description: 'Gráfico de replicación directa con trayectorias de informalidad desagregadas para hombres y mujeres.',
+    sizeBytes: 225741,
+    sizeFormatted: '220 KB',
+    extension: 'png',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=reproduce/figura6_informalidad_sexo.png`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=reproduce/figura6_informalidad_sexo.png`,
+  },
+  {
+    filename: 'figura5_intensidad_sanciones.pdf',
+    relativePath: 'reproduce/figura5_intensidad_sanciones.pdf',
+    category: 'reproduce',
+    categoryLabel: 'Figuras de Replicación',
+    title: 'Figura 5 Vectorial (PDF): Intensidad de Sanciones',
+    description: 'Gráfico vectorial de alta fidelidad listo para imprenta o publicación académica.',
+    sizeBytes: 44893,
+    sizeFormatted: '44 KB',
+    extension: 'pdf',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=reproduce/figura5_intensidad_sanciones.pdf`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=reproduce/figura5_intensidad_sanciones.pdf`,
+  },
+  {
+    filename: 'figura6_informalidad_sexo.pdf',
+    relativePath: 'reproduce/figura6_informalidad_sexo.pdf',
+    category: 'reproduce',
+    categoryLabel: 'Figuras de Replicación',
+    title: 'Figura 6 Vectorial (PDF): Informalidad por Sexo',
+    description: 'Gráfico vectorial de alta fidelidad listo para imprenta o publicación académica.',
+    sizeBytes: 36924,
+    sizeFormatted: '36 KB',
+    extension: 'pdf',
+    downloadUrl: `${API_BASE}/outputs/download-image?path=reproduce/figura6_informalidad_sexo.pdf`,
+    previewUrl: `${API_BASE}/outputs/preview-image?path=reproduce/figura6_informalidad_sexo.pdf`,
+  },
+];
+
+export const fetchOutputImagesList = async (): Promise<OutputImagesCatalogResponse> => {
+  try {
+    const res = await fetch(`${API_BASE}/outputs/images`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.images) && data.images.length > 0) {
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('[API Outputs] Backend no disponible, usando catálogo integrado:', err);
+  }
+
+  // Fallback con datos auténticos precalculados
+  return {
+    status: 'fallback',
+    total: FALLBACK_OUTPUT_IMAGES.length,
+    categories: [
+      { id: 'all', label: 'Todas las Figuras', count: FALLBACK_OUTPUT_IMAGES.length },
+      { id: 'paper_figures', label: 'Figuras del Paper (Fig. 4-7)', count: 4 },
+      { id: 'capturas_hd', label: 'Capturas HD (Gemelo 3D & Tablero)', count: 6 },
+      { id: 'reproduce', label: 'Figuras de Replicación', count: 4 },
+    ],
+    images: FALLBACK_OUTPUT_IMAGES,
+  };
+};
+
+export const getOutputImageDownloadUrl = (relativePath: string): string => {
+  return `${API_BASE}/outputs/download-image?path=${encodeURIComponent(relativePath)}`;
+};
+
+export const getOutputImagePreviewUrl = (relativePath: string): string => {
+  return `${API_BASE}/outputs/preview-image?path=${encodeURIComponent(relativePath)}`;
+};
+
+export const getOutputsZipDownloadUrl = (category: string = 'all'): string => {
+  return `${API_BASE}/outputs/download-all-zip${category && category !== 'all' ? `?category=${encodeURIComponent(category)}` : ''}`;
+};
+
+export const triggerBrowserDownload = (url: string, filename?: string) => {
+  const link = document.createElement('a');
+  link.href = url;
+  if (filename) {
+    link.download = filename;
+  }
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
 

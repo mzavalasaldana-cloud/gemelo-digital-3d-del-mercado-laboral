@@ -1,4 +1,4 @@
-.PHONY: all smoke calibrate calib_se loco baselines sweep scenarios mechanism sensitivity cost clean ia help
+.PHONY: all smoke calibrate calib_se loco baselines sweep scenarios mechanism sensitivity cost clean ia reproduce help
 
 PYTHON ?= python
 
@@ -7,6 +7,7 @@ help:
 	@echo " ITDT: Paquete de Replicación del Artículo"
 	@echo "======================================================================"
 	@echo "Comandos disponibles:"
+	@echo "  make reproduce    - Genera Figuras 5 y 6, Tablas 4-8 en Excel/MD y ZIP con interpretabilidad"
 	@echo "  make smoke        - Pruebas unitarias, metamórficas y corrida rápida (< 1 min)"
 	@echo "  make calibrate    - Calibración SMM basal (Tablas 2 y 11, Figura 4)"
 	@echo "  make calib_se     - Calibración con errores estándar (10 conjuntos de semillas)"
@@ -21,6 +22,9 @@ help:
 	@echo "  make all          - Regenera outputs/ desde cero y reporta el tiempo total"
 	@echo "  make clean        - Limpia outputs/ y cachés de Python"
 	@echo "======================================================================"
+
+reproduce:
+	$(PYTHON) -m itdt.cli reproduce
 
 smoke:
 	$(PYTHON) -m itdt.cli smoke

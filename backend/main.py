@@ -18,9 +18,12 @@ from fastapi import (
     Query,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, desc
 import pandas as pd
+import zipfile
+import mimetypes
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -612,10 +615,294 @@ async def get_historical_endpoint(
     return get_historical_ilostat_series(country_code=country)
 
 
+# =====================================================================
+# 3.5. OUTPUTS ASSETS & SCIENTIFIC FIGURES DOWNLOAD ENDPOINTS
+# =====================================================================
 
-# =====================================================================
-# 4. WEBSOCKET REAL-TIME STREAMING (FULL-DUPLEX COMPACT 2,500 BOIDS)
-# =====================================================================
+OUTPUTS_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "outputs"))
+
+KNOWN_IMAGE_METADATA = {
+    "figure4_calibration.png": {
+        "title": "Figura 4: Calibración SMM del Modelo ITDT",
+        "category": "paper_figures",
+        "categoryLabel": "Figuras del Paper",
+        "description": "Momentos simulados vs. momentos observados de ILOSTAT para informalidad laboral y dispersión salarial.",
+    },
+    "figure5_sanctions_sweep.png": {
+        "title": "Figura 5: Barrido de Sanciones e Intensidad GovTech",
+        "category": "paper_figures",
+        "categoryLabel": "Figuras del Paper",
+        "description": "Elasticidad de la informalidad ante variaciones de 1× a 5× en sanciones (μ0, μ1) y fiscalización digital.",
+    },
+    "figure6_trajectories.png": {
+        "title": "Figura 6: Trayectorias Dinámicas de Transición (Meses 1-120)",
+        "category": "paper_figures",
+        "categoryLabel": "Figuras del Paper",
+        "description": "Evolución mensual continua de la informalidad y brecha de género por escenario canónico (A, B1, B2, C, D).",
+    },
+    "figure7_policy_effects.png": {
+        "title": "Figura 7: Efectos Netos y Contrastes Estructurales",
+        "category": "paper_figures",
+        "categoryLabel": "Figuras del Paper",
+        "description": "Comparativa de largo plazo del impacto macroeconómico, recaudación fiscal y equidad de género entre políticas.",
+    },
+    "capturas/fig_dashboard_kenia_escenarioA.png": {
+        "title": "Captura HD: Tablero Ejecutivo - Escenario A (Status Quo)",
+        "category": "capturas_hd",
+        "categoryLabel": "Capturas HD (4800×2700 px)",
+        "description": "Tablero ejecutivo en ultra-alta resolución al mes 120 de la política en Kenia (Régimen inercial).",
+    },
+    "capturas/fig_dashboard_kenia_escenarioD.png": {
+        "title": "Captura HD: Tablero Ejecutivo - Escenario D (Integrado)",
+        "category": "capturas_hd",
+        "categoryLabel": "Capturas HD (4800×2700 px)",
+        "description": "Tablero ejecutivo con paquete sinérgico de GovTech intensivo y corresponsabilidad de cuidados.",
+    },
+    "capturas/fig_gemelo3d_kenia_escenarioA.png": {
+        "title": "Captura HD: Gemelo Digital 3D - Escenario A (Mes 120)",
+        "category": "capturas_hd",
+        "categoryLabel": "Capturas HD (4800×2700 px)",
+        "description": "Render espacial fidedigno de torres formales e informales al horizonte final (mes 120).",
+    },
+    "capturas/fig_gemelo3d_kenia_escenarioA_m60.png": {
+        "title": "Captura HD: Gemelo Digital 3D - Escenario A (Mes 60)",
+        "category": "capturas_hd",
+        "categoryLabel": "Capturas HD (4800×2700 px)",
+        "description": "Estado de transición a mitad de ciclo (mes 60) del escenario inercial.",
+    },
+    "capturas/fig_gemelo3d_kenia_escenarioB2.png": {
+        "title": "Captura HD: Gemelo Digital 3D - Escenario B2 (GovTech 3×, Mes 120)",
+        "category": "capturas_hd",
+        "categoryLabel": "Capturas HD (4800×2700 px)",
+        "description": "Visualización 3D con sanciones triplicadas y fiscalización algorítmica intensiva al mes 120.",
+    },
+    "capturas/fig_gemelo3d_kenia_escenarioB2_m60.png": {
+        "title": "Captura HD: Gemelo Digital 3D - Escenario B2 (GovTech 3×, Mes 60)",
+        "category": "capturas_hd",
+        "categoryLabel": "Capturas HD (4800×2700 px)",
+        "description": "Estado de transición intermedio (mes 60) bajo régimen de sanciones elevadas.",
+    },
+    "reproduce/figura5_intensidad_sanciones.png": {
+        "title": "Figura 5 (Replicación): Intensidad de Sanciones",
+        "category": "reproduce",
+        "categoryLabel": "Figuras de Replicación",
+        "description": "Gráfico generado por el pipeline de reproducción científica del artículo para barrido de sanciones.",
+    },
+    "reproduce/figura6_informalidad_sexo.png": {
+        "title": "Figura 6 (Replicación): Informalidad por Sexo",
+        "category": "reproduce",
+        "categoryLabel": "Figuras de Replicación",
+        "description": "Gráfico de replicación directa con trayectorias de informalidad desagregadas para hombres y mujeres.",
+    },
+    "reproduce/figura5_intensidad_sanciones.pdf": {
+        "title": "Figura 5 Vectorial (PDF): Intensidad de Sanciones",
+        "category": "reproduce",
+        "categoryLabel": "Figuras de Replicación",
+        "description": "Gráfico vectorial de alta fidelidad listo para imprenta o publicación académica.",
+    },
+    "reproduce/figura6_informalidad_sexo.pdf": {
+        "title": "Figura 6 Vectorial (PDF): Informalidad por Sexo",
+        "category": "reproduce",
+        "categoryLabel": "Figuras de Replicación",
+        "description": "Gráfico vectorial de alta fidelidad listo para imprenta o publicación académica.",
+    },
+}
+
+
+def _format_size_bytes(size_bytes: int) -> str:
+    """Formatea bytes a KB o MB legibles."""
+    if size_bytes >= 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
+    elif size_bytes >= 1024:
+        return f"{size_bytes / 1024:.0f} KB"
+    return f"{size_bytes} B"
+
+
+def _resolve_safe_output_path(rel_path: str) -> str:
+    """Verifica y resuelve la ruta de un archivo dentro de outputs/ previniendo path traversal."""
+    clean_rel = rel_path.replace("\\", "/").strip().lstrip("/")
+    abs_path = os.path.abspath(os.path.join(OUTPUTS_ROOT_DIR, clean_rel))
+    if not abs_path.startswith(OUTPUTS_ROOT_DIR):
+        raise HTTPException(status_code=400, detail="Acceso denegado: ruta fuera del directorio outputs.")
+    if not os.path.isfile(abs_path):
+        raise HTTPException(status_code=404, detail=f"Archivo no encontrado en outputs/: {clean_rel}")
+    return abs_path
+
+
+def _scan_output_images() -> List[Dict[str, Any]]:
+    """Escanea la carpeta outputs/ y subdirectorios recopilando imágenes existentes."""
+    images = []
+    if not os.path.isdir(OUTPUTS_ROOT_DIR):
+        return images
+
+    valid_extensions = {".png", ".jpg", ".jpeg", ".svg", ".pdf", ".webp"}
+    allowed_dirs = ["", "capturas", "reproduce"]
+
+    for sub_rel in allowed_dirs:
+        curr_dir = os.path.join(OUTPUTS_ROOT_DIR, sub_rel) if sub_rel else OUTPUTS_ROOT_DIR
+        if not os.path.isdir(curr_dir):
+            continue
+
+        for fname in sorted(os.listdir(curr_dir)):
+            full_path = os.path.join(curr_dir, fname)
+            if not os.path.isfile(full_path):
+                continue
+
+            _, ext = os.path.splitext(fname.lower())
+            if ext not in valid_extensions:
+                continue
+
+            rel_key = f"{sub_rel}/{fname}" if sub_rel else fname
+            meta = KNOWN_IMAGE_METADATA.get(rel_key, {})
+            
+            # Categoría por defecto según carpeta si no está en metadatos conocidos
+            cat = meta.get("category")
+            if not cat:
+                if sub_rel == "capturas":
+                    cat = "capturas_hd"
+                elif sub_rel == "reproduce":
+                    cat = "reproduce"
+                else:
+                    cat = "paper_figures"
+
+            title = meta.get("title") or fname.replace("_", " ").replace("-", " ").capitalize()
+            desc = meta.get("description") or f"Salida gráfica oficial del sistema: {fname}."
+            cat_label = meta.get("categoryLabel") or ("Capturas HD" if cat == "capturas_hd" else ("Replicación" if cat == "reproduce" else "Figuras del Paper"))
+
+            try:
+                stat = os.stat(full_path)
+                size_bytes = stat.st_size
+                mtime = stat.st_mtime
+            except Exception:
+                size_bytes = 0
+                mtime = 0
+
+            images.append({
+                "filename": fname,
+                "relativePath": rel_key,
+                "category": cat,
+                "categoryLabel": cat_label,
+                "title": title,
+                "description": desc,
+                "sizeBytes": size_bytes,
+                "sizeFormatted": _format_size_bytes(size_bytes),
+                "extension": ext.lstrip("."),
+                "lastModified": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(mtime)),
+                "downloadUrl": f"/api/v1/outputs/download-image?path={rel_key}",
+                "previewUrl": f"/api/v1/outputs/preview-image?path={rel_key}",
+            })
+
+    return images
+
+
+@app.get("/api/v1/outputs/images")
+async def list_output_images():
+    """
+    Lista el catálogo completo de figuras científicas, capturas de ultra-alta fidelidad
+    y gráficos de reproducción generados en la carpeta outputs/.
+    """
+    images = _scan_output_images()
+    categories = [
+        {"id": "all", "label": "Todas las Figuras", "count": len(images)},
+        {"id": "paper_figures", "label": "Figuras del Paper (Fig. 4-7)", "count": sum(1 for img in images if img["category"] == "paper_figures")},
+        {"id": "capturas_hd", "label": "Capturas HD (Gemelo 3D & Tablero)", "count": sum(1 for img in images if img["category"] == "capturas_hd")},
+        {"id": "reproduce", "label": "Figuras de Replicación", "count": sum(1 for img in images if img["category"] == "reproduce")},
+    ]
+    return {
+        "status": "success",
+        "total": len(images),
+        "categories": categories,
+        "images": images,
+    }
+
+
+@app.get("/api/v1/outputs/download-image")
+async def download_output_image(path: str = Query(..., description="Ruta relativa del archivo dentro de outputs/")):
+    """
+    Descarga una imagen específica de outputs/ con cabeceras de Content-Disposition attachment.
+    """
+    abs_path = _resolve_safe_output_path(path)
+    filename = os.path.basename(abs_path)
+    mime_type, _ = mimetypes.guess_type(abs_path)
+    if not mime_type:
+        mime_type = "image/png" if filename.endswith(".png") else "application/octet-stream"
+
+    return FileResponse(
+        path=abs_path,
+        filename=filename,
+        media_type=mime_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
+@app.get("/api/v1/outputs/preview-image")
+async def preview_output_image(path: str = Query(..., description="Ruta relativa del archivo dentro de outputs/")):
+    """
+    Permite previsualizar una imagen en el frontend (inline) sin forzar descarga inmediata.
+    """
+    abs_path = _resolve_safe_output_path(path)
+    filename = os.path.basename(abs_path)
+    mime_type, _ = mimetypes.guess_type(abs_path)
+    if not mime_type:
+        mime_type = "image/png" if filename.endswith(".png") else "application/octet-stream"
+
+    return FileResponse(
+        path=abs_path,
+        media_type=mime_type,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'}
+    )
+
+
+@app.get("/api/v1/outputs/download-all-zip")
+async def download_all_output_images_zip(
+    category: Optional[str] = Query(default=None, description="Filtrar por categoría (paper_figures, capturas_hd, reproduce) o all")
+):
+    """
+    Empaqueta y descarga en tiempo real todas las imágenes de outputs/ como archivo ZIP estructurado.
+    """
+    all_images = _scan_output_images()
+    if category and category != "all":
+        all_images = [img for img in all_images if img["category"] == category]
+
+    if not all_images:
+        raise HTTPException(status_code=404, detail="No se encontraron imágenes en outputs/ para empaquetar.")
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        manifest_lines = [
+            "=================================================================",
+            "PAQUETE DE SALIDAS GRÁFICAS Y FIGURAS DEL MODELO ITDT",
+            "Gemelo Digital 3D del Mercado Laboral y Políticas GovTech",
+            f"Fecha de Generación: {time.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Total de Archivos Incluidos: {len(all_images)}",
+            "=================================================================\n",
+            "ARCHIVOS CONTENIDOS:\n",
+        ]
+
+        for item in all_images:
+            abs_path = os.path.join(OUTPUTS_ROOT_DIR, item["relativePath"].replace("/", os.sep))
+            if os.path.isfile(abs_path):
+                # Organizar dentro del ZIP en carpetas por categoría
+                folder_in_zip = item["category"]
+                arcname = f"{folder_in_zip}/{os.path.basename(abs_path)}"
+                zf.write(abs_path, arcname=arcname)
+                manifest_lines.append(f"- {arcname} ({item['sizeFormatted']})")
+                manifest_lines.append(f"  Título: {item['title']}")
+                manifest_lines.append(f"  Descripción: {item['description']}\n")
+
+        manifest_lines.append("\n=================================================================")
+        manifest_lines.append("Fuente metodológica: itdt.model.ITDTModel y series observadas de ILOSTAT.")
+        manifest_content = "\n".join(manifest_lines)
+        zf.writestr("MANIFESTO_FIGURAS.txt", manifest_content.encode("utf-8"))
+
+    zip_buffer.seek(0)
+    zip_filename = f"Outputs_Imagenes_ITDT_{category or 'Todas'}.zip"
+
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'}
+    )
 
 @app.websocket("/ws/simulation")
 async def websocket_simulation_endpoint(websocket: WebSocket):

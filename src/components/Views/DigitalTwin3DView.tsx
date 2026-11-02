@@ -114,7 +114,29 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
   const [deepZoomLevel, setDeepZoomLevel] = useState<'satellite' | 'isometric' | 'street'>('isometric');
   const [showQuickPolicyDrawer, setShowQuickPolicyDrawer] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [captureToast, setCaptureToast] = useState<string | null>(null);
   const isLight = theme === 'light';
+
+  const handleCaptureLive3D = () => {
+    playHoloClick(1200);
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const filename = `Gemelo3D_${country}_Escenario${scenario}_Mes${month}.png`;
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setCaptureToast(filename);
+        setTimeout(() => setCaptureToast(null), 3500);
+      } catch (e) {
+        console.warn('Canvas export fallback:', e);
+      }
+    }
+  };
 
   return (
     <div className={`relative w-full h-full overflow-hidden select-none transition-colors duration-200 ${
@@ -148,6 +170,14 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-auto bg-amber-500/20 border border-amber-500/50 text-amber-200 px-4 py-2.5 rounded-xl text-xs font-mono-hud backdrop-blur-md flex items-center gap-2 shadow-2xl">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
           <span>Sin conexión con el modelo</span>
+        </div>
+      )}
+
+      {/* Floating Capture Saved Banner */}
+      {captureToast && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-40 bg-emerald-950/80 border border-emerald-400 text-emerald-300 px-4 py-2 rounded-xl text-xs font-mono shadow-2xl backdrop-blur-xl flex items-center gap-2 animate-in fade-in">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>✓ Captura HD guardada: <strong>{captureToast}</strong></span>
         </div>
       )}
 
@@ -293,6 +323,16 @@ export const DigitalTwin3DView: React.FC<DigitalTwin3DViewProps> = React.memo(({
             title="Emitir Onda de Política"
           >
             <Sparkles className="w-4 h-4 text-cyan-400" />
+          </button>
+
+          {/* Camera / 3D Canvas Snapshot Download Button */}
+          <button
+            onClick={handleCaptureLive3D}
+            className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/40 transition-all cursor-pointer flex items-center gap-1.5 glow-cyan"
+            title={language === 'en' ? 'Download 3D Snapshot (PNG)' : 'Descargar Captura del Gemelo 3D (PNG)'}
+          >
+            <Camera className="w-4 h-4 text-cyan-400" />
+            <span className="hidden md:inline text-[10px] font-mono font-bold">Captura HD</span>
           </button>
         </div>
 

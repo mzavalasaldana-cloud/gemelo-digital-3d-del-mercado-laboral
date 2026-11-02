@@ -162,8 +162,56 @@ export const MOCK_ML_ALGORITHMS = DEMO_ML_ALGORITHMS;
 export const DEMO_COHORTS: CohortPrediction[] = [];
 export const MOCK_COHORTS = DEMO_COHORTS;
 
-// MICRODATOS REALES (Vacío hasta que se carguen microdatos oficiales en data/microdatos_reales/)
-export const DEMO_DATASETS: DatasetEntry[] = [];
+// MICRODATOS REALES (Encuestas oficiales cargadas en data/microdatos_reales/)
+export const DEMO_DATASETS: DatasetEntry[] = [
+  {
+    id: 'india',
+    name: 'PLFS India 2024 (cperv1.csv)',
+    country: 'INDIA',
+    yearSpan: '2023-2024',
+    sampleSize: '163,973 observaciones reales',
+    recordsCount: 163973,
+    institution: 'MoSPI (Ministry of Statistics and Programme Implementation)',
+    variables: [
+      'ESTADO_LABORAL',
+      'edad',
+      'sexo',
+      'anos_educacion',
+      'zona_rural',
+      'horas_semana',
+      'ingreso_laboral',
+      'sector_actividad',
+      'sample_weight',
+      'household_id'
+    ],
+    verified: true,
+    active: true,
+    description: 'Encuesta oficial Periodic Labour Force Survey (PLFS 2024) de la India. Armonizada con definición CIET-19 de empleo informal de la OIT y clusters intrahogar.',
+  },
+  {
+    id: 'nigeria',
+    name: 'NLFS Nigeria 2023 Q3 (SPSS .sav)',
+    country: 'NIGERIA',
+    yearSpan: '2023 Q3',
+    sampleSize: '18,808 observaciones reales',
+    recordsCount: 18808,
+    institution: 'NBS (National Bureau of Statistics Nigeria)',
+    variables: [
+      'ESTADO_LABORAL',
+      'edad',
+      'sexo',
+      'anos_educacion',
+      'zona_rural',
+      'horas_semana',
+      'sector_actividad',
+      'sample_weight',
+      'household_id'
+    ],
+    verified: true,
+    active: false,
+    description: 'Encuesta oficial Nigeria Labour Force Survey (NLFS 2023 Q3) del NBS. Armonizada con factores de expansión y clusters de hogares.',
+  },
+];
 export const MOCK_DATASETS = DEMO_DATASETS;
 
 // USUARIOS FICTICIOS DE DEMOSTRACIÓN (Dominios cambiados a example.org)
