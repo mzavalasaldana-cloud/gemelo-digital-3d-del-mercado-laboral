@@ -210,12 +210,13 @@ export const EDATab: React.FC<EDATabProps> = ({
       )}
 
       {/* Banner de datos sintéticos */}
+      {/* Banner de fuentes oficiales de microdatos */}
       <div className={`p-3.5 rounded-xl border flex items-center gap-3 text-xs font-mono ${
-        isLight ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+        isLight ? 'bg-sky-50 border-sky-300 text-sky-900' : 'bg-cyan-950/40 border-cyan-500/40 text-cyan-200'
       }`}>
-        <Info className="w-4 h-4 text-amber-500 shrink-0" />
+        <Info className="w-4 h-4 text-cyan-500 shrink-0" />
         <span>
-          <strong>Aviso Metodológico:</strong> Datos sintéticos de demostración; no son microdatos oficiales. El modelo y el artículo no usan microdatos: usan solo tasas agregadas de ILOSTAT.
+          <strong>Protocolo de Integridad Metodologica:</strong> Analisis Exploratorio de Datos (EDA) calculado sobre los microdatos oficiales armonizados de la encuesta (PLFS 2024 / NLFS 2023 Q3).
         </span>
       </div>
 

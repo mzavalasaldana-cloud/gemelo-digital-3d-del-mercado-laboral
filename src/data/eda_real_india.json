@@ -1,0 +1,256 @@
+{
+  "has_data": true,
+  "kpis": {
+    "dataQuality": 100.0,
+    "completeness": 100.0,
+    "totalRecords": 163973,
+    "totalRows": 163973,
+    "totalVariables": 19,
+    "totalCols": 19,
+    "nullPercentage": 0.0,
+    "missingRate": 0.0,
+    "imputedRows": 0,
+    "numericCols": 14,
+    "categoricalCols": 5,
+    "imputationMethod": "Ninguno (microdatos reales oficiales)",
+    "surveySource": "cperv1.csv"
+  },
+  "histograms": {
+    "salary": {
+      "label": "Ingreso Laboral Semanal",
+      "unit": "Moneda local",
+      "data": [
+        {
+          "range": "< 500",
+          "formalCount": 838,
+          "informalCount": 50752,
+          "density": 0.315
+        },
+        {
+          "range": "500 - 1500",
+          "formalCount": 2,
+          "informalCount": 1264,
+          "density": 0.008
+        },
+        {
+          "range": "1500 - 3000",
+          "formalCount": 23,
+          "informalCount": 3856,
+          "density": 0.024
+        },
+        {
+          "range": "3000 - 6000",
+          "formalCount": 275,
+          "informalCount": 10128,
+          "density": 0.063
+        },
+        {
+          "range": "6000 - 10000",
+          "formalCount": 1236,
+          "informalCount": 18277,
+          "density": 0.119
+        },
+        {
+          "range": "> 10000",
+          "formalCount": 20976,
+          "informalCount": 56346,
+          "density": 0.472
+        }
+      ]
+    },
+    "hours": {
+      "label": "Horas Trabajadas Semanales",
+      "unit": "Horas",
+      "data": [
+        {
+          "range": "< 20h",
+          "formalCount": 632,
+          "informalCount": 13293,
+          "density": 0.085
+        },
+        {
+          "range": "20 - 35h",
+          "formalCount": 1255,
+          "informalCount": 27410,
+          "density": 0.175
+        },
+        {
+          "range": "36 - 40h",
+          "formalCount": 4548,
+          "informalCount": 19780,
+          "density": 0.148
+        },
+        {
+          "range": "41 - 48h",
+          "formalCount": 11263,
+          "informalCount": 29042,
+          "density": 0.246
+        },
+        {
+          "range": "49 - 60h",
+          "formalCount": 4315,
+          "informalCount": 36431,
+          "density": 0.248
+        },
+        {
+          "range": "> 60h",
+          "formalCount": 1337,
+          "informalCount": 14667,
+          "density": 0.098
+        }
+      ]
+    },
+    "education": {
+      "label": "Años de Educación",
+      "unit": "Años",
+      "data": [
+        {
+          "range": "0 - 5 años (Básica inc.)",
+          "formalCount": 1541,
+          "informalCount": 47321,
+          "density": 0.298
+        },
+        {
+          "range": "6 - 9 años (Básica comp.)",
+          "formalCount": 2753,
+          "informalCount": 40875,
+          "density": 0.266
+        },
+        {
+          "range": "10 - 12 años (Media)",
+          "formalCount": 5944,
+          "informalCount": 36421,
+          "density": 0.258
+        },
+        {
+          "range": "13 - 16 años (Superior)",
+          "formalCount": 8806,
+          "informalCount": 12729,
+          "density": 0.131
+        },
+        {
+          "range": "17+ años (Posgrado)",
+          "formalCount": 4306,
+          "informalCount": 3277,
+          "density": 0.046
+        }
+      ]
+    }
+  },
+  "correlationVariables": [
+    "Formalidad",
+    "Años Educ.",
+    "Horas Semanales",
+    "Edad",
+    "Ruralidad",
+    "Mujer"
+  ],
+  "correlationMatrix": [
+    [
+      1.0,
+      0.37,
+      0.09,
+      -0.07,
+      -0.24,
+      -0.05
+    ],
+    [
+      0.37,
+      1.0,
+      0.16,
+      -0.35,
+      -0.28,
+      -0.19
+    ],
+    [
+      0.09,
+      0.16,
+      1.0,
+      -0.08,
+      -0.18,
+      -0.31
+    ],
+    [
+      -0.07,
+      -0.35,
+      -0.08,
+      1.0,
+      0.04,
+      0.03
+    ],
+    [
+      -0.24,
+      -0.28,
+      -0.18,
+      0.04,
+      1.0,
+      0.09
+    ],
+    [
+      -0.05,
+      -0.19,
+      -0.31,
+      0.03,
+      0.09,
+      1.0
+    ]
+  ],
+  "highCorrelations": [
+    {
+      "varA": "Formalidad",
+      "varB": "Años Educ.",
+      "r": 0.37,
+      "pValue": "< 0.0001",
+      "direction": "Positiva Moderada",
+      "impact": "Asociación observada entre Formalidad y Años Educ.."
+    },
+    {
+      "varA": "Años Educ.",
+      "varB": "Edad",
+      "r": -0.35,
+      "pValue": "< 0.0001",
+      "direction": "Negativa Moderada",
+      "impact": "Asociación observada entre Años Educ. y Edad."
+    },
+    {
+      "varA": "Horas Semanales",
+      "varB": "Mujer",
+      "r": -0.31,
+      "pValue": "< 0.0001",
+      "direction": "Negativa Moderada",
+      "impact": "Asociación observada entre Horas Semanales y Mujer."
+    }
+  ],
+  "boxplots": [
+    {
+      "group": "Empleo Formal (Horas)",
+      "min": 28.0,
+      "q1": 40.0,
+      "median": 48.0,
+      "q3": 48.0,
+      "max": 60.0,
+      "outliers": [
+        63,
+        63,
+        62,
+        64,
+        62
+      ]
+    },
+    {
+      "group": "Empleo Informal (Horas)",
+      "min": 0.0,
+      "q1": 32.0,
+      "median": 44.0,
+      "q3": 55.0,
+      "max": 89.5,
+      "outliers": [
+        98,
+        96,
+        96,
+        92,
+        91
+      ]
+    }
+  ]
+}
