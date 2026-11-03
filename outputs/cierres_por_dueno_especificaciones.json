@@ -1,0 +1,18 @@
+{
+ "forced_informal/dynamic": {
+  "exit_female_owner": 58.59749248314967,
+  "exit_male_owner": 48.32093783431294
+ },
+ "forced_informal/fixed": {
+  "exit_female_owner": 8.376591158838252,
+  "exit_male_owner": 7.164660587739344
+ },
+ "free/dynamic": {
+  "exit_female_owner": 28.97666913752166,
+  "exit_male_owner": 21.954537808330784
+ },
+ "free/fixed": {
+  "exit_female_owner": 4.840737134403153,
+  "exit_male_owner": 3.824969108445213
+ }
+}

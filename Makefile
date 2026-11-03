@@ -1,4 +1,4 @@
-.PHONY: all smoke calibrate calib_se loco baselines sweep scenarios mechanism sensitivity cost clean ia reproduce help
+.PHONY: all smoke calibrate calib_se loco baselines sweep scenarios mechanism sensitivity cost clean ia reproduce owner figuras help
 
 PYTHON ?= python
 
@@ -18,6 +18,8 @@ help:
 	@echo "  make mechanism    - Ablación de B2 frente a A con recalibración (Tabla 8)"
 	@echo "  make sensitivity  - Sensibilidad +-20%, CES y choque de demanda (Tabla 9)"
 	@echo "  make cost         - Benchmarking de costo computacional (Tabla 10)"
+	@echo "  make owner        - Cierres anuales y formalización por sexo del dueño (3 modos)"
+	@echo "  make figuras      - Genera las figuras del artículo en español e inglés (PNG y PDF)"
 	@echo "  make ia           - Entrena y evalúa los modelos de Machine Learning (outputs/motor_ia)"
 	@echo "  make all          - Regenera outputs/ desde cero y reporta el tiempo total"
 	@echo "  make clean        - Limpia outputs/ y cachés de Python"
@@ -56,11 +58,25 @@ sensitivity:
 cost:
 	$(PYTHON) -m itdt.cli cost
 
+owner:
+	$(PYTHON) scripts/cierres_por_dueno.py
+	$(PYTHON) scripts/cierres_por_dueno.py --modo ablacion
+	$(PYTHON) scripts/cierres_por_dueno.py --modo especificaciones
+
+figuras:
+	$(PYTHON) scripts/generar_figuras.py
+	$(PYTHON) scripts/generar_figuras_en.py
+
 ia:
 	$(PYTHON) scripts/entrenar_motor_ia.py
 
 all:
 	$(PYTHON) -m itdt.cli all
+	$(PYTHON) scripts/cierres_por_dueno.py
+	$(PYTHON) scripts/cierres_por_dueno.py --modo ablacion
+	$(PYTHON) scripts/cierres_por_dueno.py --modo especificaciones
+	$(PYTHON) scripts/generar_figuras.py
+	$(PYTHON) scripts/generar_figuras_en.py
 
 clean:
 	$(PYTHON) -c "import shutil, os; [shutil.rmtree(d, ignore_errors=True) for d in ['outputs', '.pytest_cache', 'itdt/__pycache__', 'tests/__pycache__']]"

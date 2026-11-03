@@ -212,10 +212,16 @@ make sensitivity
 # 10. Benchmarking de costo computacional (NW = 3k, 6k, 12k, 24k)
 make cost
 
-# 11. Entrenamiento y evaluación rigurosa del Motor IA (outputs/motor_ia/)
+# 11. Cierres anuales y formalización por sexo del dueño (3 modos: escenarios, ablación, especificaciones)
+make owner
+
+# 12. Figuras de alta resolución del artículo en español e inglés (PNG 800 ppp y PDF)
+make figuras
+
+# 13. Entrenamiento y evaluación rigurosa del Motor IA (outputs/motor_ia/)
 make ia
 
-# 12. REPLICACIÓN COMPLETA DESDE CERO (regenera outputs/ y mide tiempo total)
+# 14. REPLICACIÓN COMPLETA DESDE CERO (regenera outputs/ y mide tiempo total)
 make all
 ```
 
@@ -239,6 +245,25 @@ Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, 
 
 ---
 
+### 👥 Métricas por sexo del dueño (v1.0.1)
+
+El script `scripts/cierres_por_dueno.py` calcula la tasa de cierre como las salidas anuales de empresas con dueña (dueño) entre el número medio de esas empresas en riesgo durante los meses 109–120 de la política (`exited_firm_indices`). No consume números aleatorios adicionales, por lo que cada réplica es estrictamente idéntica a la del simulador base `itdt/model.py`.
+
+Este módulo reproduce las métricas desagregadas de las **Tablas 5, 6 y 7** y la **Figura 3** del artículo:
+- **Modo Escenarios (A–D):** Tasas de cierre anual, riesgo relativo (RR) con intervalo de confianza al 95 % por bootstrap en dos etapas ($B=4000$) y formalización neta $\Delta$ formales.
+- **Modo Ablación (B2 vs. A):** Evaluación de las 4 variantes de mecanismos (`full`, `no_care`, `no_dcc`, `neither`).
+- **Modo Especificaciones (B2):** Recalibración bajo 4 combinaciones de regla de entrada (`forced_informal` vs. `free`) y salario de reserva (`dynamic` vs. `fixed`).
+
+```bash
+# Ejecución de los 3 modos de análisis de cierres por sexo del dueño
+make owner
+
+# Generación de las figuras vectoriales del artículo en español e inglés (PNG 800 ppp y PDF)
+make figuras
+```
+
+---
+
 ### 📊 Mapeo de Objetivos Make a Tablas y Figuras del Artículo
 
 | Objetivo `make` | Descripción Metodológica | Salida Generada en `outputs/` | Tabla / Figura del Artículo | Tiempo Estimado |
@@ -253,6 +278,8 @@ Incluye pruebas unitarias con valores calculados a mano ($U_F$, $U_I$, $\Pi_F$, 
 | `make mechanism` | Ablación de B2 frente a A (cuidado y DCC) con recalibración de cada variante | `table8_ablation.*` | **Tabla 8** | ~2.5 min |
 | `make sensitivity` | Sensibilidad $\pm 20\%$ (9 parámetros), robustez CES ($\sigma \in \{0.5, 1.5\}$) y choque | `table9_sensitivity.*` | **Tabla 9** | ~3.5 min |
 | `make cost` | Costo computacional por réplica ($N_W \in \{3\,000, 6\,000, 12\,000, 24\,000\}$) | `table10_cost.*` | **Tabla 10** | ~10 s |
+| `make owner` | Cierres anuales y formalización neta por sexo del dueño (3 modos) | `outputs/cierres_por_dueno*.json` | **Tablas 5, 6 y 7** y **Figura 3** | ~8.0 min |
+| `make figuras` | Generación de figuras del artículo (español e inglés, PNG 800 ppp + PDF) | `outputs/figuras_articulo/`<br>`outputs/figuras_articulo_en/` | **Figuras 1–6** | ~20 s |
 | `make ia` | Validación cruzada 5 pliegues (StratifiedGroupKFold) + prueba final holdout 20% | `outputs/motor_ia/tabla_desempeno_modelos.*`<br>`outputs/motor_ia/metricas_modelos_*.json` | **Motor IA** (India y Nigeria) | ~1.5 min |
 | `make all` | **Pipeline integral:** regenera `outputs/` desde cero y reporta tiempo | **Todas las Tablas (2–14), Figuras (4–7) y JSONs** | **Replicación total** | aprox. 52 min de CPU (medido el 22/10/2026, Windows, Python 3.12) |
 
