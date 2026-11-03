@@ -10,7 +10,7 @@
 En la versión inicial `v1.0.0` del paquete de replicación, no existía un script automatizado que calculara de forma explícita las tasas de cierre y la formalización neta desagregadas por el sexo del dueño de la empresa. Las cifras reportadas en borradores preliminares del manuscrito (B2: 29.80 % / 20.40 %, RR 1.46) provenían de aproximaciones que no eran estrictamente reproducibles mediante el pipeline canónico.
 
 Para subsanar esta limitación y garantizar la reproducibilidad científica estricta:
-1. Se incorporó el script canónico [`scripts/cierres_por_dueno.py`](../scripts/cierres_por_dueno.py).
+1. Se incorporó el script canónico [`scripts/cierres_por_dueno.py`](https://github.com/mzavalasaldana-cloud/gemelo-digital-3d-del-mercado-laboral/blob/v1.0.1/scripts/cierres_por_dueno.py).
 2. El script clasifica las salidas registradas en `exited_firm_indices` guardando el sexo del dueño de cada firma antes de cada paso de simulación.
 3. No consume números aleatorios adicionales, preservando la trayectoria de cada réplica idéntica a la del simulador base `ITDTModel`.
 4. Se actualizan las cifras por los valores exactos y reproducibles generados por el script:
@@ -66,8 +66,8 @@ Las correcciones numéricas no alteran en modo alguno las conclusiones teóricas
 ## 4. Regeneración de Figuras y Flujo de Reproducción
 
 Las figuras del manuscrito se generan a partir de estas salidas reproducibles:
-* **Figuras en español:** generadas en [`outputs/figuras_articulo/`](../outputs/figuras_articulo/) mediante `python scripts/generar_figuras.py`.
-* **Figuras en inglés:** generadas en [`outputs/figuras_articulo_en/`](../outputs/figuras_articulo_en/) mediante `python scripts/generar_figuras_en.py`.
+* **Figuras en español:** generadas en [`outputs/figuras_articulo/`](https://github.com/mzavalasaldana-cloud/gemelo-digital-3d-del-mercado-laboral/tree/v1.0.1/outputs/figuras_articulo) mediante `python scripts/generar_figuras.py`.
+* **Figuras en inglés:** generadas en [`outputs/figuras_articulo_en/`](https://github.com/mzavalasaldana-cloud/gemelo-digital-3d-del-mercado-laboral/tree/v1.0.1/outputs/figuras_articulo_en) mediante `python scripts/generar_figuras_en.py`.
 
 Ambos conjuntos incluyen exportaciones vectoriales en PDF y mapas de bits en PNG a 800 ppp. Todo el flujo queda plenamente integrado en los orquestadores:
 ```bash
